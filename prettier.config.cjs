@@ -3,5 +3,5 @@ module.exports = {
   arrowParens: "always",
   semi: false,
   tabWidth: 2,
-  trailingComma: "es5"
+  trailingComma: "es5",
 }
