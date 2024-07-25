@@ -2,10 +2,9 @@
 module.exports = {
   darkMode: "selector",
   content: [
-    './components/**/*.{ts,tsx}',
-    './entrypoints/**/*.{ts,tsx}',
+    "./components/**/*.{ts,tsx}",
+    "./entrypoints/**/*.{ts,tsx}",
   ],
-  prefix: "fluidic-",
   theme: {
     container: {
       center: true,

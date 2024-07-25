@@ -12,7 +12,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "fluidic-inline-flex fluidic-h-10 fluidic-items-center fluidic-justify-center fluidic-rounded-md fluidic-bg-zinc-100 fluidic-p-1 fluidic-text-zinc-500 dark:fluidic-bg-zinc-800 dark:fluidic-text-zinc-400",
+      "inline-flex h-10 items-center justify-center rounded-md bg-zinc-100 p-1 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400",
       className
     )}
     {...props}
@@ -27,7 +27,7 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "fluidic-inline-flex fluidic-items-center fluidic-justify-center fluidic-whitespace-nowrap fluidic-rounded-sm fluidic-px-3 fluidic-py-1.5 fluidic-text-sm fluidic-font-medium fluidic-ring-offset-white fluidic-transition-all focus-visible:fluidic-outline-none focus-visible:fluidic-ring-2 focus-visible:fluidic-ring-zinc-950 focus-visible:fluidic-ring-offset-2 disabled:fluidic-pointer-events-none disabled:fluidic-opacity-50 data-[state=active]:fluidic-bg-white data-[state=active]:fluidic-text-zinc-950 data-[state=active]:fluidic-shadow-sm dark:fluidic-ring-offset-zinc-950 dark:focus-visible:fluidic-ring-zinc-300 dark:data-[state=active]:fluidic-bg-zinc-950 dark:data-[state=active]:fluidic-text-zinc-50",
+      "inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-white data-[state=active]:text-zinc-950 data-[state=active]:shadow-sm dark:ring-offset-zinc-950 dark:focus-visible:ring-zinc-300 dark:data-[state=active]:bg-zinc-950 dark:data-[state=active]:text-zinc-50",
       className
     )}
     {...props}
@@ -42,7 +42,7 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "fluidic-mt-2 fluidic-ring-offset-white focus-visible:fluidic-outline-none focus-visible:fluidic-ring-2 focus-visible:fluidic-ring-zinc-950 focus-visible:fluidic-ring-offset-2 dark:fluidic-ring-offset-zinc-950 dark:focus-visible:fluidic-ring-zinc-300",
+      "mt-2 ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 dark:ring-offset-zinc-950 dark:focus-visible:ring-zinc-300",
       className
     )}
     {...props}

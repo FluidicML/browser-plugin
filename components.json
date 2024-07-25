@@ -5,10 +5,9 @@
   "tsx": true,
   "tailwind": {
     "config": "tailwind.config.cjs",
-    "css": "assets/styles.css",
+    "css": "./assets/styles.css",
     "baseColor": "zinc",
-    "cssVariables": false,
-    "prefix": "fluidic-"
+    "cssVariables": false
   },
   "aliases": {
     "components": "@/components",
