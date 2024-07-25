@@ -1,5 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+import BuilderTab from "./BuilderTab"
+import LibraryTab from "./LibraryTab"
+import RunnerTab from "./RunnerTab"
+
 function App() {
   return (
     <Tabs defaultValue="builder">
@@ -9,13 +13,13 @@ function App() {
         <TabsTrigger value="runner">Runner</TabsTrigger>
       </TabsList>
       <TabsContent value="builder">
-        <div>Builder</div>
+        <BuilderTab />
       </TabsContent>
       <TabsContent value="library">
-        <div>Library</div>
+        <LibraryTab />
       </TabsContent>
       <TabsContent value="runner">
-        <div>Runner</div>
+        <RunnerTab />
       </TabsContent>
     </Tabs>
   )
