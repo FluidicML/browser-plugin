@@ -1,3 +1,7 @@
 export default defineBackground(() => {
-  console.log('Hello background!', { id: browser.runtime.id });
+  // https://github.com/wxt-dev/wxt/issues/570
+  // @ts-ignore
+  browser.sidePanel
+    .setPanelBehavior({ openPanelOnActionClick: true })
+    .catch((e: any) => console.error("FLUIDIC", e));
 });
