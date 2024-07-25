@@ -2,8 +2,6 @@
 
 A browser extension for creating new automated workflows.
 
-## Building
-
 We use [WXT](https://wxt.dev/) to give room for cross-platform functionality,
 though currently efforts are focused on Chrome and Chromium-based browsers. To
 build and run, use:
@@ -12,6 +10,8 @@ build and run, use:
 $ pnpm install
 $ pnpm dev
 ```
+
+Styling is supported by [shadcn/ui](https://ui.shadcn.com/).
 
 ## Formatting
 
