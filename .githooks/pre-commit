@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -e
+
+STAGED=$(
+  git --no-pager diff --name-only --no-color --cached --diff-filter=d |
+    # Remove quotations used to surrounding filenames with special characters.
+    sed -e "s/^\"//" -e "s/\"$//g"
+)
+
+TARGETS=()
+while IFS= read -r FILENAME
+do
+  if [[ "$FILENAME" =~ .*\.jsx?$ ]] || [[ "$FILENAME" =~ .*\.tsx?$ ]]; then
+    TARGETS+=("${FILENAME}")
+  fi
+done <<< "$STAGED"
+
+if (( ${#TARGETS[@]} )); then
+  pnpm exec prettier --write "${TARGETS[@]}"
+  git add "${TARGETS[@]}"
+fi

@@ -3,5 +3,5 @@ export default defineBackground(() => {
   // @ts-ignore
   browser.sidePanel
     .setPanelBehavior({ openPanelOnActionClick: true })
-    .catch((e: any) => console.error("FLUIDIC", e));
-});
+    .catch((e: any) => console.error("FLUIDIC", e))
+})
