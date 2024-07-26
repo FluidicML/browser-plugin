@@ -25,9 +25,16 @@ const BuilderTab = () => {
     const shallowCopy = [...tabs]
     shallowCopy[index].values = newValues
 
-    const count = tabs.length
-    setTabs([...shallowCopy, { value: `step${count}`, label: `Step ${count}` }])
-    setTabValue(`step${count}`)
+    if (index === tabs.length - 1) {
+      shallowCopy.push({
+        value: `step${tabs.length}`,
+        label: `Step ${tabs.length}`,
+      })
+      setTabValue(`step${tabs.length}`)
+    } else {
+      setTabValue(`step${index + 1}`)
+    }
+    setTabs(shallowCopy)
   }
 
   return (

@@ -4,7 +4,16 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { Form } from "@/components/ui/form"
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
 
 const formSchema = z
   .object({
@@ -30,7 +39,22 @@ const ActionNavigateForm = ({ onSubmit }: ActionNavigateFormProps) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <input type="text" placeholder="navigate" />
+        <FormField
+          control={form.control}
+          name="example"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Example</FormLabel>
+              <FormControl>
+                <Input placeholder="navigate" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button className="w-full" type="submit">
+          Continue
+        </Button>
       </form>
     </Form>
   )
