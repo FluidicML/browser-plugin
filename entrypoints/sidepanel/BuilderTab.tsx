@@ -2,67 +2,82 @@ import React from "react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import SettingsTabPanel from "./builder_tab/SettingsTabPanel"
-import StepsTabPanel from "./builder_tab/StepsTabPanel"
-
-type Tab = {
-  value: string
-  label: string
-  values?: Record<string, any>
-}
+import { type InitTabSchema } from "./builder_tab/schema"
+import InitTabPanel from "./builder_tab/InitTabPanel"
+import ActionTabPanel from "./builder_tab/ActionTabPanel"
+import { ActionTab } from "./builder_tab/schema"
 
 const BuilderTab = () => {
-  const [tabValue, setTabValue] = React.useState("settings")
-  const [tabs, setTabs] = React.useState<Tab[]>([
-    { value: "settings", label: "Settings" },
-  ])
+  const [tabActive, setTabActive] = React.useState("init")
+  const [_initTab, setInitTab] = React.useState<InitTabSchema>()
+  const [actionTabs, setActionTabs] = React.useState<ActionTab[]>([])
 
-  const submitTab = (index: number, newValues: Record<string, any>) => {
-    if (index < 0 || index >= tabs.length) {
-      return
+  const newActionTab = (index: number): ActionTab => {
+    return {
+      key: `step${index}`,
+      label: `Step ${index}`,
+      values: null,
+    }
+  }
+
+  const submitInitTab = (values: InitTabSchema) => {
+    setInitTab(values)
+
+    const next = newActionTab(1)
+    if (actionTabs.length === 0) {
+      actionTabs.push(next)
+    }
+    setTabActive(next.key)
+  }
+
+  const submitActionTab = (index: number, values: ActionTab["values"]) => {
+    if (index < 0 || index >= actionTabs.length) {
+      throw new Error(`Invalid ${index} on tab submission.`)
     }
 
-    const shallowCopy = [...tabs]
-    shallowCopy[index].values = newValues
+    const shallowCopy = [...actionTabs]
+    shallowCopy[index].values = values
 
-    if (index === tabs.length - 1) {
-      shallowCopy.push({
-        value: `step${tabs.length}`,
-        label: `Step ${tabs.length}`,
-      })
-      setTabValue(`step${tabs.length}`)
+    if (index === actionTabs.length - 1) {
+      const next = newActionTab(actionTabs.length)
+      shallowCopy.push(next)
+      setTabActive(next.key)
     } else {
-      setTabValue(`step${index + 1}`)
+      const next = newActionTab(index + 1)
+      setTabActive(next.key)
     }
-    setTabs(shallowCopy)
+
+    setActionTabs(shallowCopy)
   }
 
   return (
     <Tabs
       className="flex flex-col h-full"
-      value={tabValue}
-      onValueChange={setTabValue}
+      value={tabActive}
+      onValueChange={setTabActive}
     >
       <TabsList className="flex flex-wrap justify-start">
-        {tabs.map((tab) => (
-          <TabsTrigger key={tab.value} value={tab.value}>
+        <TabsTrigger value="init">Start</TabsTrigger>
+        {actionTabs.map((tab) => (
+          <TabsTrigger key={tab.key} value={tab.key}>
             {tab.label}
           </TabsTrigger>
         ))}
       </TabsList>
-      {tabs.map((tab, index) => (
+      <TabsContent value="init" forceMount hidden={tabActive !== "init"}>
+        <InitTabPanel onSubmit={submitInitTab} />
+      </TabsContent>
+      {actionTabs.map((tab, index) => (
         <TabsContent
-          key={tab.value}
+          key={tab.key}
           className="overflow-y-auto"
-          value={tab.value}
+          value={tab.key}
           forceMount
-          hidden={tabValue !== tab.value}
+          hidden={tabActive !== tab.key}
         >
-          {tab.value === "settings" ? (
-            <SettingsTabPanel onSubmit={(values) => submitTab(index, values)} />
-          ) : (
-            <StepsTabPanel onSubmit={(values) => submitTab(index, values)} />
-          )}
+          <ActionTabPanel
+            onSubmit={(values) => submitActionTab(index, values)}
+          />
         </TabsContent>
       ))}
     </Tabs>

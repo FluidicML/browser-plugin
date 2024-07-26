@@ -1,8 +1,8 @@
 import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
 
+import { type InitTabSchema, initTabSchema } from "./schema"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -15,25 +15,13 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-const formSchema = z
-  .object({
-    workflowName: z.string().min(1, {
-      message: "You must provide a workflow name.",
-    }),
-    launchUrl: z.string().url({
-      message: "You must provide a valid URL.",
-    }),
-  })
-  .strict()
-  .required()
-
-type SettingsTabPanelProps = {
-  onSubmit: (values: z.infer<typeof formSchema>) => void
+type InitTabPanelProps = {
+  onSubmit: (values: InitTabSchema) => void
 }
 
-const SettingsTabPanel = ({ onSubmit }: SettingsTabPanelProps) => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+const InitTabPanel = ({ onSubmit }: InitTabPanelProps) => {
+  const form = useForm<InitTabSchema>({
+    resolver: zodResolver(initTabSchema),
     defaultValues: {
       workflowName: "",
       launchUrl: "",
@@ -80,6 +68,6 @@ const SettingsTabPanel = ({ onSubmit }: SettingsTabPanelProps) => {
     </Form>
   )
 }
-SettingsTabPanel.displayName = "SettingsTabPanel"
+InitTabPanel.displayName = "InitTabPanel"
 
-export default SettingsTabPanel
+export default InitTabPanel

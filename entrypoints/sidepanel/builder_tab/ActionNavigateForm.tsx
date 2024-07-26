@@ -1,9 +1,9 @@
 import React from "react"
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import { z } from "zod"
 
+import type { ActionNavigateSchema, ActionTab } from "./schema"
+import { ActionKind, actionNavigateSchema } from "./schema"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -15,28 +15,23 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-const formSchema = z
-  .object({
-    url: z.string().url({
-      message: "You must provide a valid URL.",
-    }),
-  })
-  .strict()
-  .required()
-
 type ActionNavigateFormProps = {
-  onSubmit: (values: z.infer<typeof formSchema>) => void
+  onSubmit: (values: ActionTab["values"]) => void
 }
 
 const ActionNavigateForm = ({ onSubmit }: ActionNavigateFormProps) => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<ActionNavigateSchema>({
+    resolver: zodResolver(actionNavigateSchema),
     defaultValues: { url: "" },
   })
 
+  const onForwardSubmit = (values: ActionNavigateSchema) => {
+    onSubmit({ kind: ActionKind.NAVIGATE, form: values })
+  }
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onForwardSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="url"
@@ -50,9 +45,6 @@ const ActionNavigateForm = ({ onSubmit }: ActionNavigateFormProps) => {
             </FormItem>
           )}
         />
-        <Button className="w-full" type="submit">
-          Continue
-        </Button>
       </form>
     </Form>
   )

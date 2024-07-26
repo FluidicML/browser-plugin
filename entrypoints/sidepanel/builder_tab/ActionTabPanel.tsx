@@ -5,55 +5,50 @@ import { ComboBox } from "@/components/ui/combobox"
 import ActionCaptureForm from "./ActionCaptureForm"
 import ActionNavigateForm from "./ActionNavigateForm"
 import ActionPromptForm from "./ActionPromptForm"
+import { type ActionTab, ActionKind } from "./schema"
 
-enum Action {
-  CAPTURE = "capture",
-  NAVIGATE = "navigate",
-  PROMPT = "prompt",
+type ActionTabPanelProps = {
+  onSubmit: (values: ActionTab["values"]) => void
 }
 
-type StepsTabPanelProps = {
-  onSubmit: (values: Record<string, any>) => void
-}
-
-const StepsTabPanel = ({ onSubmit }: StepsTabPanelProps) => {
-  const [selectedAction, setSelectedAction] = React.useState<Action>(
-    Action.CAPTURE
+const ActionTabPanel = ({ onSubmit }: ActionTabPanelProps) => {
+  const [actionKindActive, setActionKindActive] = React.useState<ActionKind>(
+    ActionKind.CAPTURE
   )
 
   const actionTabForm = React.useMemo(() => {
-    switch (selectedAction) {
-      case Action.CAPTURE: {
+    switch (actionKindActive) {
+      case ActionKind.CAPTURE: {
         return <ActionCaptureForm onSubmit={onSubmit} />
       }
-      case Action.NAVIGATE: {
+      case ActionKind.NAVIGATE: {
         return <ActionNavigateForm onSubmit={onSubmit} />
       }
-      case Action.PROMPT: {
+      case ActionKind.PROMPT: {
         return <ActionPromptForm onSubmit={onSubmit} />
       }
       default: {
-        const _exhaustivenessCheck: never = selectedAction
+        const _exhaustivenessCheck: never = actionKindActive
         break
       }
     }
-  }, [selectedAction])
+  }, [actionKindActive])
 
   return (
     <div className="p-4">
       <ComboBox
-        value={selectedAction}
-        options={Object.keys(Action).map((key) => ({
+        value={actionKindActive}
+        options={Object.keys(ActionKind).map((key) => ({
           value: key.toLowerCase(),
           label: key.slice(0, 1) + key.slice(1).toLowerCase(),
         }))}
-        onSelect={(value) => setSelectedAction(value as Action)}
+        onSelect={(value) => setActionKindActive(value as ActionKind)}
       />
       <hr className="bg-muted w-1/2 h-1 my-6 mx-auto" />
       {actionTabForm}
     </div>
   )
 }
-StepsTabPanel.displayName = "StepsTabPanel"
+ActionTabPanel.displayName = "ActionTabPanel"
 
-export default StepsTabPanel
+export default ActionTabPanel
