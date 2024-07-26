@@ -8,10 +8,10 @@ import ActionPromptForm from "./ActionPromptForm"
 import { type ActionTab, ActionKind } from "./schema"
 
 type ActionTabPanelProps = {
-  onSubmit: (values: ActionTab["values"]) => void
+  onValidInput: (values: ActionTab["form"]) => void
 }
 
-const ActionTabPanel = ({ onSubmit }: ActionTabPanelProps) => {
+const ActionTabPanel = ({ onValidInput }: ActionTabPanelProps) => {
   const [actionKindActive, setActionKindActive] = React.useState<ActionKind>(
     ActionKind.CAPTURE
   )
@@ -19,13 +19,13 @@ const ActionTabPanel = ({ onSubmit }: ActionTabPanelProps) => {
   const actionTabForm = React.useMemo(() => {
     switch (actionKindActive) {
       case ActionKind.CAPTURE: {
-        return <ActionCaptureForm onSubmit={onSubmit} />
+        return <ActionCaptureForm onValidInput={onValidInput} />
       }
       case ActionKind.NAVIGATE: {
-        return <ActionNavigateForm onSubmit={onSubmit} />
+        return <ActionNavigateForm onValidInput={onValidInput} />
       }
       case ActionKind.PROMPT: {
-        return <ActionPromptForm onSubmit={onSubmit} />
+        return <ActionPromptForm onValidInput={onValidInput} />
       }
       default: {
         const _exhaustivenessCheck: never = actionKindActive
@@ -35,7 +35,7 @@ const ActionTabPanel = ({ onSubmit }: ActionTabPanelProps) => {
   }, [actionKindActive])
 
   return (
-    <div className="p-4">
+    <div>
       <ComboBox
         value={actionKindActive}
         options={Object.keys(ActionKind).map((key) => ({

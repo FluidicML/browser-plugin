@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form"
 
 import type { ActionPromptSchema, ActionTab } from "./schema"
 import { ActionKind, actionPromptSchema } from "./schema"
-import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -16,22 +15,28 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 
 type ActionPromptFormProps = {
-  onSubmit: (values: ActionTab["values"]) => void
+  onValidInput: (values: ActionTab["form"]) => void
 }
 
-const ActionPromptForm = ({ onSubmit }: ActionPromptFormProps) => {
+const ActionPromptForm = ({ onValidInput }: ActionPromptFormProps) => {
   const form = useForm<ActionPromptSchema>({
     resolver: zodResolver(actionPromptSchema),
     defaultValues: { system: "", user: "" },
   })
 
-  const onForwardSubmit = (values: ActionPromptSchema) => {
-    onSubmit({ kind: ActionKind.PROMPT, form: values })
-  }
+  React.useEffect(() => {
+    const subscription = form.watch((values) => {
+      const parsed = actionPromptSchema.safeParse(values)
+      if (parsed.success) {
+        onValidInput({ kind: ActionKind.PROMPT, schema: parsed.data })
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form.watch])
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onForwardSubmit)} className="space-y-8">
+      <form className="space-y-8">
         <FormField
           control={form.control}
           name="system"

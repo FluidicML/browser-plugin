@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 
 type ActionCaptureFormProps = {
-  onSubmit: (values: ActionTab["values"]) => void
+  onValidInput: (values: ActionTab["form"]) => void
 }
 
-const ActionCaptureForm = ({ onSubmit }: ActionCaptureFormProps) => {
+const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
   const [isCapturing, setIsCapturing] = React.useState(false)
 
   const form = useForm<ActionCaptureSchema>({
@@ -21,13 +21,19 @@ const ActionCaptureForm = ({ onSubmit }: ActionCaptureFormProps) => {
     defaultValues: {},
   })
 
-  const onForwardSubmit = (values: ActionCaptureSchema) => {
-    onSubmit({ kind: ActionKind.CAPTURE, form: values })
-  }
+  React.useEffect(() => {
+    const subscription = form.watch((values) => {
+      const parsed = actionCaptureSchema.safeParse(values)
+      if (parsed.success) {
+        onValidInput({ kind: ActionKind.CAPTURE, schema: parsed.data })
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form.watch])
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onForwardSubmit)} className="space-y-8">
+      <form className="space-y-8">
         <p>
           Click "Start" and then interact with the browser like you normally do.
           We track each click, type, etc. automatically.

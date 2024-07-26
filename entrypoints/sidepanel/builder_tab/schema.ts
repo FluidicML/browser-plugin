@@ -1,3 +1,4 @@
+import React from "react"
 import { z } from "zod"
 
 // The initial tab shown when building the workflow. Contains basic details
@@ -72,18 +73,39 @@ export enum ActionKind {
 export type ActionTab = {
   key: string
   label: string
-  values:
-    | null
+  form?:
     | {
         kind: ActionKind.CAPTURE
-        form: ActionCaptureSchema
+        values: ActionCaptureSchema
       }
     | {
         kind: ActionKind.NAVIGATE
-        form: ActionNavigateSchema
+        values: ActionNavigateSchema
       }
     | {
         kind: ActionKind.PROMPT
-        form: ActionPromptSchema
+        values: ActionPromptSchema
       }
+}
+
+export const safeParse = (form: NonNullable<ActionTab["form"]>) => {
+  const kind = form.kind
+
+  switch (kind) {
+    case ActionKind.CAPTURE: {
+      return actionCaptureSchema.safeParse(form.values)
+    }
+    case ActionKind.NAVIGATE: {
+      return actionNavigateSchema.safeParse(form.values)
+    }
+    case ActionKind.PROMPT: {
+      return actionPromptSchema.safeParse(form.values)
+    }
+    default: {
+      const _exhaustivenessCheck: never = kind
+      break
+    }
+  }
+
+  return null
 }

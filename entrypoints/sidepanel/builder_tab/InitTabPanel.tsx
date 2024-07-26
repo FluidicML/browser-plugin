@@ -3,7 +3,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
 import { type InitTabSchema, initTabSchema } from "./schema"
-import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -16,10 +15,10 @@ import {
 import { Input } from "@/components/ui/input"
 
 type InitTabPanelProps = {
-  onSubmit: (values: InitTabSchema) => void
+  onValidInput: (values: InitTabSchema) => void
 }
 
-const InitTabPanel = ({ onSubmit }: InitTabPanelProps) => {
+const InitTabPanel = ({ onValidInput }: InitTabPanelProps) => {
   const form = useForm<InitTabSchema>({
     resolver: zodResolver(initTabSchema),
     defaultValues: {
@@ -28,9 +27,19 @@ const InitTabPanel = ({ onSubmit }: InitTabPanelProps) => {
     },
   })
 
+  React.useEffect(() => {
+    const subscription = form.watch((values) => {
+      const parsed = initTabSchema.safeParse(values)
+      if (parsed.success) {
+        onValidInput(parsed.data)
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form.watch])
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 p-4">
+      <form className="space-y-8">
         <FormField
           control={form.control}
           name="workflowName"
@@ -61,9 +70,6 @@ const InitTabPanel = ({ onSubmit }: InitTabPanelProps) => {
             </FormItem>
           )}
         />
-        <Button className="w-full" type="submit">
-          Continue
-        </Button>
       </form>
     </Form>
   )

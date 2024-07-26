@@ -25,7 +25,7 @@ function App() {
         <TabsTrigger value="runner">Runner</TabsTrigger>
       </TabsList>
       <TabsContent
-        className="overflow-y-auto"
+        className="overflow-y-auto h-full"
         value="builder"
         forceMount
         hidden={tabValue !== "builder"}

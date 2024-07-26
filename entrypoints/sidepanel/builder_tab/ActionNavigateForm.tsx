@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form"
 
 import type { ActionNavigateSchema, ActionTab } from "./schema"
 import { ActionKind, actionNavigateSchema } from "./schema"
-import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
@@ -16,22 +15,28 @@ import {
 import { Input } from "@/components/ui/input"
 
 type ActionNavigateFormProps = {
-  onSubmit: (values: ActionTab["values"]) => void
+  onValidInput: (values: ActionTab["form"]) => void
 }
 
-const ActionNavigateForm = ({ onSubmit }: ActionNavigateFormProps) => {
+const ActionNavigateForm = ({ onValidInput }: ActionNavigateFormProps) => {
   const form = useForm<ActionNavigateSchema>({
     resolver: zodResolver(actionNavigateSchema),
     defaultValues: { url: "" },
   })
 
-  const onForwardSubmit = (values: ActionNavigateSchema) => {
-    onSubmit({ kind: ActionKind.NAVIGATE, form: values })
-  }
+  React.useEffect(() => {
+    const subscription = form.watch((values) => {
+      const parsed = actionNavigateSchema.safeParse(values)
+      if (parsed.success) {
+        onValidInput({ kind: ActionKind.NAVIGATE, schema: parsed.data })
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form.watch])
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onForwardSubmit)} className="space-y-8">
+      <form className="space-y-8">
         <FormField
           control={form.control}
           name="url"
