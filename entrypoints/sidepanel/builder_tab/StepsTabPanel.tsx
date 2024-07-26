@@ -42,6 +42,7 @@ const StepsTabPanel = ({ onSubmit }: StepsTabPanelProps) => {
   return (
     <div className="p-4">
       <ComboBox
+        value={selectedAction}
         options={Object.keys(Action).map((key) => ({
           value: key.toLowerCase(),
           label: key.slice(0, 1) + key.slice(1).toLowerCase(),

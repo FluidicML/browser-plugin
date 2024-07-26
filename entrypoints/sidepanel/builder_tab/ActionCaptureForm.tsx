@@ -5,22 +5,9 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { Form } from "@/components/ui/form"
 
-const formSchema = z
-  .object({
-    selector: z.string().min(1),
-  })
-  .strict()
-  .required()
+const formSchema = z.object({}).strict().required()
 
 type ActionCaptureFormProps = {
   onSubmit: (values: z.infer<typeof formSchema>) => void
@@ -29,7 +16,7 @@ type ActionCaptureFormProps = {
 const ActionCaptureForm = ({ onSubmit }: ActionCaptureFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { selector: "" },
+    defaultValues: {},
   })
 
   return (

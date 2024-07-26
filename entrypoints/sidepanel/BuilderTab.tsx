@@ -48,20 +48,15 @@ const BuilderTab = () => {
       </TabsList>
       {tabs.map((tab, index) => (
         <TabsContent
+          key={tab.value}
           value={tab.value}
           forceMount
           hidden={tabValue !== tab.value}
         >
           {tab.value === "settings" ? (
-            <SettingsTabPanel
-              key={tab.value}
-              onSubmit={(values) => submitTab(index, values)}
-            />
+            <SettingsTabPanel onSubmit={(values) => submitTab(index, values)} />
           ) : (
-            <StepsTabPanel
-              key={tab.value}
-              onSubmit={(values) => submitTab(index, values)}
-            />
+            <StepsTabPanel onSubmit={(values) => submitTab(index, values)} />
           )}
         </TabsContent>
       ))}
