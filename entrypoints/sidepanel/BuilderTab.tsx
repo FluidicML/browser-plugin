@@ -1,19 +1,65 @@
 import React from "react"
 
-import SettingsForm from "./builder_form/SettingsForm"
-import StepsForm from "./builder_form/StepsForm"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import SettingsTabPanel from "./builder_tab/SettingsTabPanel"
+import StepsTabPanel from "./builder_tab/StepsTabPanel"
+
+type Tab = {
+  value: string
+  label: string
+  values?: Record<string, any>
+}
 
 const BuilderTab = () => {
-  const [settings, setSettings] = React.useState<{
-    workflowName: string
-    launchUrl: string
-  } | null>(null)
+  const [tabValue, setTabValue] = React.useState("settings")
+  const [tabs, setTabs] = React.useState<Tab[]>([
+    { value: "settings", label: "Settings" },
+  ])
 
-  if (settings === null) {
-    return <SettingsForm onSubmit={(values) => setSettings(values)} />
+  const submitTab = (index: number, newValues: Record<string, any>) => {
+    if (index < 0 || index >= tabs.length) {
+      return
+    }
+
+    const shallowCopy = [...tabs]
+    shallowCopy[index].values = newValues
+
+    const count = tabs.length
+    setTabs([...shallowCopy, { value: `step${count}`, label: `Step ${count}` }])
+    setTabValue(`step${count}`)
   }
 
-  return <StepsForm {...settings} />
+  return (
+    <Tabs value={tabValue} onValueChange={setTabValue}>
+      <TabsList className="flex flex-wrap justify-start">
+        {tabs.map((tab) => (
+          <TabsTrigger key={tab.value} value={tab.value}>
+            {tab.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      {tabs.map((tab, index) => (
+        <TabsContent
+          value={tab.value}
+          forceMount
+          hidden={tabValue !== tab.value}
+        >
+          {tab.value === "settings" ? (
+            <SettingsTabPanel
+              key={tab.value}
+              onSubmit={(values) => submitTab(index, values)}
+            />
+          ) : (
+            <StepsTabPanel
+              key={tab.value}
+              onSubmit={(values) => submitTab(index, values)}
+            />
+          )}
+        </TabsContent>
+      ))}
+    </Tabs>
+  )
 }
 BuilderTab.displayName = "BuilderTab"
 

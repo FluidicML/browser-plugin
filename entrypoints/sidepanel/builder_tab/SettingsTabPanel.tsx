@@ -27,11 +27,11 @@ const formSchema = z
   .strict()
   .required()
 
-type SettingsFormProps = {
+type SettingsTabPanelProps = {
   onSubmit: (values: z.infer<typeof formSchema>) => void
 }
 
-const SettingsForm = ({ onSubmit }: SettingsFormProps) => {
+const SettingsTabPanel = ({ onSubmit }: SettingsTabPanelProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -80,6 +80,6 @@ const SettingsForm = ({ onSubmit }: SettingsFormProps) => {
     </Form>
   )
 }
-SettingsForm.displayName = "SettingsForm"
+SettingsTabPanel.displayName = "SettingsTabPanel"
 
-export default SettingsForm
+export default SettingsTabPanel
