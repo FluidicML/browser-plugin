@@ -21,11 +21,17 @@ import {
 
 type ComboBoxProps = {
   options: { value: string; label: string }[]
+  value?: string
+  onSelect?: (value: string) => void
 }
 
-const ComboBox = ({ options }: ComboBoxProps) => {
+const ComboBox = ({
+  options,
+  value: controlledValue,
+  onSelect,
+}: ComboBoxProps) => {
   const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState("")
+  const [uncontrolledValue, setUncontrolledValue] = React.useState("")
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -34,15 +40,18 @@ const ComboBox = ({ options }: ComboBoxProps) => {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className="w-full justify-between"
         >
-          {value
-            ? options.find((option) => option.value === value)?.label
+          {(controlledValue ?? uncontrolledValue)
+            ? options.find(
+                (option) =>
+                  option.value === (controlledValue ?? uncontrolledValue)
+              )?.label
             : "Select..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent className="w-[calc(100vw-2rem)]">
         <Command>
           <CommandInput placeholder="Search..." />
           <CommandEmpty>No option found.</CommandEmpty>
@@ -53,14 +62,21 @@ const ComboBox = ({ options }: ComboBoxProps) => {
                   key={option.value}
                   value={option.value}
                   onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue)
+                    if (controlledValue === undefined) {
+                      setUncontrolledValue(
+                        currentValue === uncontrolledValue ? "" : currentValue
+                      )
+                    }
                     setOpen(false)
+                    onSelect?.(currentValue)
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === option.value ? "opacity-100" : "opacity-0"
+                      (controlledValue ?? uncontrolledValue) === option.value
+                        ? "opacity-100"
+                        : "opacity-0"
                     )}
                   />
                   {option.label}
@@ -75,4 +91,4 @@ const ComboBox = ({ options }: ComboBoxProps) => {
 }
 ComboBox.displayName = "ComboBox"
 
-export default ComboBox
+export { ComboBox }
