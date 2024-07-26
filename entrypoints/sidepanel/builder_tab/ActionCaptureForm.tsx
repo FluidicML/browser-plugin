@@ -14,6 +14,8 @@ type ActionCaptureFormProps = {
 }
 
 const ActionCaptureForm = ({ onSubmit }: ActionCaptureFormProps) => {
+  const [isCapturing, setIsCapturing] = React.useState(false)
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {},
@@ -26,6 +28,19 @@ const ActionCaptureForm = ({ onSubmit }: ActionCaptureFormProps) => {
           Pending. This should track discrete events like other workflow capture
           builders.
         </p>
+        <Button
+          type="button"
+          onClick={() => {
+            if (isCapturing) {
+              browser.runtime.sendMessage({ event: "stop-capture" })
+            } else {
+              browser.runtime.sendMessage({ event: "start-capture" })
+            }
+            setIsCapturing((c) => !c)
+          }}
+        >
+          {isCapturing ? "Stop" : "Start"} Capture
+        </Button>
         <Button className="w-full" type="submit">
           Continue
         </Button>
