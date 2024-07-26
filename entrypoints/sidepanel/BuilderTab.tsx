@@ -1,6 +1,7 @@
 import React from "react"
 
 import SettingsForm from "./builder_form/SettingsForm"
+import StepsForm from "./builder_form/StepsForm"
 
 const BuilderTab = () => {
   const [settings, setSettings] = React.useState<{
@@ -12,7 +13,7 @@ const BuilderTab = () => {
     return <SettingsForm onSubmit={(values) => setSettings(values)} />
   }
 
-  return <div />
+  return <StepsForm {...settings} />
 }
 BuilderTab.displayName = "BuilderTab"
 
