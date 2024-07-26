@@ -9,6 +9,10 @@ import RunnerTab from "./RunnerTab"
 function App() {
   const [tabValue, setTabValue] = React.useState("builder")
 
+  React.useEffect(() => {
+    document.documentElement.classList.add("dark")
+  }, [])
+
   return (
     <Tabs value={tabValue} onValueChange={setTabValue}>
       <TabsList className="grid grid-cols-3">
