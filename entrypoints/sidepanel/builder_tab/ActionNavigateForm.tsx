@@ -17,8 +17,8 @@ import { Input } from "@/components/ui/input"
 
 const formSchema = z
   .object({
-    example: z.string().min(1, {
-      message: "You must provide a workflow name.",
+    url: z.string().url({
+      message: "You must provide a valid URL.",
     }),
   })
   .strict()
@@ -31,9 +31,7 @@ type ActionNavigateFormProps = {
 const ActionNavigateForm = ({ onSubmit }: ActionNavigateFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      example: "",
-    },
+    defaultValues: { url: "" },
   })
 
   return (
@@ -41,12 +39,12 @@ const ActionNavigateForm = ({ onSubmit }: ActionNavigateFormProps) => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
-          name="example"
+          name="url"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Example</FormLabel>
+              <FormLabel>URL</FormLabel>
               <FormControl>
-                <Input placeholder="navigate" {...field} />
+                <Input placeholder="https://fluidicml.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

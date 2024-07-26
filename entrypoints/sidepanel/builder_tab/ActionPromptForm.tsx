@@ -13,12 +13,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 
 const formSchema = z
   .object({
-    example: z.string().min(1, {
-      message: "You must provide a workflow name.",
+    system: z.string().min(1, {
+      message: "You must provide a system prompt.",
+    }),
+    user: z.string().min(1, {
+      message: "You must provide a user prompt.",
     }),
   })
   .strict()
@@ -31,9 +34,7 @@ type ActionPromptFormProps = {
 const ActionPromptForm = ({ onSubmit }: ActionPromptFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      example: "",
-    },
+    defaultValues: { system: "", user: "" },
   })
 
   return (
@@ -41,12 +42,29 @@ const ActionPromptForm = ({ onSubmit }: ActionPromptFormProps) => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
-          name="example"
+          name="system"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Example</FormLabel>
+              <FormLabel>System Prompt</FormLabel>
               <FormControl>
-                <Input placeholder="prompt" {...field} />
+                <Textarea
+                  placeholder="You are a useful assistant for..."
+                  rows={3}
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="user"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>User Prompt</FormLabel>
+              <FormControl>
+                <Textarea rows={10} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

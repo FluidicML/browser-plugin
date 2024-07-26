@@ -2,12 +2,12 @@ import React from "react"
 
 import { ComboBox } from "@/components/ui/combobox"
 
-import ActionClickForm from "./ActionClickForm"
+import ActionCaptureForm from "./ActionCaptureForm"
 import ActionNavigateForm from "./ActionNavigateForm"
 import ActionPromptForm from "./ActionPromptForm"
 
 enum Action {
-  CLICK = "click",
+  CAPTURE = "capture",
   NAVIGATE = "navigate",
   PROMPT = "prompt",
 }
@@ -18,13 +18,13 @@ type StepsTabPanelProps = {
 
 const StepsTabPanel = ({ onSubmit }: StepsTabPanelProps) => {
   const [selectedAction, setSelectedAction] = React.useState<Action>(
-    Action.CLICK
+    Action.CAPTURE
   )
 
   const actionTabForm = React.useMemo(() => {
     switch (selectedAction) {
-      case Action.CLICK: {
-        return <ActionClickForm onSubmit={onSubmit} />
+      case Action.CAPTURE: {
+        return <ActionCaptureForm onSubmit={onSubmit} />
       }
       case Action.NAVIGATE: {
         return <ActionNavigateForm onSubmit={onSubmit} />

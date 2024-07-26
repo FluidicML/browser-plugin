@@ -21,7 +21,7 @@ const formSchema = z
       message: "You must provide a workflow name.",
     }),
     launchUrl: z.string().url({
-      message: "This must provide a valid URL.",
+      message: "You must provide a valid URL.",
     }),
   })
   .strict()

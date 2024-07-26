@@ -17,41 +17,28 @@ import { Input } from "@/components/ui/input"
 
 const formSchema = z
   .object({
-    example: z.string().min(1, {
-      message: "You must provide a workflow name.",
-    }),
+    selector: z.string().min(1),
   })
   .strict()
   .required()
 
-type ActionClickFormProps = {
+type ActionCaptureFormProps = {
   onSubmit: (values: z.infer<typeof formSchema>) => void
 }
 
-const ActionClickForm = ({ onSubmit }: ActionClickFormProps) => {
+const ActionCaptureForm = ({ onSubmit }: ActionCaptureFormProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      example: "",
-    },
+    defaultValues: { selector: "" },
   })
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="example"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Example</FormLabel>
-              <FormControl>
-                <Input placeholder="click" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <p>
+          Pending. This should track discrete events like other workflow capture
+          builders.
+        </p>
         <Button className="w-full" type="submit">
           Continue
         </Button>
@@ -59,6 +46,6 @@ const ActionClickForm = ({ onSubmit }: ActionClickFormProps) => {
     </Form>
   )
 }
-ActionClickForm.displayName = "ActionClickForm"
+ActionCaptureForm.displayName = "ActionCaptureForm"
 
-export default ActionClickForm
+export default ActionCaptureForm
