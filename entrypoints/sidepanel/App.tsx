@@ -14,19 +14,38 @@ function App() {
   }, [])
 
   return (
-    <Tabs value={tabValue} onValueChange={setTabValue}>
+    <Tabs
+      className="flex flex-col h-screen"
+      value={tabValue}
+      onValueChange={setTabValue}
+    >
       <TabsList className="grid grid-cols-3">
         <TabsTrigger value="builder">Builder</TabsTrigger>
         <TabsTrigger value="library">Library</TabsTrigger>
         <TabsTrigger value="runner">Runner</TabsTrigger>
       </TabsList>
-      <TabsContent value="builder" forceMount hidden={tabValue !== "builder"}>
+      <TabsContent
+        className="overflow-y-auto"
+        value="builder"
+        forceMount
+        hidden={tabValue !== "builder"}
+      >
         <BuilderTab />
       </TabsContent>
-      <TabsContent value="library" forceMount hidden={tabValue !== "library"}>
+      <TabsContent
+        className="overflow-y-auto"
+        value="library"
+        forceMount
+        hidden={tabValue !== "library"}
+      >
         <LibraryTab />
       </TabsContent>
-      <TabsContent value="runner" forceMount hidden={tabValue !== "runner"}>
+      <TabsContent
+        className="overflow-y-auto"
+        value="runner"
+        forceMount
+        hidden={tabValue !== "runner"}
+      >
         <RunnerTab />
       </TabsContent>
     </Tabs>

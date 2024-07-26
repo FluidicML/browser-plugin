@@ -38,7 +38,11 @@ const BuilderTab = () => {
   }
 
   return (
-    <Tabs value={tabValue} onValueChange={setTabValue}>
+    <Tabs
+      className="flex flex-col h-full"
+      value={tabValue}
+      onValueChange={setTabValue}
+    >
       <TabsList className="flex flex-wrap justify-start">
         {tabs.map((tab) => (
           <TabsTrigger key={tab.value} value={tab.value}>
@@ -49,6 +53,7 @@ const BuilderTab = () => {
       {tabs.map((tab, index) => (
         <TabsContent
           key={tab.value}
+          className="overflow-y-auto"
           value={tab.value}
           forceMount
           hidden={tabValue !== tab.value}
