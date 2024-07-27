@@ -2,7 +2,7 @@ import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import { type InitTabSchema, initTabSchema } from "./schema"
+import { type InitSchema, initSchema } from "@/utils/workflow"
 import {
   Form,
   FormControl,
@@ -15,12 +15,12 @@ import {
 import { Input } from "@/components/ui/input"
 
 type InitTabPanelProps = {
-  onValidInput: (values: InitTabSchema) => void
+  onValidInput: (values: InitSchema) => void
 }
 
 const InitTabPanel = ({ onValidInput }: InitTabPanelProps) => {
-  const form = useForm<InitTabSchema>({
-    resolver: zodResolver(initTabSchema),
+  const form = useForm<InitSchema>({
+    resolver: zodResolver(initSchema),
     defaultValues: {
       workflowName: "",
       launchUrl: "",
@@ -29,7 +29,7 @@ const InitTabPanel = ({ onValidInput }: InitTabPanelProps) => {
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
-      const parsed = initTabSchema.safeParse(values)
+      const parsed = initSchema.safeParse(values)
       if (parsed.success) {
         onValidInput(parsed.data)
       }

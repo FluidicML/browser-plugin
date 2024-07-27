@@ -4,6 +4,7 @@ module.exports = {
   content: [
     "./components/**/*.{ts,tsx}",
     "./entrypoints/**/*.{ts,tsx}",
+    "./utils/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {

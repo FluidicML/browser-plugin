@@ -3,14 +3,18 @@ import React from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { type InitTabSchema } from "./builder_tab/schema"
-import { ActionTab, initTabSchema, safeParse } from "./builder_tab/schema"
+import {
+  type InitSchema,
+  ActionForm,
+  initSchema,
+  actionFormSafeParse,
+} from "@/utils/workflow"
 import InitTabPanel from "./builder_tab/InitTabPanel"
-import ActionTabPanel from "./builder_tab/ActionTabPanel"
+import ActionTabPanel, { type ActionTab } from "./builder_tab/ActionTabPanel"
 
 const BuilderTab = () => {
   const [tabActive, setTabActive] = React.useState("init")
-  const [initTab, setInitTab] = React.useState<InitTabSchema>()
+  const [initTab, setInitTab] = React.useState<InitSchema>()
   const [actionTabs, setActionTabs] = React.useState<ActionTab[]>([])
 
   // Retrieves the index of the active tab. For uniformity, the "init" tab is
@@ -28,13 +32,13 @@ const BuilderTab = () => {
   // when updating a previous one. Indices before this one refer to validated
   // action forms.
   const validBeforeIndex = React.useMemo(() => {
-    if (!initTabSchema.safeParse(initTab).success) {
+    if (!initSchema.safeParse(initTab).success) {
       return -1
     }
     let i = 0
     for (; i < actionTabs.length; ++i) {
       const form = actionTabs[i].form
-      if (form === undefined || safeParse(form) === null) {
+      if (form === undefined || actionFormSafeParse(form) === null) {
         return i
       }
     }
@@ -42,7 +46,7 @@ const BuilderTab = () => {
   }, [initTab, actionTabs])
 
   const updateActionTab = React.useCallback(
-    (values: ActionTab["form"], index: number) => {
+    (values: ActionForm, index: number) => {
       const shallowCopy = [...actionTabs]
       shallowCopy[index].form = values
       setActionTabs(shallowCopy)

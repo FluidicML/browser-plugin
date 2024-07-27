@@ -1,9 +1,8 @@
-import React from "react"
 import { z } from "zod"
 
 // The initial tab shown when building the workflow. Contains basic details
 // all workflows must have.
-export const initTabSchema = z
+export const initSchema = z
   .object({
     workflowName: z.string().min(1, {
       message: "You must provide a workflow name.",
@@ -15,7 +14,7 @@ export const initTabSchema = z
   .strict()
   .required()
 
-export type InitTabSchema = z.infer<typeof initTabSchema>
+export type InitSchema = z.infer<typeof initSchema>
 
 // A recording feature. Triggering a capture means to start tracking discrete
 // user events like mouse clicks or key presses. Each event is stored in a list
@@ -61,34 +60,29 @@ export const actionPromptSchema = z
 
 export type ActionPromptSchema = z.infer<typeof actionPromptSchema>
 
-// Tracks the persisted tabs. An workflow in progress is only maintained for
-// the given session. Completed workflows are persisted indefinitely.
-
+// Allow aggregating actions together. A workflow can consist of a sequence of
+// any type of actions, though it must always start with an `init`.
 export enum ActionKind {
   CAPTURE = "capture",
   NAVIGATE = "navigate",
   PROMPT = "prompt",
 }
 
-export type ActionTab = {
-  key: string
-  label: string
-  form?:
-    | {
-        kind: ActionKind.CAPTURE
-        values: ActionCaptureSchema
-      }
-    | {
-        kind: ActionKind.NAVIGATE
-        values: ActionNavigateSchema
-      }
-    | {
-        kind: ActionKind.PROMPT
-        values: ActionPromptSchema
-      }
-}
+export type ActionForm =
+  | {
+      kind: ActionKind.CAPTURE
+      values: ActionCaptureSchema
+    }
+  | {
+      kind: ActionKind.NAVIGATE
+      values: ActionNavigateSchema
+    }
+  | {
+      kind: ActionKind.PROMPT
+      values: ActionPromptSchema
+    }
 
-export const safeParse = (form: NonNullable<ActionTab["form"]>) => {
+export const actionFormSafeParse = (form: ActionForm) => {
   const kind = form.kind
 
   switch (kind) {
@@ -108,4 +102,10 @@ export const safeParse = (form: NonNullable<ActionTab["form"]>) => {
   }
 
   return null
+}
+
+// Representation of the entire workflow end-to-end.
+export type Workflow = {
+  init: InitSchema
+  actions: ActionForm
 }

@@ -2,15 +2,15 @@ import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import type { ActionCaptureSchema, ActionTab } from "./schema"
-import { ActionKind, actionCaptureSchema } from "./schema"
+import type { ActionCaptureSchema, ActionForm } from "@/utils/workflow"
+import { ActionKind, actionCaptureSchema } from "@/utils/workflow"
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 
 type ActionCaptureFormProps = {
-  onValidInput: (values: ActionTab["form"]) => void
+  onValidInput: (values: ActionForm) => void
 }
 
 const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
@@ -25,7 +25,7 @@ const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
     const subscription = form.watch((values) => {
       const parsed = actionCaptureSchema.safeParse(values)
       if (parsed.success) {
-        onValidInput({ kind: ActionKind.CAPTURE, schema: parsed.data })
+        onValidInput({ kind: ActionKind.CAPTURE, values: parsed.data })
       }
     })
     return () => subscription.unsubscribe()

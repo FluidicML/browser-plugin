@@ -2,8 +2,8 @@ import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import type { ActionPromptSchema, ActionTab } from "./schema"
-import { ActionKind, actionPromptSchema } from "./schema"
+import type { ActionPromptSchema, ActionForm } from "@/utils/workflow"
+import { ActionKind, actionPromptSchema } from "@/utils/workflow"
 import {
   Form,
   FormControl,
@@ -15,7 +15,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 
 type ActionPromptFormProps = {
-  onValidInput: (values: ActionTab["form"]) => void
+  onValidInput: (values: ActionForm) => void
 }
 
 const ActionPromptForm = ({ onValidInput }: ActionPromptFormProps) => {
@@ -28,7 +28,7 @@ const ActionPromptForm = ({ onValidInput }: ActionPromptFormProps) => {
     const subscription = form.watch((values) => {
       const parsed = actionPromptSchema.safeParse(values)
       if (parsed.success) {
-        onValidInput({ kind: ActionKind.PROMPT, schema: parsed.data })
+        onValidInput({ kind: ActionKind.PROMPT, values: parsed.data })
       }
     })
     return () => subscription.unsubscribe()

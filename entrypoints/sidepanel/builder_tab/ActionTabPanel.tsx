@@ -2,13 +2,19 @@ import React from "react"
 
 import { ComboBox } from "@/components/ui/combobox"
 
+import { type ActionForm, ActionKind } from "@/utils/workflow"
 import ActionCaptureForm from "./ActionCaptureForm"
 import ActionNavigateForm from "./ActionNavigateForm"
 import ActionPromptForm from "./ActionPromptForm"
-import { type ActionTab, ActionKind } from "./schema"
+
+export type ActionTab = {
+  key: string
+  label: string
+  form?: ActionForm
+}
 
 type ActionTabPanelProps = {
-  onValidInput: (values: ActionTab["form"]) => void
+  onValidInput: (values: ActionForm) => void
 }
 
 const ActionTabPanel = ({ onValidInput }: ActionTabPanelProps) => {

@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
 
-import { cn } from "@/components/utils"
+import { cn } from "@/utils/shadcn"
 import { Button } from "@/components/ui/button"
 import {
   Command,

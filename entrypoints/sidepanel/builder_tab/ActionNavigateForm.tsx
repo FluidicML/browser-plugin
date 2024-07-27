@@ -2,8 +2,8 @@ import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import type { ActionNavigateSchema, ActionTab } from "./schema"
-import { ActionKind, actionNavigateSchema } from "./schema"
+import type { ActionNavigateSchema, ActionForm } from "@/utils/workflow"
+import { ActionKind, actionNavigateSchema } from "@/utils/workflow"
 import {
   Form,
   FormControl,
@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 
 type ActionNavigateFormProps = {
-  onValidInput: (values: ActionTab["form"]) => void
+  onValidInput: (values: ActionForm) => void
 }
 
 const ActionNavigateForm = ({ onValidInput }: ActionNavigateFormProps) => {
@@ -28,7 +28,7 @@ const ActionNavigateForm = ({ onValidInput }: ActionNavigateFormProps) => {
     const subscription = form.watch((values) => {
       const parsed = actionNavigateSchema.safeParse(values)
       if (parsed.success) {
-        onValidInput({ kind: ActionKind.NAVIGATE, schema: parsed.data })
+        onValidInput({ kind: ActionKind.NAVIGATE, values: parsed.data })
       }
     })
     return () => subscription.unsubscribe()
