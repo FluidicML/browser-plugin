@@ -1,6 +1,8 @@
 import React from "react"
 
+import CheckmarkIcon from "@/components/icons/Checkmark"
 import FolderIcon from "@/components/icons/Folder"
+import LoadingIcon from "@/components/icons/Loading"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { useSharedStore } from "./store"
 
@@ -87,9 +89,14 @@ const RunnerTab = () => {
   return (
     <div className="flex flex-col gap-4 p-4">
       <Card>
-        <CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          {running.actionIndex === running.workflow.actions.length ? (
+            <CheckmarkIcon className="w-5 h-5 rounded-full bg-white fill-emerald-600" />
+          ) : (
+            <LoadingIcon className="w-5 h-5 fill-emerald-600" />
+          )}
           {running.workflow.init.name}{" "}
-          <span className="text-xs text-muted-foreground float-right">
+          <span className="text-xs text-muted-foreground ml-auto">
             ({running.workflow.uuid.slice(0, 8)})
           </span>
         </CardTitle>
@@ -98,12 +105,14 @@ const RunnerTab = () => {
           <span className="underline">{running.workflow.init.url}</span>.
         </CardDescription>
       </Card>
+      <hr className="bg-muted w-1/2 h-1 my-2 mx-auto" />
       {[...Array(running.actionIndex + 1).keys()].map((index: number) => {
         if (index === running.workflow.actions.length) {
           return null
         }
         return (
           <StepCard
+            key={`${running.workflow.uuid}-${index}`}
             action={running.workflow.actions[index]}
             title={`Step ${index + 1} / ${running.workflow.actions.length}`}
             isRunning={index === running.actionIndex}
