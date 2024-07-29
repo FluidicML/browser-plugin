@@ -9,7 +9,7 @@ import type { Workflow } from "@/utils/workflow"
 export type SharedState = {
   library: Workflow[]
   actions: {
-    saveWorkflow: (workflow: Workflow) => void
+    saveWorkflow: (workflow: Omit<Workflow, "uuid">) => void
     removeWorkflow: (uuid: string) => void
   }
 }
@@ -19,12 +19,12 @@ export const useSharedStore = create<SharedState>()(
     immer((set, get, _api) => ({
       library: [],
       actions: {
-        saveWorkflow: (workflow: Omit<Workflow, "uuid">) => {
+        saveWorkflow: (workflow) => {
           set((s) => {
             s.library.unshift({ ...workflow, uuid: uuidv4() })
           })
         },
-        removeWorkflow: (uuid: string) => {
+        removeWorkflow: (uuid) => {
           const index = get().library.findIndex((w) => w.uuid === uuid)
           if (index !== -1) {
             set((s) => {

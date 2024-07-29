@@ -70,6 +70,7 @@ const BuilderTab = () => {
         .map((t) => t.form)
         .filter((f): f is ActionForm => Boolean(f)),
     })
+    setTabActive("init")
     setInitTab(null)
     setActionTabs([])
     setRootKey((id) => id + 1)

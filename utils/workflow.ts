@@ -33,10 +33,6 @@ export const actionNavigateSchema = z
     url: z.string().url({
       message: "You must provide a valid URL.",
     }),
-    inNewTab: z.boolean({
-      message:
-        "You must indicate whether we should launch in a new tab or not.",
-    }),
   })
   .strict()
   .required()

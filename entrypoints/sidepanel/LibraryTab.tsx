@@ -35,7 +35,7 @@ const WorkflowCard = ({ uuid, init, actions }: Workflow) => {
       <CardContent className="min-h-16 flex flex-col justify-end pt-4 relative">
         <div className="flex items-center gap-1">
           <LightningIcon className="w-4 h-4 fill-black dark:fill-white" />
-          {actions.length} Actions
+          {actions.length} Action{actions.length !== 1 ? "s" : ""}
         </div>
         <div className="flex gap-2 absolute right-0 bottom-0">
           <Button
