@@ -6,6 +6,7 @@ const SvgComponent = ({ ...props }) => (
     viewBox="0 0 32 32"
     strokeLinejoin="round"
     strokeMiterlimit="10"
+    strokeWidth="2"
     strokeLinecap="round"
     fill="none"
     {...props}

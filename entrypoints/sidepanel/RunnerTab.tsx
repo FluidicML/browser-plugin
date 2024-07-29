@@ -80,8 +80,8 @@ const RunnerTab = () => {
   if (running === null) {
     return (
       <div className="flex flex-col items-center gap-2 p-4">
-        <FolderIcon className="w-12 h-12 fill-black dark:fill-white" />
-        <p className="text-center text-base">No running workflow.</p>
+        <FolderIcon className="w-10 h-10 fill-black dark:fill-white" />
+        <p className="pt-2 text-center text-base">No running workflow.</p>
       </div>
     )
   }
