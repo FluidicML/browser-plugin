@@ -11,12 +11,12 @@ export type TabValue = "builder" | "library" | "runner"
 export type SharedState = {
   activeTab: TabValue
   library: Workflow[]
-  running: Workflow | null
+  triggered: Workflow | null
   actions: {
     setActiveTab: (tab: TabValue) => void
     saveWorkflow: (workflow: Omit<Workflow, "uuid">) => void
     removeWorkflow: (workflow: Workflow) => void
-    startWorkflow: (workflow: Workflow) => void
+    triggerWorkflow: (workflow: Workflow) => void
   }
 }
 
@@ -25,36 +25,38 @@ export const useSharedStore = create<SharedState>()(
     immer((set, get, _api) => ({
       activeTab: "builder",
       library: [],
-      running: null,
+      triggered: null,
       actions: {
         setActiveTab: (tab) => {
           set({ activeTab: tab })
         },
         saveWorkflow: (workflow) => {
           set((s) => {
+            s.activeTab = "library"
             s.library.unshift({ ...workflow, uuid: uuidv4() })
           })
         },
         removeWorkflow: (workflow) => {
           const index = get().library.findIndex((w) => w.uuid === workflow.uuid)
-          if (index !== -1) {
-            set((s) => {
-              s.library.splice(index, 1)
-            })
+          if (index === -1) {
+            return
           }
+          set((s) => {
+            s.library.splice(index, 1)
+            if (get().triggered?.uuid === workflow.uuid) {
+              s.triggered = null
+            }
+          })
         },
-        startWorkflow: (workflow) => {
-          set({ activeTab: "runner", running: workflow })
+        triggerWorkflow: (workflow) => {
+          set({ activeTab: "runner", triggered: workflow })
         },
       },
     })),
     {
       name: "fluidic-workflows",
 
-      partialize: (state) => ({
-        library: state.library,
-        running: state.running,
-      }),
+      partialize: (state) => ({ library: state.library }),
 
       storage: createJSONStorage(() => ({
         getItem: async (name: string) => {

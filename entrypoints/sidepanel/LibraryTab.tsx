@@ -19,17 +19,17 @@ const WorkflowCard = (workflow: Workflow) => {
   const store = useSharedStore()
 
   return (
-    <Card className="p-4">
-      <CardTitle className="pb-2">
-        {init.workflowName}{" "}
+    <Card>
+      <CardTitle>
+        {init.name}{" "}
         <span className="text-xs text-muted-foreground float-right">
           ({uuid.slice(0, 8)})
         </span>
       </CardTitle>
       <CardDescription>
         Launches{" "}
-        <a target="_blank" href={init.launchUrl} className="underline">
-          {init.launchUrl}
+        <a target="_blank" href={init.url} className="underline">
+          {init.url}
         </a>
         .
       </CardDescription>
@@ -49,7 +49,7 @@ const WorkflowCard = (workflow: Workflow) => {
           <Button
             size="xs"
             className="group hover:bg-emerald-600/90"
-            onClick={() => store.actions.startWorkflow(workflow)}
+            onClick={() => store.actions.triggerWorkflow(workflow)}
           >
             <PlayCircleIcon className="w-5 h-5 fill-white dark:fill-black group-hover:fill-white" />
           </Button>

@@ -4,10 +4,10 @@ import { z } from "zod"
 // all workflows must have.
 export const initSchema = z
   .object({
-    workflowName: z.string().min(1, {
+    name: z.string().min(1, {
       message: "You must provide a workflow name.",
     }),
-    launchUrl: z.string().url({
+    url: z.string().url({
       message: "You must provide a valid URL.",
     }),
   })

@@ -22,8 +22,8 @@ const InitTabPanel = ({ onChange }: InitTabPanelProps) => {
   const form = useForm<InitSchema>({
     resolver: zodResolver(initSchema),
     defaultValues: {
-      workflowName: "",
-      launchUrl: "",
+      name: "",
+      url: "",
     },
   })
 
@@ -40,7 +40,7 @@ const InitTabPanel = ({ onChange }: InitTabPanelProps) => {
       <form className="space-y-8">
         <FormField
           control={form.control}
-          name="workflowName"
+          name="name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Workflow Name</FormLabel>
@@ -53,7 +53,7 @@ const InitTabPanel = ({ onChange }: InitTabPanelProps) => {
         />
         <FormField
           control={form.control}
-          name="launchUrl"
+          name="url"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Starting URL</FormLabel>
