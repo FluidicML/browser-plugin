@@ -15,10 +15,10 @@ import {
 import { Input } from "@/components/ui/input"
 
 type InitTabPanelProps = {
-  onValidInput: (values: InitSchema) => void
+  onChange: (values: InitSchema | null) => void
 }
 
-const InitTabPanel = ({ onValidInput }: InitTabPanelProps) => {
+const InitTabPanel = ({ onChange }: InitTabPanelProps) => {
   const form = useForm<InitSchema>({
     resolver: zodResolver(initSchema),
     defaultValues: {
@@ -30,9 +30,7 @@ const InitTabPanel = ({ onValidInput }: InitTabPanelProps) => {
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       const parsed = initSchema.safeParse(values)
-      if (parsed.success) {
-        onValidInput(parsed.data)
-      }
+      onChange(parsed.success ? parsed.data : null)
     })
     return () => subscription.unsubscribe()
   }, [form.watch])

@@ -3,19 +3,31 @@ import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { immer } from "zustand/middleware/immer"
 
+import type { Workflow } from "@/utils/workflow"
+
 export type SharedState = {
-  actions: {}
+  library: Workflow[]
+  actions: {
+    saveWorkflow: (workflow: Workflow) => void
+  }
 }
 
 export const useSharedStore = create<SharedState>()(
   persist(
-    immer((_set, _get, _api) => ({
-      actions: {},
+    immer((set, _get, _api) => ({
+      library: [],
+      actions: {
+        saveWorkflow: (workflow: Workflow) => {
+          set((s) => {
+            s.library.unshift(workflow)
+          })
+        },
+      },
     })),
     {
       name: "fluidic-workflows",
 
-      partialize: (_state) => ({}),
+      partialize: (state) => ({ library: state.library }),
 
       storage: createJSONStorage(() => ({
         getItem: async (name: string) => {

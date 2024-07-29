@@ -2,6 +2,7 @@ import React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useSharedStore } from "./store"
 
 import {
   type InitSchema,
@@ -13,8 +14,10 @@ import InitTabPanel from "./builder_tab/InitTabPanel"
 import ActionTabPanel, { type ActionTab } from "./builder_tab/ActionTabPanel"
 
 const BuilderTab = () => {
+  const store = useSharedStore()
+
   const [tabActive, setTabActive] = React.useState("init")
-  const [initTab, setInitTab] = React.useState<InitSchema>()
+  const [initTab, setInitTab] = React.useState<InitSchema | null>(null)
   const [actionTabs, setActionTabs] = React.useState<ActionTab[]>([])
 
   // Retrieves the index of the active tab. For uniformity, the "init" tab is
@@ -32,7 +35,7 @@ const BuilderTab = () => {
   // when updating a previous one. Indices before this one refer to validated
   // action forms.
   const validBeforeIndex = React.useMemo(() => {
-    if (!initSchema.safeParse(initTab).success) {
+    if (initTab === null || !initSchema.safeParse(initTab).success) {
       return -1
     }
     let i = 0
@@ -54,6 +57,20 @@ const BuilderTab = () => {
     [actionTabs, setActionTabs]
   )
 
+  const saveWorkflow = React.useCallback(() => {
+    if (!initTab) {
+      throw new Error("Attempted to save invalid `InitSchema`.")
+    }
+    store.actions.saveWorkflow({
+      init: initTab,
+      actions: actionTabs
+        .map((t) => t.form)
+        .filter((f): f is ActionForm => Boolean(f)),
+    })
+    setInitTab(null)
+    setActionTabs([])
+  }, [store.actions, initTab, actionTabs])
+
   return (
     <Tabs
       className="flex flex-col h-full gap-4"
@@ -74,7 +91,7 @@ const BuilderTab = () => {
         forceMount
         hidden={tabActive !== "init"}
       >
-        <InitTabPanel onValidInput={setInitTab} />
+        <InitTabPanel onChange={setInitTab} />
       </TabsContent>
       {actionTabs.map((tab, index) => (
         <TabsContent
@@ -112,6 +129,7 @@ const BuilderTab = () => {
           variant="secondary"
           className="ml-auto"
           disabled={validBeforeIndex < actionTabs.length}
+          onClick={saveWorkflow}
         >
           Save Workflow
         </Button>
