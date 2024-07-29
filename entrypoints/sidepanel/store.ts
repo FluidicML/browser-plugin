@@ -2,6 +2,7 @@ import React from "react"
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 import { immer } from "zustand/middleware/immer"
+import { v4 as uuidv4 } from "uuid"
 
 import type { Workflow } from "@/utils/workflow"
 
@@ -9,24 +10,27 @@ export type SharedState = {
   library: Workflow[]
   actions: {
     saveWorkflow: (workflow: Workflow) => void
-    removeWorkflow: (index: number) => void
+    removeWorkflow: (uuid: string) => void
   }
 }
 
 export const useSharedStore = create<SharedState>()(
   persist(
-    immer((set, _get, _api) => ({
+    immer((set, get, _api) => ({
       library: [],
       actions: {
-        saveWorkflow: (workflow: Workflow) => {
+        saveWorkflow: (workflow: Omit<Workflow, "uuid">) => {
           set((s) => {
-            s.library.unshift(workflow)
+            s.library.unshift({ ...workflow, uuid: uuidv4() })
           })
         },
-        removeWorkflow: (index: number) => {
-          set((s) => {
-            s.library.splice(index, 1)
-          })
+        removeWorkflow: (uuid: string) => {
+          const index = get().library.findIndex((w) => w.uuid === uuid)
+          if (index !== -1) {
+            set((s) => {
+              s.library.splice(index, 1)
+            })
+          }
         },
       },
     })),

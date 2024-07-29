@@ -106,6 +106,7 @@ export const actionFormSafeParse = (form: ActionForm) => {
 
 // Representation of the entire workflow end-to-end.
 export type Workflow = {
+  uuid: string
   init: InitSchema
   actions: ActionForm[]
 }
