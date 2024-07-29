@@ -9,6 +9,7 @@ export type SharedState = {
   library: Workflow[]
   actions: {
     saveWorkflow: (workflow: Workflow) => void
+    removeWorkflow: (index: number) => void
   }
 }
 
@@ -20,6 +21,11 @@ export const useSharedStore = create<SharedState>()(
         saveWorkflow: (workflow: Workflow) => {
           set((s) => {
             s.library.unshift(workflow)
+          })
+        },
+        removeWorkflow: (index: number) => {
+          set((s) => {
+            s.library.splice(index, 1)
           })
         },
       },

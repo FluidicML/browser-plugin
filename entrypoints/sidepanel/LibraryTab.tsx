@@ -14,7 +14,14 @@ import {
 import { useSharedStore } from "./store"
 import type { Workflow } from "@/utils/workflow"
 
-const WorkflowCard = (workflow: Workflow) => {
+type WorkflowCardProps = {
+  workflow: Workflow
+  index: number
+}
+
+const WorkflowCard = ({ workflow, index }: WorkflowCardProps) => {
+  const store = useSharedStore()
+
   return (
     <Card className="p-4">
       <CardTitle className="pb-2">{workflow.init.workflowName}</CardTitle>
@@ -25,16 +32,22 @@ const WorkflowCard = (workflow: Workflow) => {
         </a>
         .
       </CardDescription>
-      <CardContent className="flex flex-col pt-4 relative">
+      <CardContent className="min-h-16 flex flex-col justify-end pt-4 relative">
         <div className="flex items-center gap-1">
           <LightningIcon className="w-4 h-4 fill-black dark:fill-white" />
           {workflow.actions.length} Actions
         </div>
         <div className="flex gap-2 absolute right-0 bottom-0">
-          <Button size="icon" className="group hover:bg-destructive/90">
+          <Button
+            size="xs"
+            className="group hover:bg-destructive/90"
+            onClick={() => {
+              store.actions.removeWorkflow(index)
+            }}
+          >
             <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
           </Button>
-          <Button size="icon" className="group hover:bg-emerald-600/90">
+          <Button size="xs" className="group hover:bg-emerald-600/90">
             <PlayCircleIcon className="w-5 h-5 fill-white dark:fill-black group-hover:fill-white" />
           </Button>
         </div>
@@ -56,10 +69,14 @@ const LibraryTab = () => {
   }
 
   return (
-    <div className="flex flex-col p-4">
-      {store.library.map((w: Workflow, i: number) => (
+    <div className="flex flex-col p-4 gap-4">
+      {store.library.map((w, i) => (
         // TODO: Not a great key. Make more unique.
-        <WorkflowCard key={`${w.init.workflowName}-${i}`} {...w} />
+        <WorkflowCard
+          key={`${w.init.workflowName}-${i}`}
+          workflow={w}
+          index={i}
+        />
       ))}
     </div>
   )

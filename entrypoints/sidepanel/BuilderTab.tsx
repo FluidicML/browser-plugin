@@ -16,6 +16,9 @@ import ActionTabPanel, { type ActionTab } from "./builder_tab/ActionTabPanel"
 const BuilderTab = () => {
   const store = useSharedStore()
 
+  // Used to re-render form on save.
+  const [rootKey, setRootKey] = React.useState(0)
+
   const [tabActive, setTabActive] = React.useState("init")
   const [initTab, setInitTab] = React.useState<InitSchema | null>(null)
   const [actionTabs, setActionTabs] = React.useState<ActionTab[]>([])
@@ -69,10 +72,12 @@ const BuilderTab = () => {
     })
     setInitTab(null)
     setActionTabs([])
+    setRootKey((id) => id + 1)
   }, [store.actions, initTab, actionTabs])
 
   return (
     <Tabs
+      key={`${rootKey}`}
       className="flex flex-col h-full gap-4"
       value={tabActive}
       onValueChange={setTabActive}
