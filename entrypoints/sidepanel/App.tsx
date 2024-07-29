@@ -2,12 +2,13 @@ import React from "react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+import { type TabValue, useSharedStore } from "./store"
 import BuilderTab from "./BuilderTab"
 import LibraryTab from "./LibraryTab"
 import RunnerTab from "./RunnerTab"
 
 function App() {
-  const [tabValue, setTabValue] = React.useState("builder")
+  const store = useSharedStore()
 
   React.useEffect(() => {
     document.documentElement.classList.add("dark")
@@ -16,8 +17,8 @@ function App() {
   return (
     <Tabs
       className="flex flex-col h-screen"
-      value={tabValue}
-      onValueChange={setTabValue}
+      value={store.activeTab}
+      onValueChange={(value) => store.actions.setActiveTab(value as TabValue)}
     >
       <TabsList className="grid grid-cols-3">
         <TabsTrigger value="builder">Builder</TabsTrigger>
@@ -28,7 +29,7 @@ function App() {
         className="overflow-y-auto h-full"
         value="builder"
         forceMount
-        hidden={tabValue !== "builder"}
+        hidden={store.activeTab !== "builder"}
       >
         <BuilderTab />
       </TabsContent>
@@ -36,7 +37,7 @@ function App() {
         className="overflow-y-auto"
         value="library"
         forceMount
-        hidden={tabValue !== "library"}
+        hidden={store.activeTab !== "library"}
       >
         <LibraryTab />
       </TabsContent>
@@ -44,7 +45,7 @@ function App() {
         className="overflow-y-auto"
         value="runner"
         forceMount
-        hidden={tabValue !== "runner"}
+        hidden={store.activeTab !== "runner"}
       >
         <RunnerTab />
       </TabsContent>

@@ -14,7 +14,8 @@ import {
 import { useSharedStore } from "./store"
 import type { Workflow } from "@/utils/workflow"
 
-const WorkflowCard = ({ uuid, init, actions }: Workflow) => {
+const WorkflowCard = (workflow: Workflow) => {
+  const { uuid, init, actions } = workflow
   const store = useSharedStore()
 
   return (
@@ -41,11 +42,15 @@ const WorkflowCard = ({ uuid, init, actions }: Workflow) => {
           <Button
             size="xs"
             className="group hover:bg-destructive/90"
-            onClick={() => store.actions.removeWorkflow(uuid)}
+            onClick={() => store.actions.removeWorkflow(workflow)}
           >
             <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
           </Button>
-          <Button size="xs" className="group hover:bg-emerald-600/90">
+          <Button
+            size="xs"
+            className="group hover:bg-emerald-600/90"
+            onClick={() => store.actions.startWorkflow(workflow)}
+          >
             <PlayCircleIcon className="w-5 h-5 fill-white dark:fill-black group-hover:fill-white" />
           </Button>
         </div>
