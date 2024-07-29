@@ -1,90 +1,32 @@
 import React from "react"
 
 import FolderIcon from "@/components/icons/Folder"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { useSharedStore } from "./store"
 
-type StepDescriptionProps = {
-  action: ActionForm
-  isRunning?: boolean
-}
+import StepCard from "./runner_tab/StepCard"
 
-const StepDescription = ({ action, isRunning }: StepDescriptionProps) => {
-  const getDescription = () => {
-    const kind = action.kind
+const runStep = async (browserTab: number, action: ActionForm) => {
+  const kind = action.kind
 
-    switch (kind) {
-      case ActionKind.CAPTURE: {
-        return (
-          <span>
-            {isRunning ? "Replaying capture..." : "Replayed capture."}
-          </span>
-        )
-      }
-      case ActionKind.NAVIGATE: {
-        const Link = () => (
-          <span className="underline">{action.values.url}</span>
-        )
-        if (isRunning) {
-          return (
-            <span>
-              Navigating to <Link />
-              ...
-            </span>
-          )
-        } else {
-          return (
-            <span>
-              Navigated to <Link />.
-            </span>
-          )
-        }
-      }
-      case ActionKind.PROMPT: {
-        return (
-          <span>
-            {isRunning
-              ? "Sending request to OpenAI..."
-              : "Sent request to OpenAI."}
-          </span>
-        )
-      }
-      default: {
-        const _exhaustivenessCheck: never = kind
-        break
-      }
+  switch (kind) {
+    case ActionKind.CAPTURE: {
+      break
+    }
+    case ActionKind.NAVIGATE: {
+      await browser.tabs.update(browserTab, {
+        url: action.values.url,
+      })
+      break
+    }
+    case ActionKind.PROMPT: {
+      break
+    }
+    default: {
+      const _exhaustivenessCheck: never = kind
+      break
     }
   }
-
-  return <CardDescription>{getDescription()}</CardDescription>
-}
-
-type StepContentProps = {
-  action: ActionForm
-}
-
-const StepContent = ({ action }: StepContentProps) => {
-  return <CardContent />
-}
-
-type StepCardProps = {
-  title: string
-  action: ActionForm
-}
-
-const StepCard = ({ title, action }: StepCardProps) => {
-  return (
-    <Card>
-      <CardTitle>{title}</CardTitle>
-      <StepDescription action={action} />
-      <StepContent action={action} />
-    </Card>
-  )
 }
 
 type Running = {
@@ -117,34 +59,6 @@ const RunnerTab = () => {
     })
   }, [store.triggered, setRunning])
 
-  const runStep = React.useCallback(async () => {
-    if (running === null) {
-      return
-    }
-
-    const action = running.workflow.actions[running.actionIndex]
-    const kind = action.kind
-
-    switch (kind) {
-      case ActionKind.CAPTURE: {
-        break
-      }
-      case ActionKind.NAVIGATE: {
-        await browser.tabs.update(running.browserTab, {
-          url: action.values.url,
-        })
-        break
-      }
-      case ActionKind.PROMPT: {
-        break
-      }
-      default: {
-        const _exhaustivenessCheck: never = kind
-        break
-      }
-    }
-  }, [running])
-
   React.useEffect(() => {
     if (
       running === null ||
@@ -152,7 +66,11 @@ const RunnerTab = () => {
     ) {
       return
     }
-    runStep().then(() =>
+
+    runStep(
+      running.browserTab,
+      running.workflow.actions[running.actionIndex]
+    ).then(() =>
       setRunning({ ...running, actionIndex: running.actionIndex + 1 })
     )
   }, [running])
@@ -180,18 +98,18 @@ const RunnerTab = () => {
           <span className="underline">{running.workflow.init.url}</span>.
         </CardDescription>
       </Card>
-      {[...Array(running.actionIndex).keys()].map((index: number) => (
-        <StepCard
-          action={running.workflow.actions[index]}
-          title={`Step ${index + 1} / ${running.workflow.actions.length}`}
-        />
-      ))}
-      {running.actionIndex < running.workflow.actions.length ? (
-        <StepCard
-          action={running.workflow.actions[running.actionIndex]}
-          title={`Step ${running.actionIndex + 1} / ${running.workflow.actions.length}`}
-        />
-      ) : null}
+      {[...Array(running.actionIndex + 1).keys()].map((index: number) => {
+        if (index === running.workflow.actions.length) {
+          return null
+        }
+        return (
+          <StepCard
+            action={running.workflow.actions[index]}
+            title={`Step ${index + 1} / ${running.workflow.actions.length}`}
+            isRunning={index === running.actionIndex}
+          />
+        )
+      })}
     </div>
   )
 }
