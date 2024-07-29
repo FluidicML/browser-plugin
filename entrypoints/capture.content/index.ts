@@ -1,3 +1,5 @@
+import "./style.css"
+
 import type { ContentScriptContext } from "wxt/client"
 
 // This content script is responsible for capturing different user actions like
@@ -6,10 +8,47 @@ import type { ContentScriptContext } from "wxt/client"
 export default defineContentScript({
   matches: ["*://*/*"],
 
-  main(context: ContentScriptContext) {
+  main(_context: ContentScriptContext) {
+    let hoverEl: HTMLElement | null = null
+
+    const unhighlightHover = () => {
+      if (hoverEl === null) {
+        return
+      }
+      delete hoverEl.dataset.fluidic_outline
+      hoverEl = null
+    }
+
+    const highlightHover = (ev: MouseEvent) => {
+      if (!(ev.target instanceof HTMLElement)) {
+        return
+      }
+      if (hoverEl !== ev.target) {
+        unhighlightHover()
+      }
+      ev.target.dataset.fluidic_outline = ""
+      console.log(ev.target)
+      hoverEl = ev.target
+    }
+
     browser.runtime.onMessage.addListener(async (message) => {
-      console.log("Content script recieved message:", message)
-      return Math.random()
+      if (typeof message !== "object" || message?.event === undefined) {
+        return
+      }
+      switch (message.event) {
+        case "start-capture": {
+          document.addEventListener("mouseover", highlightHover)
+          break
+        }
+        case "stop-capture": {
+          unhighlightHover()
+          document.removeEventListener("mouseover", highlightHover)
+          break
+        }
+        default: {
+          break
+        }
+      }
     })
   },
 })
