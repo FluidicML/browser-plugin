@@ -9,11 +9,18 @@ import type { Workflow } from "@/utils/workflow"
 export type TabValue = "builder" | "library" | "runner"
 
 export type SharedState = {
+  // Which tab of the sidepanel is selected.
   activeTab: TabValue
+  // Indicates we are actively recording actions.
+  isCapturing: boolean
+  // A collection of locally saved workflows.
   library: Workflow[]
+  // The workflow being run.
   triggered: Workflow | null
+
   actions: {
     setActiveTab: (tab: TabValue) => void
+    setIsCapturing: (isCapturing: boolean) => void
     saveWorkflow: (workflow: Omit<Workflow, "uuid">) => void
     removeWorkflow: (workflow: Workflow) => void
     triggerWorkflow: (workflow: Workflow) => void
@@ -25,17 +32,25 @@ export const useSharedStore = create<SharedState>()(
     immer((set, get, _api) => ({
       activeTab: "builder",
       library: [],
+      isCapturing: false,
       triggered: null,
+
       actions: {
         setActiveTab: (tab) => {
           set({ activeTab: tab })
         },
+
+        setIsCapturing: (isCapturing: boolean) => {
+          set({ isCapturing })
+        },
+
         saveWorkflow: (workflow) => {
           set((s) => {
             s.activeTab = "library"
             s.library.unshift({ ...workflow, uuid: uuidv4() })
           })
         },
+
         removeWorkflow: (workflow) => {
           const index = get().library.findIndex((w) => w.uuid === workflow.uuid)
           if (index === -1) {
@@ -48,6 +63,7 @@ export const useSharedStore = create<SharedState>()(
             }
           })
         },
+
         triggerWorkflow: (workflow) => {
           set({ activeTab: "runner", triggered: workflow })
         },

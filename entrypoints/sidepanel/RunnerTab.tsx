@@ -44,14 +44,14 @@ const RunnerTab = () => {
 
   const [running, setRunning] = React.useState<Running | null>(null)
 
+  // Changes to our triggered workflow indicate either starting a workflow or
+  // potentially deleting an active one.
   React.useEffect(() => {
     const triggered = store.triggered
-
     if (triggered === null) {
       setRunning(null)
       return
     }
-
     browser.tabs.create({ url: triggered.init.url }).then((tab) => {
       setRunning({
         workflow: triggered,
@@ -61,6 +61,8 @@ const RunnerTab = () => {
     })
   }, [store.triggered, setRunning])
 
+  // Process each step of the workflow. On completion, trigger an update to
+  // reinvoke this same effect.
   React.useEffect(() => {
     if (
       running === null ||
@@ -68,7 +70,6 @@ const RunnerTab = () => {
     ) {
       return
     }
-
     runStep(
       running.browserTab,
       running.workflow.actions[running.actionIndex]

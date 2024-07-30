@@ -4,6 +4,12 @@ import { useForm } from "react-hook-form"
 
 import type { ActionCaptureSchema, ActionForm } from "@/utils/workflow"
 import { ActionKind, actionCaptureSchema } from "@/utils/workflow"
+import {
+  MessageEvent,
+  addMessageListener,
+  broadcastTabs,
+} from "@/utils/messages"
+import { serializeLocator } from "@/utils/locator"
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
 import { Button } from "@/components/ui/button"
@@ -14,7 +20,9 @@ type ActionCaptureFormProps = {
 }
 
 const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
+  // TODO: Stick to using the store capturing state.
   const [isCapturing, setIsCapturing] = React.useState(false)
+  const [captureList, setCaptureList] = React.useState<Locator[]>([])
 
   const form = useForm<ActionCaptureSchema>({
     resolver: zodResolver(actionCaptureSchema),
@@ -31,6 +39,19 @@ const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
     return () => subscription.unsubscribe()
   }, [form.watch])
 
+  React.useEffect(() => {
+    const listener = addMessageListener(async (message) => {
+      const payload = message.payload
+      if (message.event === MessageEvent.CAPTURE_CLICK && payload !== null) {
+        setCaptureList((cs) => [...cs, payload])
+      }
+      if (message.event === MessageEvent.CAPTURE_QUERY) {
+        return true
+      }
+    })
+    return () => removeMessageListener(listener)
+  }, [isCapturing, setCaptureList])
+
   return (
     <Form {...form}>
       <form className="space-y-8">
@@ -42,11 +63,12 @@ const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
           type="button"
           className="w-full flex gap-2"
           onClick={() => {
-            if (isCapturing) {
-              browser.runtime.sendMessage({ event: "stop-capture" })
-            } else {
-              browser.runtime.sendMessage({ event: "start-capture" })
-            }
+            broadcastTabs({
+              event: isCapturing
+                ? MessageEvent.CAPTURE_STOP
+                : MessageEvent.CAPTURE_START,
+              payload: null,
+            })
             setIsCapturing((c) => !c)
           }}
         >
@@ -62,6 +84,11 @@ const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
             </>
           )}
         </Button>
+        <div className="flex flex-col">
+          {...captureList.map((capture) => (
+            <span>{serializeLocator(capture)}</span>
+          ))}
+        </div>
       </form>
     </Form>
   )
