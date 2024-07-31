@@ -15,10 +15,10 @@ import {
 import { Input } from "@/components/ui/input"
 
 type ActionNavigateFormProps = {
-  onValidInput: (values: ActionForm) => void
+  onChange: (values: ActionForm | null) => void
 }
 
-const ActionNavigateForm = ({ onValidInput }: ActionNavigateFormProps) => {
+const ActionNavigateForm = ({ onChange }: ActionNavigateFormProps) => {
   const form = useForm<ActionNavigateSchema>({
     resolver: zodResolver(actionNavigateSchema),
     defaultValues: { url: "" },
@@ -27,9 +27,11 @@ const ActionNavigateForm = ({ onValidInput }: ActionNavigateFormProps) => {
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       const parsed = actionNavigateSchema.safeParse(values)
-      if (parsed.success) {
-        onValidInput({ kind: ActionKind.NAVIGATE, values: parsed.data })
-      }
+      onChange(
+        parsed.success
+          ? { kind: ActionKind.NAVIGATE, values: parsed.data }
+          : null
+      )
     })
     return () => subscription.unsubscribe()
   }, [form.watch])

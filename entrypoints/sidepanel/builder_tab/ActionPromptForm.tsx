@@ -15,10 +15,10 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 
 type ActionPromptFormProps = {
-  onValidInput: (values: ActionForm) => void
+  onChange: (values: ActionForm | null) => void
 }
 
-const ActionPromptForm = ({ onValidInput }: ActionPromptFormProps) => {
+const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
   const form = useForm<ActionPromptSchema>({
     resolver: zodResolver(actionPromptSchema),
     defaultValues: { system: "", user: "" },
@@ -27,9 +27,9 @@ const ActionPromptForm = ({ onValidInput }: ActionPromptFormProps) => {
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       const parsed = actionPromptSchema.safeParse(values)
-      if (parsed.success) {
-        onValidInput({ kind: ActionKind.PROMPT, values: parsed.data })
-      }
+      onChange(
+        parsed.success ? { kind: ActionKind.PROMPT, values: parsed.data } : null
+      )
     })
     return () => subscription.unsubscribe()
   }, [form.watch])

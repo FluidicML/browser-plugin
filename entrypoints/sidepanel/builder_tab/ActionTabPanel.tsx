@@ -14,10 +14,10 @@ export type ActionTab = {
 }
 
 type ActionTabPanelProps = {
-  onValidInput: (values: ActionForm) => void
+  onChange: (values: ActionForm | null) => void
 }
 
-const ActionTabPanel = ({ onValidInput }: ActionTabPanelProps) => {
+const ActionTabPanel = ({ onChange }: ActionTabPanelProps) => {
   const [actionKindActive, setActionKindActive] = React.useState<ActionKind>(
     ActionKind.CAPTURE
   )
@@ -25,20 +25,20 @@ const ActionTabPanel = ({ onValidInput }: ActionTabPanelProps) => {
   const actionTabForm = React.useMemo(() => {
     switch (actionKindActive) {
       case ActionKind.CAPTURE: {
-        return <ActionCaptureForm onValidInput={onValidInput} />
+        return <ActionCaptureForm onChange={onChange} />
       }
       case ActionKind.NAVIGATE: {
-        return <ActionNavigateForm onValidInput={onValidInput} />
+        return <ActionNavigateForm onChange={onChange} />
       }
       case ActionKind.PROMPT: {
-        return <ActionPromptForm onValidInput={onValidInput} />
+        return <ActionPromptForm onChange={onChange} />
       }
       default: {
         const _exhaustivenessCheck: never = actionKindActive
         break
       }
     }
-  }, [actionKindActive])
+  }, [onChange, actionKindActive])
 
   return (
     <div>
@@ -48,7 +48,13 @@ const ActionTabPanel = ({ onValidInput }: ActionTabPanelProps) => {
           value: key.toLowerCase(),
           label: key.slice(0, 1) + key.slice(1).toLowerCase(),
         }))}
-        onSelect={(value) => setActionKindActive(value as ActionKind)}
+        onSelect={(value) => {
+          const kind = value as ActionKind
+          if (kind !== actionKindActive) {
+            onChange(null)
+          }
+          setActionKindActive(kind)
+        }}
       />
       <hr className="bg-muted w-1/2 h-1 my-6 mx-auto" />
       {actionTabForm}

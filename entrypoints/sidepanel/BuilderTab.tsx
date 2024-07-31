@@ -52,9 +52,9 @@ const BuilderTab = () => {
   }, [initTab, actionTabs])
 
   const updateActionTab = React.useCallback(
-    (values: ActionForm, index: number) => {
+    (values: ActionForm | null, index: number) => {
       const shallowCopy = [...actionTabs]
-      shallowCopy[index].form = values
+      shallowCopy[index].form = values ?? undefined
       setActionTabs(shallowCopy)
     },
     [actionTabs, setActionTabs]
@@ -108,7 +108,7 @@ const BuilderTab = () => {
           hidden={tabActive !== tab.key}
         >
           <ActionTabPanel
-            onValidInput={(values) => {
+            onChange={(values) => {
               updateActionTab(values, index)
               // TODO: Check which of any later tabs are valid.
             }}

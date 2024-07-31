@@ -17,10 +17,10 @@ import { Form } from "@/components/ui/form"
 import { useSharedStore } from "../store"
 
 type ActionCaptureFormProps = {
-  onValidInput: (values: ActionForm) => void
+  onChange: (values: ActionForm | null) => void
 }
 
-const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
+const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
   const store = useSharedStore()
 
   const form = useForm<ActionCaptureSchema>({
@@ -36,9 +36,11 @@ const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       const parsed = actionCaptureSchema.safeParse(values)
-      if (parsed.success) {
-        onValidInput({ kind: ActionKind.CAPTURE, values: parsed.data })
-      }
+      onChange(
+        parsed.success
+          ? { kind: ActionKind.CAPTURE, values: parsed.data }
+          : null
+      )
     })
     return () => subscription.unsubscribe()
   }, [form.watch])
