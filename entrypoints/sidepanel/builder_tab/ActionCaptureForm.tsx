@@ -16,18 +16,61 @@ import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { useSharedStore } from "../store"
 
+type CaptureContentProps = {
+  name: string
+  body: string
+}
+
+const CaptureContent = ({ name, body }: CaptureContentProps) => {
+  return (
+    <CardContent>
+      <div>
+        Element with {name}: <pre className="pt-2 text-center">{body}</pre>
+      </div>
+    </CardContent>
+  )
+}
+
 type CaptureEntryProps = {
+  index: number
   action: "click"
   locator: Locator
 }
 
-const CaptureEntry = ({ action, locator }: CaptureEntryProps) => {
+const CaptureCard = ({ index, action, locator }: CaptureEntryProps) => {
+  const step = `Step ${index + 1}`
+  const name = action.slice(0, 1).toUpperCase() + action.slice(1)
+
+  const content: CaptureContentProps = React.useMemo(() => {
+    if (locator.title) {
+      return { name: "title", body: locator.title }
+    }
+    if (locator.altText) {
+      return { name: "alt", body: locator.altText }
+    }
+    if (locator.label) {
+      return { name: "label", body: locator.label }
+    }
+    if (locator.text) {
+      let prefix = locator.text.slice(0, 60)
+      if (prefix.length < locator.text.length) {
+        prefix += "..."
+      }
+      return { name: "text", body: prefix }
+    }
+    if (locator.placeholder) {
+      return { name: "placeholder", body: locator.placeholder }
+    }
+    if (locator.testId) {
+      return { name: "test id", body: locator.testId }
+    }
+    return { name: "CSS", body: locator.css }
+  }, [locator])
+
   return (
     <Card>
-      <CardTitle>
-        {action.slice(0, 1).toUpperCase() + action.slice(1)}
-      </CardTitle>
-      <CardContent className="pt-4">TODO</CardContent>
+      <CardTitle className="pb-4">{`${step} - ${name}`}</CardTitle>
+      <CaptureContent {...content} />
     </Card>
   )
 }
@@ -116,7 +159,7 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
         </Button>
         <div className="flex flex-col gap-4 pt-2">
           {...captures.fields.map((capture, i) => (
-            <CaptureEntry key={i} {...capture} />
+            <CaptureCard key={i} index={i} {...capture} />
           ))}
         </div>
       </form>
