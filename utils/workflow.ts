@@ -23,7 +23,14 @@ export type InitSchema = z.infer<typeof initSchema>
 // for later replay.
 export const actionCaptureSchema = z
   .object({
-    locators: z.array(locatorSchema).nonempty(),
+    captures: z
+      .array(
+        z.object({
+          action: z.enum(["click"] as const),
+          locator: locatorSchema,
+        })
+      )
+      .nonempty(),
   })
   .strict()
   .required()

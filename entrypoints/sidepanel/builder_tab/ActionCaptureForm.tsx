@@ -9,12 +9,28 @@ import {
   addMessageListener,
   broadcastTabs,
 } from "@/utils/messages"
-import { serializeLocator } from "@/utils/locator"
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { useSharedStore } from "../store"
+
+type CaptureEntryProps = {
+  action: "click"
+  locator: Locator
+}
+
+const CaptureEntry = ({ action, locator }: CaptureEntryProps) => {
+  return (
+    <Card>
+      <CardTitle>
+        {action.slice(0, 1).toUpperCase() + action.slice(1)}
+      </CardTitle>
+      <CardContent className="pt-4">TODO</CardContent>
+    </Card>
+  )
+}
 
 type ActionCaptureFormProps = {
   onChange: (values: ActionForm | null) => void
@@ -30,8 +46,15 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
 
   const captures = useFieldArray({
     control: form.control,
-    name: "locators",
+    name: "captures",
   })
+
+  React.useEffect(() => {
+    return () => {
+      broadcastTabs({ event: MessageEvent.CAPTURE_STOP, payload: null })
+      store.actions.setIsCapturing(false)
+    }
+  }, [store.actions])
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
@@ -61,7 +84,7 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
 
   return (
     <Form {...form}>
-      <form className="space-y-8">
+      <form className="space-y-4">
         <p>
           Click "Start" and then interact with the browser like you normally do.
           We track each click, type, etc. automatically.
@@ -91,9 +114,9 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
             </>
           )}
         </Button>
-        <div className="flex flex-col">
-          {...captures.fields.map((capture) => (
-            <span>{serializeLocator(capture)}</span>
+        <div className="flex flex-col gap-4 pt-2">
+          {...captures.fields.map((capture, i) => (
+            <CaptureEntry key={i} {...capture} />
           ))}
         </div>
       </form>

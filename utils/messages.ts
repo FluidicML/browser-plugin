@@ -7,7 +7,11 @@ export enum MessageEvent {
   CAPTURE_STOP = "CAPTURE_STOP",
 }
 
-type BaseMessage<Event extends MessageEvent, Payload, Response> = {
+type BaseMessage<
+  Event extends MessageEvent,
+  Payload = null,
+  Response = null,
+> = {
   event: Event
   payload: Payload
   response: Response // Exists solely for typing purposes. Do not use.
@@ -15,16 +19,18 @@ type BaseMessage<Event extends MessageEvent, Payload, Response> = {
 
 type CaptureClickMessage = BaseMessage<
   MessageEvent.CAPTURE_CLICK,
-  Locator,
+  { action: "click"; locator: Locator },
   null
 >
+
 type CaptureQueryMessage = BaseMessage<
   MessageEvent.CAPTURE_QUERY,
   null,
   boolean
 >
-type CaptureStartMessage = BaseMessage<MessageEvent.CAPTURE_START, null, null>
-type CaptureStopMessage = BaseMessage<MessageEvent.CAPTURE_STOP, null, null>
+
+type CaptureStartMessage = BaseMessage<MessageEvent.CAPTURE_START>
+type CaptureStopMessage = BaseMessage<MessageEvent.CAPTURE_STOP>
 
 export type Message =
   | CaptureClickMessage

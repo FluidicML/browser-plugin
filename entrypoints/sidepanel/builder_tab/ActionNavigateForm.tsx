@@ -7,6 +7,7 @@ import { ActionKind, actionNavigateSchema } from "@/utils/workflow"
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -38,7 +39,11 @@ const ActionNavigateForm = ({ onChange }: ActionNavigateFormProps) => {
 
   return (
     <Form {...form}>
-      <form className="space-y-8">
+      <form className="space-y-4">
+        <p>
+          Navigate directly to the specified URL. Prefer capturing if you can
+          navigate by clicking on a link.
+        </p>
         <FormField
           control={form.control}
           name="url"

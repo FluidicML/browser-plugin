@@ -65,7 +65,7 @@ export default defineContentScript({
       if (target instanceof HTMLElement) {
         sendExt({
           event: MessageEvent.CAPTURE_CLICK,
-          payload: buildLocator(target),
+          payload: { action: "click", locator: buildLocator(target) },
         })
       }
     }
