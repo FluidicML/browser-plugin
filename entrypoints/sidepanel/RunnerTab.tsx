@@ -8,11 +8,52 @@ import { useSharedStore } from "./store"
 
 import StepCard from "./runner_tab/StepCard"
 
+const waitForClick = async (browserTab: number, locator: Locator) => {
+  await browser.scripting.executeScript({
+    target: { tabId: browserTab },
+    func: (locator: Locator) => {
+      // TODO: Trigger clicks.
+    },
+    args: [locator],
+  })
+}
+
+const waitForKeypress = async (
+  browserTab: number,
+  locator: Locator,
+  value: string
+) => {
+  await browser.scripting.executeScript({
+    target: { tabId: browserTab },
+    func: (locator: Locator) => {
+      // TODO: Trigger keypresses.
+    },
+    args: [locator],
+  })
+}
+
 const runStep = async (browserTab: number, action: ActionForm) => {
   const kind = action.kind
 
   switch (kind) {
     case ActionKind.CAPTURE: {
+      for (const capture of action.values.captures) {
+        const action = capture.action
+        switch (action) {
+          case "click": {
+            await waitForClick(browserTab, capture.locator)
+            break
+          }
+          case "keypress": {
+            await waitForKeypress(browserTab, capture.locator, capture.value)
+            break
+          }
+          default: {
+            const _exhaustivenessCheck: never = action
+            break
+          }
+        }
+      }
       break
     }
     case ActionKind.NAVIGATE: {

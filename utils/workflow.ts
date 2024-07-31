@@ -25,10 +25,17 @@ export const actionCaptureSchema = z
   .object({
     captures: z
       .array(
-        z.object({
-          action: z.enum(["click"] as const),
-          locator: locatorSchema,
-        })
+        z.discriminatedUnion("action", [
+          z.object({
+            action: z.literal("click"),
+            locator: locatorSchema,
+          }),
+          z.object({
+            action: z.literal("keypress"),
+            locator: locatorSchema,
+            value: z.string(),
+          }),
+        ])
       )
       .nonempty(),
   })
