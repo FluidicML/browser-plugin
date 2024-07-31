@@ -18,7 +18,7 @@ const waitForClick = async (browserTab: number, locator: Locator) => {
   })
 }
 
-const waitForKeypress = async (
+const waitForKeyup = async (
   browserTab: number,
   locator: Locator,
   value: string
@@ -26,7 +26,7 @@ const waitForKeypress = async (
   await browser.scripting.executeScript({
     target: { tabId: browserTab },
     func: (locator: Locator) => {
-      // TODO: Trigger keypresses.
+      // TODO: Trigger keyups.
     },
     args: [locator],
   })
@@ -44,8 +44,8 @@ const runStep = async (browserTab: number, action: ActionForm) => {
             await waitForClick(browserTab, capture.locator)
             break
           }
-          case "keypress": {
-            await waitForKeypress(browserTab, capture.locator, capture.value)
+          case "keyup": {
+            await waitForKeyup(browserTab, capture.locator, capture.value)
             break
           }
           default: {

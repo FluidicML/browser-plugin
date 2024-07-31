@@ -2,6 +2,7 @@ import { browser, Runtime } from "wxt/browser"
 
 export enum MessageEvent {
   CAPTURE_CLICK = "CAPTURE_CLICK",
+  CAPTURE_KEYUP = "CAPTURE_KEYUP",
   CAPTURE_QUERY = "CAPTURE_QUERY",
   CAPTURE_START = "CAPTURE_START",
   CAPTURE_STOP = "CAPTURE_STOP",
@@ -14,12 +15,18 @@ type BaseMessage<
 > = {
   event: Event
   payload: Payload
-  response: Response // Exists solely for typing purposes. Do not use.
+  response: Response // Exists solely for typing purposes.
 }
 
 type CaptureClickMessage = BaseMessage<
   MessageEvent.CAPTURE_CLICK,
   { action: "click"; locator: Locator },
+  null
+>
+
+type CaptureKeyupMessage = BaseMessage<
+  MessageEvent.CAPTURE_KEYUP,
+  { action: "keyup"; locator: Locator; value: string; replace: boolean },
   null
 >
 
@@ -34,13 +41,21 @@ type CaptureStopMessage = BaseMessage<MessageEvent.CAPTURE_STOP>
 
 export type Message =
   | CaptureClickMessage
+  | CaptureKeyupMessage
   | CaptureQueryMessage
   | CaptureStartMessage
   | CaptureStopMessage
 
+export type LiveMessage =
+  | Omit<CaptureClickMessage, "response">
+  | Omit<CaptureKeyupMessage, "response">
+  | Omit<CaptureQueryMessage, "response">
+  | Omit<CaptureStartMessage, "response">
+  | Omit<CaptureStopMessage, "response">
+
 export const sendTab = (
   tabId: number,
-  message: Omit<Message, "response">,
+  message: LiveMessage,
   options?: Runtime.SendMessageOptionsType
 ) => {
   return browser.tabs.sendMessage(tabId, message, options) as Promise<
@@ -49,7 +64,7 @@ export const sendTab = (
 }
 
 export const broadcastTabs = async (
-  message: Omit<Message, "response">,
+  message: LiveMessage,
   options?: Runtime.SendMessageOptionsType
 ) => {
   const allTabs = await browser.tabs.query({})
@@ -72,7 +87,7 @@ export const broadcastTabs = async (
 }
 
 export const sendExt = (
-  message: Omit<Message, "response">,
+  message: LiveMessage,
   options?: Runtime.SendMessageOptionsType
 ) => {
   return browser.runtime.sendMessage(message, options) as Promise<
@@ -83,7 +98,7 @@ export const sendExt = (
 // A type-safe representation of the types of messages we anticipate handling
 // within the content scripts/extension.
 type MessageListener = (
-  message: Omit<Message, "response">,
+  message: LiveMessage,
   sender?: Runtime.MessageSender,
   sendResponse?: () => void
 ) => Promise<any> | true | void

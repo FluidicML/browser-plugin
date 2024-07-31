@@ -1,4 +1,5 @@
 import React from "react"
+import pick from "lodash/pick"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useFieldArray, useForm } from "react-hook-form"
 
@@ -16,62 +17,27 @@ import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { useSharedStore } from "../store"
 
-type CaptureContentProps = {
-  name: string
-  body: string
-}
+type ClickCardContentProps = {}
 
-const CaptureContent = ({ name, body }: CaptureContentProps) => {
+const ClickCardContent = ({}: ClickCardContentProps) => {
   return (
     <CardContent>
-      <div>
-        Element with {name}: <pre className="pt-2 text-center">{body}</pre>
-      </div>
+      <div>Clicked element.</div>
     </CardContent>
   )
 }
 
-type CaptureEntryProps = {
-  index: number
-  action: "click"
-  locator: Locator
+type KeyupCardContentProps = {
+  value: string
 }
 
-const CaptureCard = ({ index, action, locator }: CaptureEntryProps) => {
-  const step = `Step ${index + 1}`
-  const name = action.slice(0, 1).toUpperCase() + action.slice(1)
-
-  const content: CaptureContentProps = React.useMemo(() => {
-    if (locator.title) {
-      return { name: "title", body: locator.title }
-    }
-    if (locator.altText) {
-      return { name: "alt", body: locator.altText }
-    }
-    if (locator.label) {
-      return { name: "label", body: locator.label }
-    }
-    if (locator.text) {
-      let prefix = locator.text.slice(0, 60)
-      if (prefix.length < locator.text.length) {
-        prefix += "..."
-      }
-      return { name: "text", body: prefix }
-    }
-    if (locator.placeholder) {
-      return { name: "placeholder", body: locator.placeholder }
-    }
-    if (locator.testId) {
-      return { name: "test id", body: locator.testId }
-    }
-    return { name: "CSS", body: locator.css }
-  }, [locator])
-
+const KeyupCardContent = ({ value }: KeyupCardContentProps) => {
   return (
-    <Card>
-      <CardTitle className="pb-4">{`${step} - ${name}`}</CardTitle>
-      <CaptureContent {...content} />
-    </Card>
+    <CardContent>
+      <div>
+        Input <pre className="pt-2 text-center">{value}</pre>
+      </div>
+    </CardContent>
   )
 }
 
@@ -115,15 +81,29 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
     const listener = addMessageListener((message) => {
       switch (message.event) {
         case MessageEvent.CAPTURE_CLICK: {
-          const payload = message.payload
-          if (payload !== null) {
-            captures.append(payload)
+          if (message.payload === null) {
+            return
           }
+          captures.append(message.payload)
+          break
+        }
+        case MessageEvent.CAPTURE_KEYUP: {
+          if (message.payload === null) {
+            return
+          }
+          const copy = pick(message.payload, ["action", "locator", "value"])
+          const last = captures.fields[captures.fields.length - 1]
+          if (message.payload.replace && last.action === "keyup") {
+            captures.update(captures.fields.length - 1, copy)
+          } else {
+            captures.append(copy)
+          }
+          break
         }
       }
     })
     return () => removeMessageListener(listener)
-  }, [captures.append])
+  }, [captures])
 
   return (
     <Form {...form}>
@@ -158,9 +138,22 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
           )}
         </Button>
         <div className="flex flex-col gap-4 pt-2">
-          {...captures.fields.map((capture, i) => (
-            <CaptureCard key={i} index={i} {...capture} />
-          ))}
+          {...captures.fields.map((capture, index) => {
+            const action = capture.action
+            const step = `Step ${index + 1}`
+            const name = action.slice(0, 1).toUpperCase() + action.slice(1)
+
+            return (
+              <Card>
+                <CardTitle className="pb-4">{`${step} - ${name}`}</CardTitle>
+                {action === "click" ? (
+                  <ClickCardContent />
+                ) : action === "keyup" ? (
+                  <KeyupCardContent value={capture.value} />
+                ) : null}
+              </Card>
+            )
+          })}
         </div>
       </form>
     </Form>

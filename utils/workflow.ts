@@ -21,21 +21,33 @@ export type InitSchema = z.infer<typeof initSchema>
 // A recording feature. Triggering a capture means to start tracking discrete
 // user events like mouse clicks or key presses. Each event is stored in a list
 // for later replay.
+
+export const actionClickSchema = z
+  .object({
+    action: z.literal("click"),
+    locator: locatorSchema,
+  })
+  .strict()
+  .required()
+
+export type ActionClickSchema = z.infer<typeof actionClickSchema>
+
+export const actionKeyupSchema = z
+  .object({
+    action: z.literal("keyup"),
+    locator: locatorSchema,
+    value: z.string(),
+  })
+  .strict()
+  .required()
+
+export type ActionKeyupSchema = z.infer<typeof actionKeyupSchema>
+
 export const actionCaptureSchema = z
   .object({
     captures: z
       .array(
-        z.discriminatedUnion("action", [
-          z.object({
-            action: z.literal("click"),
-            locator: locatorSchema,
-          }),
-          z.object({
-            action: z.literal("keypress"),
-            locator: locatorSchema,
-            value: z.string(),
-          }),
-        ])
+        z.discriminatedUnion("action", [actionClickSchema, actionKeyupSchema])
       )
       .nonempty(),
   })

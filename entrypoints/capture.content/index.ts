@@ -62,27 +62,52 @@ export default defineContentScript({
 
     const clickListener = (ev: MouseEvent) => {
       const target = document.elementFromPoint(ev.clientX, ev.clientY)
-      if (target instanceof HTMLElement) {
-        sendExt({
-          event: MessageEvent.CAPTURE_CLICK,
-          payload: { action: "click", locator: buildLocator(target) },
-        })
+      if (!(target instanceof HTMLElement)) {
+        return
       }
+      sendExt({
+        event: MessageEvent.CAPTURE_CLICK,
+        payload: { action: "click", locator: buildLocator(target) },
+      })
+    }
+
+    let lastKeyupTarget: HTMLElement | null = null
+
+    const keyupListener = (ev: KeyboardEvent) => {
+      if (!(ev.target instanceof HTMLInputElement)) {
+        return
+      }
+      sendExt({
+        event: MessageEvent.CAPTURE_KEYUP,
+        payload: {
+          action: "keyup",
+          locator: buildLocator(ev.target),
+          value:
+            ev.target instanceof HTMLInputElement ? ev.target.value : ev.key,
+          replace: lastKeyupTarget === ev.target,
+        },
+      })
+      lastKeyupTarget = ev.target
     }
 
     const captureStart = () => {
       document.addEventListener("mousemove", moveListener, true)
       document.addEventListener("scroll", scrollListener, true)
       document.addEventListener("click", clickListener, true)
+      document.addEventListener("keyup", keyupListener, true)
       outlineShow(true)
     }
 
     const captureStop = () => {
+      if (lastKeyupTarget) {
+        lastKeyupTarget = null
+      }
       if (scrollTimeoutId) {
         clearTimeout(scrollTimeoutId)
         scrollTimeoutId = null
       }
       outlineShow(false)
+      document.removeEventListener("keyup", keyupListener, true)
       document.removeEventListener("click", clickListener, true)
       document.removeEventListener("scroll", scrollListener, true)
       document.removeEventListener("mousemove", moveListener, true)
