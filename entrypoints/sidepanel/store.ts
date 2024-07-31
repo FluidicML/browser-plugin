@@ -20,7 +20,7 @@ export type SharedState = {
 
   actions: {
     setActiveTab: (tab: TabValue) => void
-    setIsCapturing: (isCapturing: boolean) => void
+    setIsCapturing: (arg: boolean | ((state: boolean) => boolean)) => void
     saveWorkflow: (workflow: Omit<Workflow, "uuid">) => void
     removeWorkflow: (workflow: Workflow) => void
     triggerWorkflow: (workflow: Workflow) => void
@@ -40,8 +40,12 @@ export const useSharedStore = create<SharedState>()(
           set({ activeTab: tab })
         },
 
-        setIsCapturing: (isCapturing: boolean) => {
-          set({ isCapturing })
+        setIsCapturing: (arg: boolean | ((state: boolean) => boolean)) => {
+          if (typeof arg === "boolean") {
+            set({ isCapturing: arg })
+          } else {
+            set({ isCapturing: arg(get().isCapturing) })
+          }
         },
 
         saveWorkflow: (workflow) => {

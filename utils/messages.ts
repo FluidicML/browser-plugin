@@ -82,6 +82,13 @@ type MessageListener = (
   sendResponse?: () => void
 ) => Promise<any> | true | void
 
+// If passing an async function, the listener will return a Promise for every
+// message it receives, preventing other listeners from responding. If the
+// listener should only respond to messages of a certain type, define the
+// listener as a non-async function and return a Promise only for the messages
+// the listener is meant to respond to. Otherwise return false or undefined.
+// Refer to the following for details:
+// https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage
 export const addMessageListener = (listener: MessageListener) => {
   const wrapper: MessageListener = (message, sender, sendResponse) => {
     if (

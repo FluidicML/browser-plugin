@@ -4,7 +4,4 @@ export default defineBackground(() => {
   browser.sidePanel
     .setPanelBehavior({ openPanelOnActionClick: true })
     .catch((e: any) => console.error("FLUIDIC", e))
-
-  // TODO: Check if the sidepanel is open. If not, we should handle the capture
-  // query request.
 })

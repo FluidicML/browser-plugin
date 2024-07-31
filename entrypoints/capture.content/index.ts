@@ -18,7 +18,7 @@ const forceStyle = (el: HTMLElement, key: string, value: string | null) => {
 export default defineContentScript({
   matches: ["*://*/*"],
 
-  main: async (_context: ContentScriptContext) => {
+  main(_context: ContentScriptContext) {
     const outline = document.createElement("div")
     outline.id = "fluidic-outline"
     document.body.appendChild(outline)
@@ -88,7 +88,7 @@ export default defineContentScript({
       document.removeEventListener("mousemove", moveListener, true)
     }
 
-    addMessageListener(async (message) => {
+    addMessageListener((message) => {
       switch (message.event) {
         case MessageEvent.CAPTURE_START: {
           captureStart()
@@ -103,18 +103,18 @@ export default defineContentScript({
 
     // On a new page load, the content script is injected again. Check what
     // state we're in.
-    // TODO: We should cleanup if necessary when going back in history.
-    captureStop()
     try {
-      const isCapturing = await sendExt({
+      sendExt({
         event: MessageEvent.CAPTURE_QUERY,
         payload: null,
+      }).then((isCapturing) => {
+        if (isCapturing) {
+          captureStart()
+        }
       })
-      if (isCapturing) {
-        captureStart()
-      }
-    } catch (e) {
-      console.log(e)
+    } catch (err) {
+      // A communication error indicates the sidepanel isn't open; assume we
+      // aren't capturing when this happens.
     }
   },
 })

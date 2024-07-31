@@ -14,14 +14,14 @@ import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
+import { useSharedStore } from "../store"
 
 type ActionCaptureFormProps = {
   onValidInput: (values: ActionForm) => void
 }
 
 const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
-  // TODO: Stick to using the store capturing state.
-  const [isCapturing, setIsCapturing] = React.useState(false)
+  const store = useSharedStore()
   const [captureList, setCaptureList] = React.useState<Locator[]>([])
 
   const form = useForm<ActionCaptureSchema>({
@@ -40,17 +40,18 @@ const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
   }, [form.watch])
 
   React.useEffect(() => {
-    const listener = addMessageListener(async (message) => {
-      const payload = message.payload
-      if (message.event === MessageEvent.CAPTURE_CLICK && payload !== null) {
-        setCaptureList((cs) => [...cs, payload])
-      }
-      if (message.event === MessageEvent.CAPTURE_QUERY) {
-        return true
+    const listener = addMessageListener((message) => {
+      switch (message.event) {
+        case MessageEvent.CAPTURE_CLICK: {
+          const payload = message.payload
+          if (payload !== null) {
+            setCaptureList((cs) => [...cs, payload])
+          }
+        }
       }
     })
     return () => removeMessageListener(listener)
-  }, [isCapturing, setCaptureList])
+  }, [store.isCapturing, setCaptureList])
 
   return (
     <Form {...form}>
@@ -64,15 +65,15 @@ const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
           className="w-full flex gap-2"
           onClick={() => {
             broadcastTabs({
-              event: isCapturing
+              event: store.isCapturing
                 ? MessageEvent.CAPTURE_STOP
                 : MessageEvent.CAPTURE_START,
               payload: null,
             })
-            setIsCapturing((c) => !c)
+            store.actions.setIsCapturing((c) => !c)
           }}
         >
-          {isCapturing ? (
+          {store.isCapturing ? (
             <>
               <StopIcon className="w-6 h-6" />
               <span>Stop</span>
