@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { locatorSchema } from "@/utils/locator"
+
 // The initial tab shown when building the workflow. Contains basic details
 // all workflows must have.
 export const initSchema = z
@@ -19,7 +21,12 @@ export type InitSchema = z.infer<typeof initSchema>
 // A recording feature. Triggering a capture means to start tracking discrete
 // user events like mouse clicks or key presses. Each event is stored in a list
 // for later replay.
-export const actionCaptureSchema = z.object({}).strict().required()
+export const actionCaptureSchema = z
+  .object({
+    locators: z.array(locatorSchema).nonempty(),
+  })
+  .strict()
+  .required()
 
 export type ActionCaptureSchema = z.infer<typeof actionCaptureSchema>
 

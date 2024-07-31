@@ -1,6 +1,6 @@
 import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useFieldArray, useForm } from "react-hook-form"
 
 import type { ActionCaptureSchema, ActionForm } from "@/utils/workflow"
 import { ActionKind, actionCaptureSchema } from "@/utils/workflow"
@@ -22,11 +22,15 @@ type ActionCaptureFormProps = {
 
 const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
   const store = useSharedStore()
-  const [captureList, setCaptureList] = React.useState<Locator[]>([])
 
   const form = useForm<ActionCaptureSchema>({
     resolver: zodResolver(actionCaptureSchema),
     defaultValues: {},
+  })
+
+  const captures = useFieldArray({
+    control: form.control,
+    name: "locators",
   })
 
   React.useEffect(() => {
@@ -45,13 +49,13 @@ const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
         case MessageEvent.CAPTURE_CLICK: {
           const payload = message.payload
           if (payload !== null) {
-            setCaptureList((cs) => [...cs, payload])
+            captures.append(payload)
           }
         }
       }
     })
     return () => removeMessageListener(listener)
-  }, [store.isCapturing, setCaptureList])
+  }, [captures.append])
 
   return (
     <Form {...form}>
@@ -86,7 +90,7 @@ const ActionCaptureForm = ({ onValidInput }: ActionCaptureFormProps) => {
           )}
         </Button>
         <div className="flex flex-col">
-          {...captureList.map((capture) => (
+          {...captures.fields.map((capture) => (
             <span>{serializeLocator(capture)}</span>
           ))}
         </div>

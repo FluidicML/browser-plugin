@@ -2,19 +2,23 @@
 // is to have a more semantically rich means of identifying elements on a page.
 // As a fallback, we can defer to a more rigid CSS selector.
 
-export type Locator = {
-  role?: string
-  title?: string
-  label?: string
-  placeholder?: string
-  altText?: string
-  testId?: string
-  text?: string
-  css?: string
-}
+import { z } from "zod"
+
+export const locatorSchema = z.object({
+  role: z.string().optional(),
+  title: z.string().optional(),
+  label: z.string().optional(),
+  placeholder: z.string().optional(),
+  altText: z.string().optional(),
+  testId: z.string().optional(),
+  text: z.string().optional(),
+  css: z.string(),
+})
+
+export type Locator = z.infer<typeof locatorSchema>
 
 export const buildLocator = (el: HTMLElement): Locator => {
-  const locator: Locator = {
+  return {
     role: undefined,
     title: el.getAttribute("title") ?? undefined,
     label:
@@ -25,13 +29,8 @@ export const buildLocator = (el: HTMLElement): Locator => {
     altText: el.getAttribute("alt") ?? undefined,
     testId: el.getAttribute("data-testid") ?? undefined,
     text: el.innerText || undefined,
+    css: "",
   }
-
-  if (Object.values(locator).filter(Boolean).length === 0) {
-    return { css: "" }
-  }
-
-  return locator
 }
 
 export const serializeLocator = (locator: Locator): string => {

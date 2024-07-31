@@ -101,17 +101,16 @@ export default defineContentScript({
       }
     })
 
-    // On a new page load, the content script is injected again. Check what
+    // On a new page load the content script is injected again. Check what
     // state we're in.
     try {
-      sendExt({
-        event: MessageEvent.CAPTURE_QUERY,
-        payload: null,
-      }).then((isCapturing) => {
-        if (isCapturing) {
-          captureStart()
+      sendExt({ event: MessageEvent.CAPTURE_QUERY, payload: null }).then(
+        (isCapturing) => {
+          if (isCapturing) {
+            captureStart()
+          }
         }
-      })
+      )
     } catch (err) {
       // A communication error indicates the sidepanel isn't open; assume we
       // aren't capturing when this happens.
