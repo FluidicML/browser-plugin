@@ -84,9 +84,15 @@ const BuilderTab = () => {
       onValueChange={setTabActive}
     >
       <TabsList className="flex flex-wrap justify-start mt-2 mx-4">
-        <TabsTrigger value="init">Start</TabsTrigger>
+        <TabsTrigger value="init" disabled={store.isCapturing}>
+          Start
+        </TabsTrigger>
         {actionTabs.map((tab) => (
-          <TabsTrigger key={tab.key} value={tab.key}>
+          <TabsTrigger
+            key={tab.key}
+            value={tab.key}
+            disabled={store.isCapturing}
+          >
             {tab.label}
           </TabsTrigger>
         ))}
