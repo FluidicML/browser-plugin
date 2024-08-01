@@ -67,7 +67,7 @@ export default defineContentScript({
       }
       sendExt({
         event: MessageEvent.EXTRACTING_CLICK,
-        payload: buildSelector(target),
+        payload: getSelector(target),
       })
     }
 

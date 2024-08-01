@@ -5,6 +5,7 @@
 import { z } from "zod"
 
 export const locatorSchema = z.object({
+  tag: z.string(),
   role: z.string().optional(),
   title: z.string().optional(),
   label: z.string().optional(),
@@ -21,7 +22,24 @@ export const selectorSchema = locatorSchema.or(z.string())
 
 export type Selector = z.infer<typeof selectorSchema>
 
-const buildRole = (el: HTMLElement) => {
+const getTag = (el: HTMLElement) => {
+  return el.tagName
+}
+
+const TEXTBOX_INPUT_TYPES = [
+  null,
+  "date",
+  "datetime-local",
+  "email",
+  "month",
+  "number",
+  "password",
+  "tel",
+  "text",
+  "time",
+]
+
+const getRole = (el: HTMLElement) => {
   const roleAttr = el.getAttribute("role")
   if (roleAttr) {
     return roleAttr
@@ -31,32 +49,25 @@ const buildRole = (el: HTMLElement) => {
     return "button"
   }
 
-  if (el instanceof HTMLInputElement) {
-    const inputType = el.getAttribute("type")
-    if (
-      [
-        null,
-        "date",
-        "datetime-local",
-        "email",
-        "month",
-        "number",
-        "password",
-        "tel",
-        "text",
-        "time",
-      ].includes(inputType)
-    ) {
-      return "textbox"
-    }
+  if (el instanceof HTMLTextAreaElement) {
+    return "textbox"
   }
+
+  if (
+    el instanceof HTMLInputElement &&
+    TEXTBOX_INPUT_TYPES.includes(el.getAttribute("type"))
+  ) {
+    return "textbox"
+  }
+
+  return undefined
 }
 
-const buildTitle = (el: HTMLElement) => {
+const getTitle = (el: HTMLElement) => {
   return el.getAttribute("title") ?? undefined
 }
 
-const buildLabel = (el: HTMLElement) => {
+const getLabel = (el: HTMLElement) => {
   return (
     el.getAttribute("aria-label") ??
     el.getAttribute("aria-labelledby") ??
@@ -64,19 +75,19 @@ const buildLabel = (el: HTMLElement) => {
   )
 }
 
-const buildPlaceholder = (el: HTMLElement) => {
+const getPlaceholder = (el: HTMLElement) => {
   return el.getAttribute("placeholder") ?? undefined
 }
 
-const buildAltText = (el: HTMLElement) => {
+const getAltText = (el: HTMLElement) => {
   return el.getAttribute("alt") ?? undefined
 }
 
-const buildTestId = (el: HTMLElement) => {
+const getTestId = (el: HTMLElement) => {
   return el.getAttribute("data-testid") ?? undefined
 }
 
-const buildText = (el: HTMLElement) => {
+const getText = (el: HTMLElement) => {
   return el.innerText || undefined
 }
 
@@ -89,7 +100,7 @@ const relativeSelectorOf = (el: HTMLElement) => {
   }
 
   if (!el.parentElement) {
-    return el.nodeName
+    return el.tagName
   }
 
   // With the advent of utility and generated classes, the class list isn't a
@@ -99,7 +110,7 @@ const relativeSelectorOf = (el: HTMLElement) => {
   let suffix = ""
   for (const cls of el.classList) {
     suffix += `.${cls}`
-    const selector = `${el.nodeName}${suffix}`
+    const selector = `${el.tagName}${suffix}`
     if (el.parentElement.querySelectorAll(selector).length === 1) {
       return selector
     }
@@ -108,20 +119,20 @@ const relativeSelectorOf = (el: HTMLElement) => {
   // As a fallback, just find the child's position in its parent.
   let index = 0
   for (const child of el.parentElement.children) {
-    if (child.nodeName === el.nodeName) {
+    if (child.tagName === el.tagName) {
       index += 1
     }
     if (child === el) {
       break
     }
   }
-  return `${el.nodeName}:nth-of-type(${index})`
+  return `${el.tagName}:nth-of-type(${index})`
 }
 
 // Build a series of selectors, starting from our specified element and working
 // our way up to each subsequent parent node. Stop as soon as we finished
 // building a nonambiguous selector.
-const buildCSS = (el: HTMLElement) => {
+const getCSS = (el: HTMLElement) => {
   const selectors = []
 
   while (el) {
@@ -138,20 +149,151 @@ const buildCSS = (el: HTMLElement) => {
   return ""
 }
 
-export const buildSelector = (el: HTMLElement): Selector => {
+export const getSelector = (el: HTMLElement): Selector => {
   const locator: Locator = {
-    role: buildRole(el),
-    title: buildTitle(el),
-    label: buildLabel(el),
-    placeholder: buildPlaceholder(el),
-    altText: buildAltText(el),
-    testId: buildTestId(el),
-    text: buildText(el),
+    tag: getTag(el),
+    role: getRole(el),
+    title: getTitle(el),
+    label: getLabel(el),
+    placeholder: getPlaceholder(el),
+    altText: getAltText(el),
+    testId: getTestId(el),
+    text: getText(el),
   }
 
   if (Object.values(locator).filter(Boolean).length === 0) {
-    return buildCSS(el)
+    return getCSS(el)
   }
 
   return locator
+}
+
+// Build up a query from a locator. There is a bit of a balancing act being
+// performed at the moment. If we attempt to only return elements that match
+// all of our fields exactly, any minor change to the DOM could result in a
+// failed match that the user would expect to continue succeeding. If on the
+// other hand we are too loose, we may end up matching too many elements and
+// not being able to decide how to proceed (on e.g. replay).
+//
+// As a compromise, allow the caller to specify a prioritized list of all
+// locator fields. As soon as we are able to filter down the number of matched
+// elements to one (or, in failed cases, zero), stop processing any further.
+//
+// TODO: In practice, we probably need to make this much stricter. This fuzzy
+// approach could lead to potentially harmful edge cases on replay if we aren't
+// careful. For now, ignoring this issue.
+class QueryBuilder {
+  private matches: HTMLElement[]
+
+  constructor(tag: string) {
+    this.matches = Array.from(document.querySelectorAll(tag))
+  }
+
+  withRole(role?: string): QueryBuilder {
+    if (role === undefined || this.matches.length <= 1) {
+      return this
+    }
+
+    this.matches = this.matches.filter((m) => {
+      if (m.getAttribute("role") === role) {
+        return true
+      }
+
+      if (role === "button") {
+        return m.tagName === "button"
+      }
+
+      if (role === "textbox" && m instanceof HTMLTextAreaElement) {
+        return true
+      }
+
+      if (role === "textbox" && m instanceof HTMLInputElement) {
+        return TEXTBOX_INPUT_TYPES.includes(m.getAttribute("type"))
+      }
+
+      // Encountered either an invalid or unsupported role.
+      return false
+    })
+
+    return this
+  }
+
+  withTitle(title?: string): QueryBuilder {
+    if (title === undefined || this.matches.length <= 1) {
+      return this
+    }
+    this.matches = this.matches.filter((m) => m.getAttribute("title") === title)
+    return this
+  }
+
+  withLabel(label?: string): QueryBuilder {
+    if (label === undefined || this.matches.length <= 1) {
+      return this
+    }
+    this.matches = this.matches.filter((m) => {
+      for (const attr of ["aria-label", "aria-labelledby"]) {
+        if (m.getAttribute(attr) === label) {
+          return true
+        }
+      }
+      return false
+    })
+    return this
+  }
+
+  withPlaceholder(placeholder?: string): QueryBuilder {
+    if (placeholder === undefined || this.matches.length <= 1) {
+      return this
+    }
+    this.matches = this.matches.filter(
+      (m) => m.getAttribute("placeholder") === placeholder
+    )
+    return this
+  }
+
+  withAltText(altText?: string): QueryBuilder {
+    if (altText === undefined || this.matches.length <= 1) {
+      return this
+    }
+    this.matches = this.matches.filter((m) => m.getAttribute("alt") === altText)
+    return this
+  }
+
+  withTestId(testId?: string): QueryBuilder {
+    if (testId === undefined || this.matches.length <= 1) {
+      return this
+    }
+    this.matches = this.matches.filter(
+      (m) => m.getAttribute("data-testid") === testId
+    )
+    return this
+  }
+
+  withText(text?: string): QueryBuilder {
+    if (text === undefined || this.matches.length <= 1) {
+      return this
+    }
+    this.matches = this.matches.filter((m) => m.innerText === text)
+    return this
+  }
+
+  query(): HTMLElement[] {
+    return this.matches
+  }
+}
+
+export const findSelector = (selector: Selector): HTMLElement[] => {
+  if (typeof selector === "string") {
+    return Array.from(document.querySelectorAll(selector))
+  }
+
+  return new QueryBuilder(selector.tag)
+    .withRole(selector.role)
+    .withTitle(selector.title)
+    .withLabel(selector.label)
+    .withPlaceholder(selector.placeholder)
+    .withAltText(selector.altText)
+    .withTestId(selector.testId)
+    .withText(selector.text)
+    .query()
 }

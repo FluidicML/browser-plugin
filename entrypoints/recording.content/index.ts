@@ -63,7 +63,7 @@ export default defineContentScript({
       }
       sendExt({
         event: MessageEvent.RECORDING_CLICK,
-        payload: { action: "click", selector: buildSelector(target) },
+        payload: { action: "click", selector: getSelector(target) },
       })
     }
 
@@ -77,7 +77,7 @@ export default defineContentScript({
         event: MessageEvent.RECORDING_KEYUP,
         payload: {
           action: "keyup",
-          selector: buildSelector(ev.target),
+          selector: getSelector(ev.target),
           value:
             ev.target instanceof HTMLInputElement ? ev.target.value : ev.key,
           replace: lastKeyupTarget === ev.target,
