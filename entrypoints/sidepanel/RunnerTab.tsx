@@ -12,9 +12,14 @@ const waitForClick = async (browserTab: number, selector: Selector) => {
   await browser.scripting.executeScript({
     target: { tabId: browserTab },
     func: (selector: Selector) => {
-      // TODO: Trigger clicks.
+      window.fluidic_args = window.fluidic_args ?? {}
+      window.fluidic_args.injected_click = { selector }
     },
     args: [selector],
+  })
+  await browser.scripting.executeScript({
+    target: { tabId: browserTab },
+    files: ["injected_click.js"],
   })
 }
 
@@ -26,34 +31,49 @@ const waitForKeyup = async (
   await browser.scripting.executeScript({
     target: { tabId: browserTab },
     func: (selector: Selector) => {
-      // TODO: Trigger keyups.
+      window.fluidic_args = window.fluidic_args ?? {}
+      window.fluidic_args.injected_keyup = { selector, value }
     },
     args: [selector],
   })
+  await browser.scripting.executeScript({
+    target: { tabId: browserTab },
+    files: ["injected_keyup.js"],
+  })
+}
+
+const runRecordingStep = async (
+  browserTab: number,
+  values: ActionRecordingSchema
+) => {
+  for (const recording of values.recordings) {
+    const action = recording.action
+    switch (action) {
+      case "click": {
+        await waitForClick(browserTab, recording.selector)
+        break
+      }
+      case "keyup": {
+        await waitForKeyup(browserTab, recording.selector, recording.value)
+        break
+      }
+      default: {
+        const _exhaustivenessCheck: never = action
+        break
+      }
+    }
+  }
 }
 
 const runStep = async (browserTab: number, action: ActionForm) => {
   const kind = action.kind
 
   switch (kind) {
+    case ActionKind.EXTRACTING: {
+      break
+    }
     case ActionKind.RECORDING: {
-      for (const recording of action.values.recordings) {
-        const action = recording.action
-        switch (action) {
-          case "click": {
-            await waitForClick(browserTab, recording.selector)
-            break
-          }
-          case "keyup": {
-            await waitForKeyup(browserTab, recording.selector, recording.value)
-            break
-          }
-          default: {
-            const _exhaustivenessCheck: never = action
-            break
-          }
-        }
-      }
+      await runRecordingStep(browserTab, action.values)
       break
     }
     case ActionKind.NAVIGATE: {
