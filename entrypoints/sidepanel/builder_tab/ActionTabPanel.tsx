@@ -3,7 +3,7 @@ import React from "react"
 import { ComboBox } from "@/components/ui/combobox"
 
 import { type ActionForm, ActionKind } from "@/utils/workflow"
-import ActionCaptureForm from "./ActionCaptureForm"
+import ActionRecordingForm from "./ActionRecordingForm"
 import ActionNavigateForm from "./ActionNavigateForm"
 import ActionPromptForm from "./ActionPromptForm"
 
@@ -19,13 +19,13 @@ type ActionTabPanelProps = {
 
 const ActionTabPanel = ({ onChange }: ActionTabPanelProps) => {
   const [actionKindActive, setActionKindActive] = React.useState<ActionKind>(
-    ActionKind.CAPTURE
+    ActionKind.RECORDING
   )
 
   const actionTabForm = React.useMemo(() => {
     switch (actionKindActive) {
-      case ActionKind.CAPTURE: {
-        return <ActionCaptureForm onChange={onChange} />
+      case ActionKind.RECORDING: {
+        return <ActionRecordingForm onChange={onChange} />
       }
       case ActionKind.NAVIGATE: {
         return <ActionNavigateForm onChange={onChange} />

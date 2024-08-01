@@ -1,5 +1,6 @@
-// This content script is responsible for capturing different user actions like
-// clicks or key events. Messaging is used to toggle "capture mode" on and off.
+// This content script is responsible for recording different user actions like
+// clicks or key events. Messaging is used to toggle "recording mode" on and
+// off.
 //
 // Rely on CSS when possible to account for vendor prefixes.
 
@@ -66,7 +67,7 @@ export default defineContentScript({
         return
       }
       sendExt({
-        event: MessageEvent.CAPTURE_CLICK,
+        event: MessageEvent.RECORDING_CLICK,
         payload: { action: "click", locator: buildLocator(target) },
       })
     }
@@ -78,7 +79,7 @@ export default defineContentScript({
         return
       }
       sendExt({
-        event: MessageEvent.CAPTURE_KEYUP,
+        event: MessageEvent.RECORDING_KEYUP,
         payload: {
           action: "keyup",
           locator: buildLocator(ev.target),
@@ -90,7 +91,7 @@ export default defineContentScript({
       lastKeyupTarget = ev.target
     }
 
-    const captureStart = () => {
+    const recordingStart = () => {
       document.addEventListener("mousemove", moveListener, true)
       document.addEventListener("scroll", scrollListener, true)
       document.addEventListener("click", clickListener, true)
@@ -98,7 +99,7 @@ export default defineContentScript({
       outlineShow(true)
     }
 
-    const captureStop = () => {
+    const recordingStop = () => {
       if (lastKeyupTarget) {
         lastKeyupTarget = null
       }
@@ -115,12 +116,12 @@ export default defineContentScript({
 
     addMessageListener((message) => {
       switch (message.event) {
-        case MessageEvent.CAPTURE_START: {
-          captureStart()
+        case MessageEvent.RECORDING_START: {
+          recordingStart()
           break
         }
-        case MessageEvent.CAPTURE_STOP: {
-          captureStop()
+        case MessageEvent.RECORDING_STOP: {
+          recordingStop()
           break
         }
       }
@@ -129,16 +130,16 @@ export default defineContentScript({
     // On a new page load the content script is injected again. Check what
     // state we're in.
     try {
-      sendExt({ event: MessageEvent.CAPTURE_QUERY, payload: null }).then(
-        (isCapturing) => {
-          if (isCapturing) {
-            captureStart()
+      sendExt({ event: MessageEvent.RECORDING_QUERY, payload: null }).then(
+        (isRecording) => {
+          if (isRecording) {
+            recordingStart()
           }
         }
       )
     } catch (err) {
       // A communication error indicates the sidepanel isn't open; assume we
-      // aren't capturing when this happens.
+      // aren't recording when this happens.
     }
   },
 })

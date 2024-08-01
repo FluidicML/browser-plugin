@@ -6,11 +6,11 @@ type ActionDescriptionProps = {
   isRunning?: boolean
 }
 
-const ActionCaptureDescription = ({ isRunning }: ActionDescriptionProps) => {
+const ActionRecordingDescription = ({ isRunning }: ActionDescriptionProps) => {
   if (isRunning) {
-    return <span>Replaying capture...</span>
+    return <span>Replaying recording...</span>
   }
-  return <span>Replayed capture.</span>
+  return <span>Replayed recording.</span>
 }
 
 type ActionNavigateDescriptionProps = ActionDescriptionProps & {
@@ -55,8 +55,8 @@ const StepDescription = ({ action, isRunning }: StepDescriptionProps) => {
     const kind = action.kind
 
     switch (kind) {
-      case ActionKind.CAPTURE: {
-        return <ActionCaptureDescription isRunning={isRunning} />
+      case ActionKind.RECORDING: {
+        return <ActionRecordingDescription isRunning={isRunning} />
       }
       case ActionKind.NAVIGATE: {
         return (

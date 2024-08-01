@@ -1,11 +1,11 @@
 import { browser, Runtime } from "wxt/browser"
 
 export enum MessageEvent {
-  CAPTURE_CLICK = "CAPTURE_CLICK",
-  CAPTURE_KEYUP = "CAPTURE_KEYUP",
-  CAPTURE_QUERY = "CAPTURE_QUERY",
-  CAPTURE_START = "CAPTURE_START",
-  CAPTURE_STOP = "CAPTURE_STOP",
+  RECORDING_CLICK = "RECORDING_CLICK",
+  RECORDING_KEYUP = "RECORDING_KEYUP",
+  RECORDING_QUERY = "RECORDING_QUERY",
+  RECORDING_START = "RECORDING_START",
+  RECORDING_STOP = "RECORDING_STOP",
 }
 
 type BaseMessage<
@@ -18,40 +18,40 @@ type BaseMessage<
   response: Response // Exists solely for typing purposes.
 }
 
-type CaptureClickMessage = BaseMessage<
-  MessageEvent.CAPTURE_CLICK,
+type RecordingClickMessage = BaseMessage<
+  MessageEvent.RECORDING_CLICK,
   { action: "click"; locator: Locator },
   null
 >
 
-type CaptureKeyupMessage = BaseMessage<
-  MessageEvent.CAPTURE_KEYUP,
+type RecordingKeyupMessage = BaseMessage<
+  MessageEvent.RECORDING_KEYUP,
   { action: "keyup"; locator: Locator; value: string; replace: boolean },
   null
 >
 
-type CaptureQueryMessage = BaseMessage<
-  MessageEvent.CAPTURE_QUERY,
+type RecordingQueryMessage = BaseMessage<
+  MessageEvent.RECORDING_QUERY,
   null,
   boolean
 >
 
-type CaptureStartMessage = BaseMessage<MessageEvent.CAPTURE_START>
-type CaptureStopMessage = BaseMessage<MessageEvent.CAPTURE_STOP>
+type RecordingStartMessage = BaseMessage<MessageEvent.RECORDING_START>
+type RecordingStopMessage = BaseMessage<MessageEvent.RECORDING_STOP>
 
 export type Message =
-  | CaptureClickMessage
-  | CaptureKeyupMessage
-  | CaptureQueryMessage
-  | CaptureStartMessage
-  | CaptureStopMessage
+  | RecordingClickMessage
+  | RecordingKeyupMessage
+  | RecordingQueryMessage
+  | RecordingStartMessage
+  | RecordingStopMessage
 
 export type LiveMessage =
-  | Omit<CaptureClickMessage, "response">
-  | Omit<CaptureKeyupMessage, "response">
-  | Omit<CaptureQueryMessage, "response">
-  | Omit<CaptureStartMessage, "response">
-  | Omit<CaptureStopMessage, "response">
+  | Omit<RecordingClickMessage, "response">
+  | Omit<RecordingKeyupMessage, "response">
+  | Omit<RecordingQueryMessage, "response">
+  | Omit<RecordingStartMessage, "response">
+  | Omit<RecordingStopMessage, "response">
 
 export const sendTab = (
   tabId: number,

@@ -35,16 +35,16 @@ const runStep = async (browserTab: number, action: ActionForm) => {
   const kind = action.kind
 
   switch (kind) {
-    case ActionKind.CAPTURE: {
-      for (const capture of action.values.captures) {
-        const action = capture.action
+    case ActionKind.RECORDING: {
+      for (const recording of action.values.recordings) {
+        const action = recording.action
         switch (action) {
           case "click": {
-            await waitForClick(browserTab, capture.locator)
+            await waitForClick(browserTab, recording.locator)
             break
           }
           case "keyup": {
-            await waitForKeyup(browserTab, capture.locator, capture.value)
+            await waitForKeyup(browserTab, recording.locator, recording.value)
             break
           }
           default: {

@@ -17,7 +17,7 @@ export const initSchema = z
 
 export type InitSchema = z.infer<typeof initSchema>
 
-// A recording feature. Triggering a capture means to start tracking discrete
+// A recording feature. Triggering a recording means to start tracking discrete
 // user events like mouse clicks or key presses. Each event is stored in a list
 // for later replay.
 
@@ -42,9 +42,9 @@ export const actionKeyupSchema = z
 
 export type ActionKeyupSchema = z.infer<typeof actionKeyupSchema>
 
-export const actionCaptureSchema = z
+export const actionRecordingSchema = z
   .object({
-    captures: z
+    recordings: z
       .array(
         z.discriminatedUnion("action", [actionClickSchema, actionKeyupSchema])
       )
@@ -52,12 +52,12 @@ export const actionCaptureSchema = z
   })
   .required()
 
-export type ActionCaptureSchema = z.infer<typeof actionCaptureSchema>
+export type ActionRecordingSchema = z.infer<typeof actionRecordingSchema>
 
 // Navigates to the specified domain. In general, the action is considered
 // complete as soon as the `DomContentLoaded` event fires. This means the
 // actual contents of the page may not have finished rendering yet; you'll
-// likely want to use a capture action or similar afterwards, which will wait
+// likely want to use a recording action or similar afterwards, which will wait
 // for the specified selector to become available.
 export const actionNavigateSchema = z
   .object({
@@ -102,15 +102,15 @@ export type ActionPromptSchema = z.infer<typeof actionPromptSchema>
 // Allow aggregating actions together. A workflow can consist of a sequence of
 // any type of actions, though it must always start with an `init`.
 export enum ActionKind {
-  CAPTURE = "capture",
+  RECORDING = "recording",
   NAVIGATE = "navigate",
   PROMPT = "prompt",
 }
 
 export type ActionForm =
   | {
-      kind: ActionKind.CAPTURE
-      values: ActionCaptureSchema
+      kind: ActionKind.RECORDING
+      values: ActionRecordingSchema
     }
   | {
       kind: ActionKind.NAVIGATE
@@ -125,8 +125,8 @@ export const actionFormSafeParse = (form: ActionForm) => {
   const kind = form.kind
 
   switch (kind) {
-    case ActionKind.CAPTURE: {
-      return actionCaptureSchema.safeParse(form.values)
+    case ActionKind.RECORDING: {
+      return actionRecordingSchema.safeParse(form.values)
     }
     case ActionKind.NAVIGATE: {
       return actionNavigateSchema.safeParse(form.values)

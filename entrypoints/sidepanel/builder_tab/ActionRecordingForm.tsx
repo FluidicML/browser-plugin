@@ -2,11 +2,12 @@ import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useFieldArray, useForm } from "react-hook-form"
 
-import type { ActionCaptureSchema, ActionForm } from "@/utils/workflow"
-import { ActionKind, actionCaptureSchema } from "@/utils/workflow"
+import type { ActionRecordingSchema, ActionForm } from "@/utils/workflow"
+import { ActionKind, actionRecordingSchema } from "@/utils/workflow"
 import {
   MessageEvent,
   addMessageListener,
+  removeMessageListener,
   broadcastTabs,
 } from "@/utils/messages"
 import PlayIcon from "@/components/icons/Play"
@@ -40,38 +41,38 @@ const KeyupCardContent = ({ value }: KeyupCardContentProps) => {
   )
 }
 
-type ActionCaptureFormProps = {
+type ActionRecordingFormProps = {
   onChange: (values: ActionForm | null) => void
 }
 
-const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
+const ActionRecordingForm = ({ onChange }: ActionRecordingFormProps) => {
   const id = React.useId()
   const store = useSharedStore()
-  const [isCapturing, setIsCapturing] = React.useState(false)
+  const [isRecording, setIsRecording] = React.useState(false)
 
-  const form = useForm<ActionCaptureSchema>({
-    resolver: zodResolver(actionCaptureSchema),
+  const form = useForm<ActionRecordingSchema>({
+    resolver: zodResolver(actionRecordingSchema),
     defaultValues: {},
   })
 
-  const captures = useFieldArray({
+  const recordings = useFieldArray({
     control: form.control,
-    name: "captures",
+    name: "recordings",
   })
 
   React.useEffect(() => {
     return () => {
-      broadcastTabs({ event: MessageEvent.CAPTURE_STOP, payload: null })
+      broadcastTabs({ event: MessageEvent.RECORDING_STOP, payload: null })
       store.actions.unlock(id)
     }
   }, [store.actions])
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
-      const parsed = actionCaptureSchema.safeParse(values)
+      const parsed = actionRecordingSchema.safeParse(values)
       onChange(
         parsed.success
-          ? { kind: ActionKind.CAPTURE, values: parsed.data }
+          ? { kind: ActionKind.RECORDING, values: parsed.data }
           : null
       )
     })
@@ -79,37 +80,37 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
   }, [form.watch])
 
   React.useEffect(() => {
-    if (!isCapturing) {
+    if (!isRecording) {
       return
     }
     const listener = addMessageListener((message) => {
       switch (message.event) {
-        case MessageEvent.CAPTURE_QUERY: {
+        case MessageEvent.RECORDING_QUERY: {
           return Promise.resolve(true)
         }
-        case MessageEvent.CAPTURE_CLICK: {
+        case MessageEvent.RECORDING_CLICK: {
           if (message.payload === null) {
             return
           }
-          captures.append(message.payload)
+          recordings.append(message.payload)
           break
         }
-        case MessageEvent.CAPTURE_KEYUP: {
+        case MessageEvent.RECORDING_KEYUP: {
           if (message.payload === null) {
             return
           }
-          const last = captures.fields[captures.fields.length - 1]
+          const last = recordings.fields[recordings.fields.length - 1]
           if (message.payload.replace && last.action === "keyup") {
-            captures.update(captures.fields.length - 1, message.payload)
+            recordings.update(recordings.fields.length - 1, message.payload)
           } else {
-            captures.append(message.payload)
+            recordings.append(message.payload)
           }
           break
         }
       }
     })
     return () => removeMessageListener(listener)
-  }, [isCapturing, captures])
+  }, [isRecording, recordings])
 
   return (
     <Form {...form}>
@@ -122,26 +123,26 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
           type="button"
           className="w-full flex gap-2"
           onClick={() => {
-            if (isCapturing) {
+            if (isRecording) {
               broadcastTabs({
-                event: MessageEvent.CAPTURE_STOP,
+                event: MessageEvent.RECORDING_STOP,
                 payload: null,
               }).then(() => {
                 store.actions.unlock(id)
-                setIsCapturing(false)
+                setIsRecording(false)
               })
             } else {
               broadcastTabs({
-                event: MessageEvent.CAPTURE_START,
+                event: MessageEvent.RECORDING_START,
                 payload: null,
               }).then(() => {
-                setIsCapturing(true)
+                setIsRecording(true)
                 store.actions.lock(id)
               })
             }
           }}
         >
-          {isCapturing ? (
+          {isRecording ? (
             <>
               <StopIcon className="w-6 h-6" />
               <span>Stop</span>
@@ -154,8 +155,8 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
           )}
         </Button>
         <div className="flex flex-col gap-4 pt-2">
-          {...captures.fields.map((capture, index) => {
-            const action = capture.action
+          {...recordings.fields.map((recording, index) => {
+            const action = recording.action
             const step = `Step ${index + 1}`
             const name = action.slice(0, 1).toUpperCase() + action.slice(1)
 
@@ -165,7 +166,7 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
                 {action === "click" ? (
                   <ClickCardContent />
                 ) : action === "keyup" ? (
-                  <KeyupCardContent value={capture.value} />
+                  <KeyupCardContent value={recording.value} />
                 ) : null}
               </Card>
             )
@@ -175,6 +176,6 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
     </Form>
   )
 }
-ActionCaptureForm.displayName = "ActionCaptureForm"
+ActionRecordingForm.displayName = "ActionRecordingForm"
 
-export default ActionCaptureForm
+export default ActionRecordingForm
