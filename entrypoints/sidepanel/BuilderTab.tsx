@@ -133,7 +133,6 @@ const BuilderTab = () => {
             }
             setTabActive(nextKey)
           }}
-          disabled={tabActiveIndex >= validBeforeIndex}
         >
           {tabActiveIsLast ? "New Step" : "Continue"}
         </Button>

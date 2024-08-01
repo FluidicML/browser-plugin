@@ -1,7 +1,8 @@
 import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { Control, useFieldArray, useForm } from "react-hook-form"
 
+import PlusIcon from "@/components/icons/Plus"
 import type { ActionPromptSchema, ActionForm } from "@/utils/workflow"
 import { ActionKind, actionPromptSchema } from "@/utils/workflow"
 import {
@@ -12,7 +13,46 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+
+type InterpolationFieldProps = {
+  control: Control<ActionPromptSchema>
+  index: number
+}
+
+const InterpolationField = ({ control, index }: InterpolationFieldProps) => {
+  return (
+    <div className="flex flex-col gap-2">
+      <FormField
+        control={control}
+        name={`interpolations.${index}.name`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Response {index + 1}</FormLabel>
+            <FormControl>
+              <Input placeholder="name" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name={`interpolations.${index}.description`}
+        render={({ field }) => (
+          <FormItem>
+            <FormControl>
+              <Textarea placeholder="description" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </div>
+  )
+}
 
 type ActionPromptFormProps = {
   onChange: (values: ActionForm | null) => void
@@ -21,7 +61,16 @@ type ActionPromptFormProps = {
 const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
   const form = useForm<ActionPromptSchema>({
     resolver: zodResolver(actionPromptSchema),
-    defaultValues: { system: "", user: "" },
+    defaultValues: {
+      system: "",
+      user: "",
+      interpolations: [{ name: "", description: "" }],
+    },
+  })
+
+  const interpolations = useFieldArray({
+    control: form.control,
+    name: "interpolations",
   })
 
   React.useEffect(() => {
@@ -36,7 +85,7 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
 
   return (
     <Form {...form}>
-      <form className="space-y-8">
+      <form className="space-y-4">
         <FormField
           control={form.control}
           name="system"
@@ -61,12 +110,36 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
             <FormItem>
               <FormLabel>User Prompt</FormLabel>
               <FormControl>
-                <Textarea rows={10} {...field} />
+                <Textarea
+                  placeholder="Craft a concise request for..."
+                  rows={10}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        <p>
+          Define what values should be returned in the response for
+          interpolation into subsequent steps.
+        </p>
+        <div className="flex flex-col gap-4">
+          {...interpolations.fields.map((field, index) => (
+            <InterpolationField
+              key={field.id}
+              control={form.control}
+              index={index}
+            />
+          ))}
+          <Button
+            className="w-full flex gap-2"
+            onClick={() => interpolations.append({ name: "", description: "" })}
+          >
+            <PlusIcon className="w-4 h-4 fill-black" />
+            Add Response Field
+          </Button>
+        </div>
       </form>
     </Form>
   )
