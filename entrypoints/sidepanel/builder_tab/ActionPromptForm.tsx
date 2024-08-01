@@ -136,7 +136,7 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
             className="w-full flex gap-2"
             onClick={() => interpolations.append({ name: "", description: "" })}
           >
-            <PlusIcon className="w-4 h-4 fill-black" />
+            <PlusIcon className="w-3 h-3 fill-white dark:fill-black" />
             Add Response Field
           </Button>
         </div>

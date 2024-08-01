@@ -1,5 +1,6 @@
 import React from "react"
 
+import { cn } from "@/utils/shadcn"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSharedStore } from "./store"
@@ -87,11 +88,12 @@ const BuilderTab = () => {
         <TabsTrigger value="init" disabled={store.isCapturing}>
           Start
         </TabsTrigger>
-        {actionTabs.map((tab) => (
+        {actionTabs.map((tab, index) => (
           <TabsTrigger
             key={tab.key}
             value={tab.key}
-            disabled={store.isCapturing}
+            disabled={store.isCapturing || index > validBeforeIndex}
+            className={cn(index >= validBeforeIndex ? "text-destructive" : "")}
           >
             {tab.label}
           </TabsTrigger>
@@ -133,6 +135,7 @@ const BuilderTab = () => {
             }
             setTabActive(nextKey)
           }}
+          disabled={store.isCapturing || tabActiveIndex >= validBeforeIndex}
         >
           {tabActiveIsLast ? "New Step" : "Continue"}
         </Button>
