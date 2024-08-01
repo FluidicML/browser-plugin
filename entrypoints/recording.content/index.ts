@@ -21,7 +21,7 @@ export default defineContentScript({
 
   main(_context: ContentScriptContext) {
     const outline = document.createElement("div")
-    outline.id = "fluidic-outline"
+    outline.id = "fluidic-recording-outline"
     document.body.appendChild(outline)
 
     const outlineShow = (visible: boolean) => {

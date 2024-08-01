@@ -1,6 +1,8 @@
 import { browser, Runtime } from "wxt/browser"
 
 export enum MessageEvent {
+  EXTRACTING_START = "EXTRACTING_START",
+  EXTRACTING_STOP = "EXTRACTING_STOP",
   RECORDING_CLICK = "RECORDING_CLICK",
   RECORDING_KEYUP = "RECORDING_KEYUP",
   RECORDING_QUERY = "RECORDING_QUERY",
@@ -17,6 +19,11 @@ type BaseMessage<
   payload: Payload
   response: Response // Exists solely for typing purposes.
 }
+
+type ExtractingStartMessage = BaseMessage<MessageEvent.EXTRACTING_START>
+type ExtractingStopMessage = BaseMessage<MessageEvent.EXTRACTING_STOP>
+type RecordingStartMessage = BaseMessage<MessageEvent.RECORDING_START>
+type RecordingStopMessage = BaseMessage<MessageEvent.RECORDING_STOP>
 
 type RecordingClickMessage = BaseMessage<
   MessageEvent.RECORDING_CLICK,
@@ -36,10 +43,9 @@ type RecordingQueryMessage = BaseMessage<
   boolean
 >
 
-type RecordingStartMessage = BaseMessage<MessageEvent.RECORDING_START>
-type RecordingStopMessage = BaseMessage<MessageEvent.RECORDING_STOP>
-
 export type Message =
+  | ExtractingStartMessage
+  | ExtractingStopMessage
   | RecordingClickMessage
   | RecordingKeyupMessage
   | RecordingQueryMessage
@@ -47,6 +53,8 @@ export type Message =
   | RecordingStopMessage
 
 export type LiveMessage =
+  | Omit<ExtractingStartMessage, "response">
+  | Omit<ExtractingStopMessage, "response">
   | Omit<RecordingClickMessage, "response">
   | Omit<RecordingKeyupMessage, "response">
   | Omit<RecordingQueryMessage, "response">

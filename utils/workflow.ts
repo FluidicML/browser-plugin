@@ -17,6 +17,23 @@ export const initSchema = z
 
 export type InitSchema = z.infer<typeof initSchema>
 
+// An extraction feature. Allows pulling the contents of elements out in a
+// general way for interpolation into subsequent steps.
+export const actionExtractingSchema = z.object({
+  extractions: z
+    .array(
+      z.object({
+        name: z.string().min(1, {
+          message: "you must provide a valid name.",
+        }),
+        locator: locatorSchema,
+      })
+    )
+    .nonempty(),
+})
+
+export type ActionExtractingSchema = z.infer<typeof actionExtractingSchema>
+
 // A recording feature. Triggering a recording means to start tracking discrete
 // user events like mouse clicks or key presses. Each event is stored in a list
 // for later replay.
@@ -102,12 +119,17 @@ export type ActionPromptSchema = z.infer<typeof actionPromptSchema>
 // Allow aggregating actions together. A workflow can consist of a sequence of
 // any type of actions, though it must always start with an `init`.
 export enum ActionKind {
+  EXTRACTING = "extracting",
   RECORDING = "recording",
   NAVIGATE = "navigate",
   PROMPT = "prompt",
 }
 
 export type ActionForm =
+  | {
+      kind: ActionKind.EXTRACTING
+      values: ActionExtractingSchema
+    }
   | {
       kind: ActionKind.RECORDING
       values: ActionRecordingSchema
