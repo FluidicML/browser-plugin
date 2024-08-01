@@ -23,18 +23,18 @@ type BaseMessage<
 
 type ExtractingClickMessage = BaseMessage<
   MessageEvent.EXTRACTING_CLICK,
-  Locator
+  Selector
 >
 type ExtractingStartMessage = BaseMessage<MessageEvent.EXTRACTING_START>
 type ExtractingStopMessage = BaseMessage<MessageEvent.EXTRACTING_STOP>
 
 type RecordingClickMessage = BaseMessage<
   MessageEvent.RECORDING_CLICK,
-  { action: "click"; locator: Locator }
+  { action: "click"; selector: Selector }
 >
 type RecordingKeyupMessage = BaseMessage<
   MessageEvent.RECORDING_KEYUP,
-  { action: "keyup"; locator: Locator; value: string; replace: boolean }
+  { action: "keyup"; selector: Selector; value: string; replace: boolean }
 >
 type RecordingQueryMessage = BaseMessage<
   MessageEvent.RECORDING_QUERY,

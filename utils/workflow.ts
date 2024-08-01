@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { locatorSchema } from "@/utils/locator"
+import { selectorSchema } from "@/utils/selector"
 
 // The initial tab shown when building the workflow. Contains basic details
 // all workflows must have.
@@ -26,7 +26,7 @@ export const actionExtractingSchema = z.object({
         name: z.string().min(1, {
           message: "you must provide a valid name.",
         }),
-        locator: locatorSchema,
+        selector: selectorSchema,
       })
     )
     .nonempty(),
@@ -41,7 +41,7 @@ export type ActionExtractingSchema = z.infer<typeof actionExtractingSchema>
 export const actionClickSchema = z
   .object({
     action: z.literal("click"),
-    locator: locatorSchema,
+    selector: selectorSchema,
   })
   .required()
 
@@ -50,7 +50,7 @@ export type ActionClickSchema = z.infer<typeof actionClickSchema>
 export const actionKeyupSchema = z
   .object({
     action: z.literal("keyup"),
-    locator: locatorSchema,
+    selector: selectorSchema,
     value: z.string().min(1, {
       message: "You must provide a value.",
     }),

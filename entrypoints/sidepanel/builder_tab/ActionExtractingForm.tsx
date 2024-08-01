@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/form"
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
-import { Card, CardContent, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useSharedStore } from "../store"
@@ -47,7 +47,7 @@ const ExtractionCard = ({ index, control }: ExtractionCardProps) => {
             </FormItem>
           )}
         />
-        LOCATOR
+        SELECTOR
       </CardContent>
     </Card>
   )
@@ -98,7 +98,7 @@ const ActionExtractingForm = ({ onChange }: ActionExtractingFormProps) => {
     const listener = addMessageListener((message) => {
       switch (message.event) {
         case MessageEvent.EXTRACTING_CLICK: {
-          extractions.append({ name: "", locator: message.payload })
+          extractions.append({ name: "", selector: message.payload })
           break
         }
       }
@@ -148,18 +148,20 @@ const ActionExtractingForm = ({ onChange }: ActionExtractingFormProps) => {
             </>
           )}
         </Button>
-        <p>Name each extraction for insertion into subsequent steps.</p>
-        <div className="flex flex-col gap-4">
-          {[...Array(extractions.fields.length).keys()].map((index) => {
-            return (
-              <ExtractionCard
-                key={extractions.fields[index].id}
-                index={index}
-                control={form.control}
-              />
-            )
-          })}
-        </div>
+        {extractions.fields.length > 0 && (
+          <div className="flex flex-col gap-4">
+            <p>Name each extraction for insertion into subsequent steps.</p>
+            {[...Array(extractions.fields.length).keys()].map((index) => {
+              return (
+                <ExtractionCard
+                  key={extractions.fields[index].id}
+                  index={index}
+                  control={form.control}
+                />
+              )
+            })}
+          </div>
+        )}
       </form>
     </Form>
   )

@@ -7,7 +7,6 @@
 import "./styles.css"
 
 import type { ContentScriptContext } from "wxt/client"
-import { buildLocator } from "@/utils/locator"
 import { MessageEvent, addMessageListener, sendExt } from "@/utils/messages"
 
 const OUTLINE_PADDING = 15
@@ -64,7 +63,7 @@ export default defineContentScript({
       }
       sendExt({
         event: MessageEvent.RECORDING_CLICK,
-        payload: { action: "click", locator: buildLocator(target) },
+        payload: { action: "click", selector: buildSelector(target) },
       })
     }
 
@@ -78,7 +77,7 @@ export default defineContentScript({
         event: MessageEvent.RECORDING_KEYUP,
         payload: {
           action: "keyup",
-          locator: buildLocator(ev.target),
+          selector: buildSelector(ev.target),
           value:
             ev.target instanceof HTMLInputElement ? ev.target.value : ev.key,
           replace: lastKeyupTarget === ev.target,

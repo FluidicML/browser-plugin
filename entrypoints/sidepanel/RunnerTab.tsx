@@ -5,29 +5,30 @@ import FolderIcon from "@/components/icons/Folder"
 import LoadingIcon from "@/components/icons/Loading"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { useSharedStore } from "./store"
+import { Selector } from "@/utils/selector"
 import StepCard from "./runner_tab/StepCard"
 
-const waitForClick = async (browserTab: number, locator: Locator) => {
+const waitForClick = async (browserTab: number, selector: Selector) => {
   await browser.scripting.executeScript({
     target: { tabId: browserTab },
-    func: (locator: Locator) => {
+    func: (selector: Selector) => {
       // TODO: Trigger clicks.
     },
-    args: [locator],
+    args: [selector],
   })
 }
 
 const waitForKeyup = async (
   browserTab: number,
-  locator: Locator,
+  selector: Selector,
   value: string
 ) => {
   await browser.scripting.executeScript({
     target: { tabId: browserTab },
-    func: (locator: Locator) => {
+    func: (selector: Selector) => {
       // TODO: Trigger keyups.
     },
-    args: [locator],
+    args: [selector],
   })
 }
 
@@ -40,11 +41,11 @@ const runStep = async (browserTab: number, action: ActionForm) => {
         const action = recording.action
         switch (action) {
           case "click": {
-            await waitForClick(browserTab, recording.locator)
+            await waitForClick(browserTab, recording.selector)
             break
           }
           case "keyup": {
-            await waitForKeyup(browserTab, recording.locator, recording.value)
+            await waitForKeyup(browserTab, recording.selector, recording.value)
             break
           }
           default: {
