@@ -6,21 +6,26 @@ import { v4 as uuidv4 } from "uuid"
 
 import type { Workflow } from "@/utils/workflow"
 
+// https://immerjs.github.io/immer/map-set
+import { enableMapSet } from "immer"
+enableMapSet()
+
 export type TabValue = "builder" | "library" | "runner"
 
 export type SharedState = {
+  // A non-empty value indicates the top-level tabbing should be disabled.
+  lockedBy: Set<string>
   // Which tab of the sidepanel is selected.
   activeTab: TabValue
-  // Indicates we are actively recording actions.
-  isCapturing: boolean
   // A collection of locally saved workflows.
   library: Workflow[]
   // The workflow being run.
   triggered: Workflow | null
 
   actions: {
+    lock: (locker: string) => void
+    unlock: (locker: string) => void
     setActiveTab: (tab: TabValue) => void
-    setIsCapturing: (arg: boolean | ((state: boolean) => boolean)) => void
     saveWorkflow: (workflow: Omit<Workflow, "uuid">) => void
     removeWorkflow: (workflow: Workflow) => void
     triggerWorkflow: (workflow: Workflow) => void
@@ -30,22 +35,26 @@ export type SharedState = {
 export const useSharedStore = create<SharedState>()(
   persist(
     immer((set, get, _api) => ({
+      lockedBy: new Set(),
       activeTab: "builder",
       library: [],
-      isCapturing: false,
       triggered: null,
 
       actions: {
-        setActiveTab: (tab) => {
-          set({ activeTab: tab })
+        lock: (locker: string) => {
+          set((s) => {
+            s.lockedBy.add(locker)
+          })
         },
 
-        setIsCapturing: (arg: boolean | ((state: boolean) => boolean)) => {
-          if (typeof arg === "boolean") {
-            set({ isCapturing: arg })
-          } else {
-            set({ isCapturing: arg(get().isCapturing) })
-          }
+        unlock: (locker: string) => {
+          set((s) => {
+            s.lockedBy.delete(locker)
+          })
+        },
+
+        setActiveTab: (tab) => {
+          set({ activeTab: tab })
         },
 
         saveWorkflow: (workflow) => {

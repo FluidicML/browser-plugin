@@ -45,7 +45,9 @@ type ActionCaptureFormProps = {
 }
 
 const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
+  const id = React.useId()
   const store = useSharedStore()
+  const [isCapturing, setIsCapturing] = React.useState(false)
 
   const form = useForm<ActionCaptureSchema>({
     resolver: zodResolver(actionCaptureSchema),
@@ -60,7 +62,7 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
   React.useEffect(() => {
     return () => {
       broadcastTabs({ event: MessageEvent.CAPTURE_STOP, payload: null })
-      store.actions.setIsCapturing(false)
+      store.actions.unlock(id)
     }
   }, [store.actions])
 
@@ -77,6 +79,9 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
   }, [form.watch])
 
   React.useEffect(() => {
+    if (!isCapturing) {
+      return
+    }
     const listener = addMessageListener((message) => {
       switch (message.event) {
         case MessageEvent.CAPTURE_CLICK: {
@@ -101,7 +106,7 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
       }
     })
     return () => removeMessageListener(listener)
-  }, [captures])
+  }, [isCapturing, captures])
 
   return (
     <Form {...form}>
@@ -114,16 +119,26 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
           type="button"
           className="w-full flex gap-2"
           onClick={() => {
-            broadcastTabs({
-              event: store.isCapturing
-                ? MessageEvent.CAPTURE_STOP
-                : MessageEvent.CAPTURE_START,
-              payload: null,
-            })
-            store.actions.setIsCapturing((c) => !c)
+            if (isCapturing) {
+              broadcastTabs({
+                event: MessageEvent.CAPTURE_STOP,
+                payload: null,
+              }).then(() => {
+                store.actions.unlock(id)
+                setIsCapturing(false)
+              })
+            } else {
+              broadcastTabs({
+                event: MessageEvent.CAPTURE_START,
+                payload: null,
+              }).then(() => {
+                setIsCapturing(true)
+                store.actions.lock(id)
+              })
+            }
           }}
         >
-          {store.isCapturing ? (
+          {isCapturing ? (
             <>
               <StopIcon className="w-6 h-6" />
               <span>Stop</span>

@@ -85,14 +85,14 @@ const BuilderTab = () => {
       onValueChange={setTabActive}
     >
       <TabsList className="flex flex-wrap justify-start mt-2 mx-4">
-        <TabsTrigger value="init" disabled={store.isCapturing}>
+        <TabsTrigger value="init" disabled={store.lockedBy.size > 0}>
           Start
         </TabsTrigger>
         {actionTabs.map((tab, index) => (
           <TabsTrigger
             key={tab.key}
             value={tab.key}
-            disabled={store.isCapturing || index > validBeforeIndex}
+            disabled={store.lockedBy.size > 0 || index > validBeforeIndex}
             className={cn(index >= validBeforeIndex ? "text-destructive" : "")}
           >
             {tab.label}
@@ -135,7 +135,9 @@ const BuilderTab = () => {
             }
             setTabActive(nextKey)
           }}
-          disabled={store.isCapturing || tabActiveIndex >= validBeforeIndex}
+          disabled={
+            store.lockedBy.size > 0 || tabActiveIndex >= validBeforeIndex
+          }
         >
           {tabActiveIsLast ? "New Step" : "Continue"}
         </Button>
