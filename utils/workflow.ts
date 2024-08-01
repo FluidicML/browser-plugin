@@ -147,6 +147,9 @@ export const actionFormSafeParse = (form: ActionForm) => {
   const kind = form.kind
 
   switch (kind) {
+    case ActionKind.EXTRACTING: {
+      return actionExtractingSchema.safeParse(form.values)
+    }
     case ActionKind.RECORDING: {
       return actionRecordingSchema.safeParse(form.values)
     }

@@ -1,6 +1,7 @@
 import { browser, Runtime } from "wxt/browser"
 
 export enum MessageEvent {
+  EXTRACTING_CLICK = "EXTRACTING_CLICK",
   EXTRACTING_START = "EXTRACTING_START",
   EXTRACTING_STOP = "EXTRACTING_STOP",
   RECORDING_CLICK = "RECORDING_CLICK",
@@ -20,30 +21,31 @@ type BaseMessage<
   response: Response // Exists solely for typing purposes.
 }
 
+type ExtractingClickMessage = BaseMessage<
+  MessageEvent.EXTRACTING_CLICK,
+  Locator
+>
 type ExtractingStartMessage = BaseMessage<MessageEvent.EXTRACTING_START>
 type ExtractingStopMessage = BaseMessage<MessageEvent.EXTRACTING_STOP>
-type RecordingStartMessage = BaseMessage<MessageEvent.RECORDING_START>
-type RecordingStopMessage = BaseMessage<MessageEvent.RECORDING_STOP>
 
 type RecordingClickMessage = BaseMessage<
   MessageEvent.RECORDING_CLICK,
-  { action: "click"; locator: Locator },
-  null
+  { action: "click"; locator: Locator }
 >
-
 type RecordingKeyupMessage = BaseMessage<
   MessageEvent.RECORDING_KEYUP,
-  { action: "keyup"; locator: Locator; value: string; replace: boolean },
-  null
+  { action: "keyup"; locator: Locator; value: string; replace: boolean }
 >
-
 type RecordingQueryMessage = BaseMessage<
   MessageEvent.RECORDING_QUERY,
   null,
   boolean
 >
+type RecordingStartMessage = BaseMessage<MessageEvent.RECORDING_START>
+type RecordingStopMessage = BaseMessage<MessageEvent.RECORDING_STOP>
 
 export type Message =
+  | ExtractingClickMessage
   | ExtractingStartMessage
   | ExtractingStopMessage
   | RecordingClickMessage
@@ -53,6 +55,7 @@ export type Message =
   | RecordingStopMessage
 
 export type LiveMessage =
+  | Omit<ExtractingClickMessage, "response">
   | Omit<ExtractingStartMessage, "response">
   | Omit<ExtractingStopMessage, "response">
   | Omit<RecordingClickMessage, "response">

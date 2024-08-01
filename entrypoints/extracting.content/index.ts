@@ -60,14 +60,27 @@ export default defineContentScript({
       }, 300)
     }
 
+    const clickListener = (ev: MouseEvent) => {
+      const target = document.elementFromPoint(ev.clientX, ev.clientY)
+      if (!(target instanceof HTMLElement)) {
+        return
+      }
+      sendExt({
+        event: MessageEvent.EXTRACTING_CLICK,
+        payload: buildLocator(target),
+      })
+    }
+
     const extractingStart = () => {
       document.addEventListener("mousemove", moveListener, true)
       document.addEventListener("scroll", scrollListener, true)
+      document.addEventListener("click", clickListener, true)
       outlineShow(true)
     }
 
     const extractingStop = () => {
       outlineShow(false)
+      document.removeEventListener("click", clickListener, true)
       document.removeEventListener("scroll", scrollListener, true)
       document.removeEventListener("mousemove", moveListener, true)
     }

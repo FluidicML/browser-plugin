@@ -1,6 +1,6 @@
 import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useFieldArray, useForm } from "react-hook-form"
+import { Control, useFieldArray, useForm } from "react-hook-form"
 
 import type { ActionExtractingSchema, ActionForm } from "@/utils/workflow"
 import { ActionKind, actionExtractingSchema } from "@/utils/workflow"
@@ -10,11 +10,48 @@ import {
   removeMessageListener,
   broadcastTabs,
 } from "@/utils/messages"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Form } from "@/components/ui/form"
 import { useSharedStore } from "../store"
+
+type ExtractionCardProps = {
+  index: number
+  control: Control<ActionExtractingSchema>
+}
+
+const ExtractionCard = ({ index, control }: ExtractionCardProps) => {
+  return (
+    <Card>
+      <CardContent className="flex flex-col gap-4">
+        <FormField
+          control={control}
+          name={`extractions.${index}.name`}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        LOCATOR
+      </CardContent>
+    </Card>
+  )
+}
 
 type ActionExtractingFormProps = {
   onChange: (values: ActionForm | null) => void
@@ -60,6 +97,10 @@ const ActionExtractingForm = ({ onChange }: ActionExtractingFormProps) => {
     }
     const listener = addMessageListener((message) => {
       switch (message.event) {
+        case MessageEvent.EXTRACTING_CLICK: {
+          extractions.append({ name: "", locator: message.payload })
+          break
+        }
       }
     })
     return () => removeMessageListener(listener)
@@ -107,6 +148,18 @@ const ActionExtractingForm = ({ onChange }: ActionExtractingFormProps) => {
             </>
           )}
         </Button>
+        <p>Name each extraction for insertion into subsequent steps.</p>
+        <div className="flex flex-col gap-4">
+          {[...Array(extractions.fields.length).keys()].map((index) => {
+            return (
+              <ExtractionCard
+                key={extractions.fields[index].id}
+                index={index}
+                control={form.control}
+              />
+            )
+          })}
+        </div>
       </form>
     </Form>
   )
