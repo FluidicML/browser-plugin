@@ -22,10 +22,6 @@ export const selectorSchema = locatorSchema.or(z.string())
 
 export type Selector = z.infer<typeof selectorSchema>
 
-const getTag = (el: HTMLElement) => {
-  return el.tagName
-}
-
 const TEXTBOX_INPUT_TYPES = [
   null,
   "date",
@@ -38,6 +34,154 @@ const TEXTBOX_INPUT_TYPES = [
   "text",
   "time",
 ]
+
+// Build up a query from a locator. There is a bit of a balancing act being
+// performed at the moment. If we attempt to only return elements that match
+// all of our fields exactly, any minor change to the DOM could result in a
+// failed match that the user would expect to continue succeeding. If on the
+// other hand we are too loose, we may end up matching too many elements and
+// not being able to decide how to proceed (on e.g. replay).
+//
+// As a compromise, allow the caller to specify a prioritized list of all
+// locator fields. As soon as we are able to filter down the number of matched
+// elements to one (or, in failed cases, zero), stop processing any further.
+//
+// TODO: In practice, we probably need to make this much stricter. This fuzzy
+// approach could lead to potentially harmful edge cases on replay if we aren't
+// careful. For now, ignoring this issue.
+class QueryBuilder {
+  private matches: HTMLElement[]
+
+  constructor(tag: string) {
+    this.matches = Array.from(document.querySelectorAll(tag))
+  }
+
+  withRole(role?: string): QueryBuilder {
+    if (role === undefined || this.matches.length <= 1) {
+      return this
+    }
+
+    this.matches = this.matches.filter((m) => {
+      if (m.getAttribute("role") === role) {
+        return true
+      }
+
+      if (role === "button") {
+        return m.tagName === "button"
+      }
+
+      if (role === "textbox" && m instanceof HTMLTextAreaElement) {
+        return true
+      }
+
+      if (role === "textbox" && m instanceof HTMLInputElement) {
+        return TEXTBOX_INPUT_TYPES.includes(m.getAttribute("type"))
+      }
+
+      // Encountered either an invalid or unsupported role.
+      return false
+    })
+
+    return this
+  }
+
+  withTitle(title?: string): QueryBuilder {
+    if (title === undefined || this.matches.length <= 1) {
+      return this
+    }
+
+    this.matches = this.matches.filter((m) => m.getAttribute("title") === title)
+
+    return this
+  }
+
+  withLabel(label?: string): QueryBuilder {
+    if (label === undefined || this.matches.length <= 1) {
+      return this
+    }
+
+    this.matches = this.matches.filter((m) => {
+      for (const attr of ["aria-label", "aria-labelledby"]) {
+        if (m.getAttribute(attr) === label) {
+          return true
+        }
+      }
+      return false
+    })
+
+    return this
+  }
+
+  withPlaceholder(placeholder?: string): QueryBuilder {
+    if (placeholder === undefined || this.matches.length <= 1) {
+      return this
+    }
+
+    this.matches = this.matches.filter(
+      (m) => m.getAttribute("placeholder") === placeholder
+    )
+
+    return this
+  }
+
+  withAltText(altText?: string): QueryBuilder {
+    if (altText === undefined || this.matches.length <= 1) {
+      return this
+    }
+
+    this.matches = this.matches.filter((m) => m.getAttribute("alt") === altText)
+
+    return this
+  }
+
+  withTestId(testId?: string): QueryBuilder {
+    if (testId === undefined || this.matches.length <= 1) {
+      return this
+    }
+
+    this.matches = this.matches.filter(
+      (m) => m.getAttribute("data-testid") === testId
+    )
+
+    return this
+  }
+
+  withText(text?: string): QueryBuilder {
+    if (text === undefined || this.matches.length <= 1) {
+      return this
+    }
+
+    this.matches = this.matches.filter((m) => m.innerText === text)
+
+    return this
+  }
+
+  query(): HTMLElement[] {
+    return this.matches
+  }
+}
+
+export const findSelector = (selector: Selector): HTMLElement[] => {
+  // It's assumed the CSS selector is unique.
+  if (typeof selector === "string") {
+    const found = document.querySelector(selector)
+    return found instanceof HTMLElement ? [found] : []
+  }
+
+  return new QueryBuilder(selector.tag)
+    .withRole(selector.role)
+    .withTitle(selector.title)
+    .withLabel(selector.label)
+    .withPlaceholder(selector.placeholder)
+    .withAltText(selector.altText)
+    .withTestId(selector.testId)
+    .withText(selector.text)
+    .query()
+}
+
+const getTag = (el: HTMLElement) => {
+  return el.tagName
+}
 
 const getRole = (el: HTMLElement) => {
   const roleAttr = el.getAttribute("role")
@@ -126,6 +270,7 @@ const relativeSelectorOf = (el: HTMLElement) => {
       break
     }
   }
+
   return `${el.tagName}:nth-of-type(${index})`
 }
 
@@ -161,139 +306,12 @@ export const getSelector = (el: HTMLElement): Selector => {
     text: getText(el),
   }
 
-  if (Object.values(locator).filter(Boolean).length === 0) {
+  if (
+    Object.values(locator).filter(Boolean).length === 0 ||
+    findSelector(locator).length !== 1
+  ) {
     return getCSS(el)
   }
 
   return locator
-}
-
-// Build up a query from a locator. There is a bit of a balancing act being
-// performed at the moment. If we attempt to only return elements that match
-// all of our fields exactly, any minor change to the DOM could result in a
-// failed match that the user would expect to continue succeeding. If on the
-// other hand we are too loose, we may end up matching too many elements and
-// not being able to decide how to proceed (on e.g. replay).
-//
-// As a compromise, allow the caller to specify a prioritized list of all
-// locator fields. As soon as we are able to filter down the number of matched
-// elements to one (or, in failed cases, zero), stop processing any further.
-//
-// TODO: In practice, we probably need to make this much stricter. This fuzzy
-// approach could lead to potentially harmful edge cases on replay if we aren't
-// careful. For now, ignoring this issue.
-class QueryBuilder {
-  private matches: HTMLElement[]
-
-  constructor(tag: string) {
-    this.matches = Array.from(document.querySelectorAll(tag))
-  }
-
-  withRole(role?: string): QueryBuilder {
-    if (role === undefined || this.matches.length <= 1) {
-      return this
-    }
-
-    this.matches = this.matches.filter((m) => {
-      if (m.getAttribute("role") === role) {
-        return true
-      }
-
-      if (role === "button") {
-        return m.tagName === "button"
-      }
-
-      if (role === "textbox" && m instanceof HTMLTextAreaElement) {
-        return true
-      }
-
-      if (role === "textbox" && m instanceof HTMLInputElement) {
-        return TEXTBOX_INPUT_TYPES.includes(m.getAttribute("type"))
-      }
-
-      // Encountered either an invalid or unsupported role.
-      return false
-    })
-
-    return this
-  }
-
-  withTitle(title?: string): QueryBuilder {
-    if (title === undefined || this.matches.length <= 1) {
-      return this
-    }
-    this.matches = this.matches.filter((m) => m.getAttribute("title") === title)
-    return this
-  }
-
-  withLabel(label?: string): QueryBuilder {
-    if (label === undefined || this.matches.length <= 1) {
-      return this
-    }
-    this.matches = this.matches.filter((m) => {
-      for (const attr of ["aria-label", "aria-labelledby"]) {
-        if (m.getAttribute(attr) === label) {
-          return true
-        }
-      }
-      return false
-    })
-    return this
-  }
-
-  withPlaceholder(placeholder?: string): QueryBuilder {
-    if (placeholder === undefined || this.matches.length <= 1) {
-      return this
-    }
-    this.matches = this.matches.filter(
-      (m) => m.getAttribute("placeholder") === placeholder
-    )
-    return this
-  }
-
-  withAltText(altText?: string): QueryBuilder {
-    if (altText === undefined || this.matches.length <= 1) {
-      return this
-    }
-    this.matches = this.matches.filter((m) => m.getAttribute("alt") === altText)
-    return this
-  }
-
-  withTestId(testId?: string): QueryBuilder {
-    if (testId === undefined || this.matches.length <= 1) {
-      return this
-    }
-    this.matches = this.matches.filter(
-      (m) => m.getAttribute("data-testid") === testId
-    )
-    return this
-  }
-
-  withText(text?: string): QueryBuilder {
-    if (text === undefined || this.matches.length <= 1) {
-      return this
-    }
-    this.matches = this.matches.filter((m) => m.innerText === text)
-    return this
-  }
-
-  query(): HTMLElement[] {
-    return this.matches
-  }
-}
-
-export const findSelector = (selector: Selector): HTMLElement[] => {
-  if (typeof selector === "string") {
-    return Array.from(document.querySelectorAll(selector))
-  }
-
-  return new QueryBuilder(selector.tag)
-    .withRole(selector.role)
-    .withTitle(selector.title)
-    .withLabel(selector.label)
-    .withPlaceholder(selector.placeholder)
-    .withAltText(selector.altText)
-    .withTestId(selector.testId)
-    .withText(selector.text)
-    .query()
 }

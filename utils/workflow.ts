@@ -168,6 +168,11 @@ export const actionFormSafeParse = (form: ActionForm) => {
   return null
 }
 
+export type StepResult = {
+  success: boolean
+  messages: string[]
+}
+
 // Representation of the entire workflow end-to-end.
 export type Workflow = {
   uuid: string

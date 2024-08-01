@@ -1,6 +1,7 @@
 import React from "react"
 
 import CheckmarkIcon from "@/components/icons/Checkmark"
+import CloseIcon from "@/components/icons/Close"
 import FolderIcon from "@/components/icons/Folder"
 import LoadingIcon from "@/components/icons/Loading"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
@@ -8,101 +9,139 @@ import { useSharedStore } from "./store"
 import { Selector } from "@/utils/selector"
 import StepCard from "./runner_tab/StepCard"
 
-const waitForClick = async (browserTab: number, selector: Selector) => {
+const waitForClick = async (
+  browserTab: number,
+  selector: Selector
+): Promise<StepResult> => {
   await browser.scripting.executeScript({
     target: { tabId: browserTab },
     func: (selector: Selector) => {
-      window.fluidic_args = window.fluidic_args ?? {}
-      window.fluidic_args.injected_click = { selector }
+      window.fluidic_args = { selector }
     },
     args: [selector],
   })
-  await browser.scripting.executeScript({
+
+  const responses = await browser.scripting.executeScript({
     target: { tabId: browserTab },
     files: ["injected_click.js"],
   })
+
+  for (const response of responses) {
+    if (response.result) {
+      return response.result
+    }
+  }
+
+  return { success: false, messages: ["Unknown error"] }
 }
 
 const waitForKeyup = async (
   browserTab: number,
   selector: Selector,
   value: string
-) => {
+): Promise<StepResult> => {
   await browser.scripting.executeScript({
     target: { tabId: browserTab },
     func: (selector: Selector) => {
-      window.fluidic_args = window.fluidic_args ?? {}
-      window.fluidic_args.injected_keyup = { selector, value }
+      window.fluidic_args = { selector, value }
     },
     args: [selector],
   })
-  await browser.scripting.executeScript({
+
+  const responses = await browser.scripting.executeScript({
     target: { tabId: browserTab },
     files: ["injected_keyup.js"],
   })
+
+  for (const response of responses) {
+    if (response.result) {
+      return response.result
+    }
+  }
+
+  return { success: false, messages: ["Unknown error"] }
 }
 
 const runRecordingStep = async (
   browserTab: number,
   values: ActionRecordingSchema
-) => {
+): Promise<StepResult> => {
+  let result: StepResult = { success: true, messages: [] }
+
   for (const recording of values.recordings) {
+    let next: StepResult
     const action = recording.action
+
     switch (action) {
       case "click": {
-        await waitForClick(browserTab, recording.selector)
+        next = await waitForClick(browserTab, recording.selector)
         break
       }
       case "keyup": {
-        await waitForKeyup(browserTab, recording.selector, recording.value)
+        next = await waitForKeyup(
+          browserTab,
+          recording.selector,
+          recording.value
+        )
         break
       }
       default: {
-        const _exhaustivenessCheck: never = action
+        next = action
         break
       }
     }
+
+    result.success = next.success
+    result.messages.push(...next.messages)
+
+    if (!result.success) {
+      return result
+    }
   }
+
+  return result
 }
 
-const runStep = async (browserTab: number, action: ActionForm) => {
+const runStep = async (
+  browserTab: number,
+  action: ActionForm
+): Promise<StepResult> => {
   const kind = action.kind
 
   switch (kind) {
     case ActionKind.EXTRACTING: {
-      break
+      return { success: false, messages: ["Unsupported EXTRACTING action."] }
     }
     case ActionKind.RECORDING: {
-      await runRecordingStep(browserTab, action.values)
-      break
+      return await runRecordingStep(browserTab, action.values)
     }
     case ActionKind.NAVIGATE: {
-      await browser.tabs.update(browserTab, {
-        url: action.values.url,
-      })
-      break
+      await browser.tabs.update(browserTab, { url: action.values.url })
+      return { success: true, messages: [] }
     }
     case ActionKind.PROMPT: {
-      break
+      return { success: false, messages: ["Unsupported PROMPT action."] }
     }
     default: {
       const _exhaustivenessCheck: never = kind
       break
     }
   }
+
+  return { success: false, messages: [`Unsupported ${kind} action.`] }
 }
 
 type Running = {
   workflow: Workflow
   browserTab: number
   actionIndex: number
+  results: StepResult[]
 }
 
 const RunnerTab = () => {
   const store = useSharedStore()
 
   // TODO: Should handle when the active tab is shutdown.
-
   const [running, setRunning] = React.useState<Running | null>(null)
 
   // Changes to our triggered workflow indicate either starting a workflow or
@@ -118,6 +157,7 @@ const RunnerTab = () => {
         workflow: triggered,
         browserTab: tab.id!,
         actionIndex: 0,
+        results: [],
       })
     })
   }, [store.triggered, setRunning])
@@ -127,16 +167,23 @@ const RunnerTab = () => {
   React.useEffect(() => {
     if (
       running === null ||
-      running.actionIndex >= running.workflow.actions.length
+      running.actionIndex >= running.workflow.actions.length ||
+      running.results[running.actionIndex]?.success === false
     ) {
       return
     }
     runStep(
       running.browserTab,
       running.workflow.actions[running.actionIndex]
-    ).then(() =>
-      setRunning({ ...running, actionIndex: running.actionIndex + 1 })
-    )
+    ).then((result) => {
+      setRunning({
+        ...running,
+        results: [...running.results, result],
+        actionIndex: result.success
+          ? running.actionIndex + 1
+          : running.actionIndex,
+      })
+    })
   }, [running])
 
   if (running === null) {
@@ -152,8 +199,10 @@ const RunnerTab = () => {
     <div className="flex flex-col gap-4 p-4">
       <Card>
         <CardTitle className="flex items-center gap-2">
-          {running.actionIndex === running.workflow.actions.length ? (
-            <CheckmarkIcon className="w-5 h-5 rounded-full bg-white fill-emerald-600" />
+          {running.results[running.actionIndex]?.success === false ? (
+            <CloseIcon className="w-5 h-5 rounded-full fill-red-900" />
+          ) : running.actionIndex === running.workflow.actions.length ? (
+            <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
           ) : (
             <LoadingIcon className="w-5 h-5 fill-emerald-600" />
           )}
@@ -168,7 +217,7 @@ const RunnerTab = () => {
         </CardDescription>
       </Card>
       <hr className="bg-muted w-1/2 h-1 my-2 mx-auto" />
-      {[...Array(running.actionIndex + 1).keys()].map((index: number) => {
+      {[...Array(running.actionIndex + 1).keys()].map((index) => {
         if (index === running.workflow.actions.length) {
           return null
         }
@@ -178,6 +227,7 @@ const RunnerTab = () => {
             action={running.workflow.actions[index]}
             title={`Step ${index + 1} / ${running.workflow.actions.length}`}
             isRunning={index === running.actionIndex}
+            result={running.results[index] ?? null}
           />
         )
       })}
