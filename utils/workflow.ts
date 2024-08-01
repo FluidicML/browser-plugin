@@ -13,7 +13,6 @@ export const initSchema = z
       message: "You must provide a valid URL.",
     }),
   })
-  .strict()
   .required()
 
 export type InitSchema = z.infer<typeof initSchema>
@@ -27,7 +26,6 @@ export const actionClickSchema = z
     action: z.literal("click"),
     locator: locatorSchema,
   })
-  .strict()
   .required()
 
 export type ActionClickSchema = z.infer<typeof actionClickSchema>
@@ -36,9 +34,10 @@ export const actionKeyupSchema = z
   .object({
     action: z.literal("keyup"),
     locator: locatorSchema,
-    value: z.string(),
+    value: z.string().min(1, {
+      message: "You must provide a value.",
+    }),
   })
-  .strict()
   .required()
 
 export type ActionKeyupSchema = z.infer<typeof actionKeyupSchema>
@@ -51,7 +50,6 @@ export const actionCaptureSchema = z
       )
       .nonempty(),
   })
-  .strict()
   .required()
 
 export type ActionCaptureSchema = z.infer<typeof actionCaptureSchema>
@@ -67,7 +65,6 @@ export const actionNavigateSchema = z
       message: "You must provide a valid URL.",
     }),
   })
-  .strict()
   .required()
 
 export type ActionNavigateSchema = z.infer<typeof actionNavigateSchema>
@@ -83,8 +80,21 @@ export const actionPromptSchema = z
     user: z.string().min(1, {
       message: "You must provide a user prompt.",
     }),
+    interpolations: z
+      .array(
+        z
+          .object({
+            name: z.string().min(1, {
+              message: "You must provide a nonempty name.",
+            }),
+            description: z.string().min(1, {
+              message: "You must provide a nonempty description.",
+            }),
+          })
+          .required()
+      )
+      .optional(),
   })
-  .strict()
   .required()
 
 export type ActionPromptSchema = z.infer<typeof actionPromptSchema>

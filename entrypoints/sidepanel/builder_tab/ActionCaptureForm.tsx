@@ -1,5 +1,4 @@
 import React from "react"
-import pick from "lodash/pick"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useFieldArray, useForm } from "react-hook-form"
 
@@ -91,12 +90,11 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
           if (message.payload === null) {
             return
           }
-          const copy = pick(message.payload, ["action", "locator", "value"])
           const last = captures.fields[captures.fields.length - 1]
           if (message.payload.replace && last.action === "keyup") {
-            captures.update(captures.fields.length - 1, copy)
+            captures.update(captures.fields.length - 1, message.payload)
           } else {
-            captures.append(copy)
+            captures.append(message.payload)
           }
           break
         }

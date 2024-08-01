@@ -5,7 +5,6 @@ import FolderIcon from "@/components/icons/Folder"
 import LoadingIcon from "@/components/icons/Loading"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { useSharedStore } from "./store"
-
 import StepCard from "./runner_tab/StepCard"
 
 const waitForClick = async (browserTab: number, locator: Locator) => {
