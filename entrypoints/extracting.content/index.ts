@@ -6,12 +6,9 @@
 import "./styles.css"
 
 import type { ContentScriptContext } from "wxt/client"
+import { MessageEvent, addMessageListener } from "@/utils/messages"
 
 const OUTLINE_PADDING = 15
-
-const forceStyle = (el: HTMLElement, key: string, value: string | null) => {
-  el.style.setProperty(key, value, "important")
-}
 
 export default defineContentScript({
   matches: ["*://*/*"],
@@ -21,25 +18,30 @@ export default defineContentScript({
     outline.id = "fluidic-extracting-outline"
     document.body.appendChild(outline)
 
+    const forceStyle = (key: string, value: string | null) => {
+      outline.style.setProperty(key, value, "important")
+    }
+
     const outlineShow = (visible: boolean) => {
-      forceStyle(outline, "display", visible ? "block" : "none")
+      forceStyle("display", visible ? "block" : "none")
     }
 
     // Renders the outline around the target element. Moving is a relatively
     // expensive operation, but other events (e.g. mouseover) didn't perform as
     // accurately.
     const moveListener = (ev: MouseEvent) => {
-      const target = document.elementFromPoint(ev.clientX, ev.clientY)
-      if (target instanceof HTMLElement) {
-        const bounds = target.getBoundingClientRect()
-        forceStyle(outline, "top", `${bounds.top - OUTLINE_PADDING}px`)
-        forceStyle(outline, "left", `${bounds.left - OUTLINE_PADDING}px`)
-        forceStyle(outline, "width", `${bounds.width + 2 * OUTLINE_PADDING}px`)
-        forceStyle(
-          outline,
-          "height",
-          `${bounds.height + 2 * OUTLINE_PADDING}px`
-        )
+      forceStyle("pointer-events", "none")
+      try {
+        const target = document.elementFromPoint(ev.clientX, ev.clientY)
+        if (target instanceof HTMLElement) {
+          const bounds = target.getBoundingClientRect()
+          forceStyle("top", `${bounds.top - OUTLINE_PADDING}px`)
+          forceStyle("left", `${bounds.left - OUTLINE_PADDING}px`)
+          forceStyle("width", `${bounds.width + 2 * OUTLINE_PADDING}px`)
+          forceStyle("height", `${bounds.height + 2 * OUTLINE_PADDING}px`)
+        }
+      } finally {
+        forceStyle("pointer-events", "auto")
       }
     }
 
@@ -52,8 +54,8 @@ export default defineContentScript({
         clearTimeout(scrollTimeoutId)
       }
       scrollTimeoutId = window.setTimeout(() => {
-        forceStyle(outline, "width", "0px")
-        forceStyle(outline, "height", "0px")
+        forceStyle("width", "0px")
+        forceStyle("height", "0px")
         outlineShow(true)
       }, 300)
     }
@@ -69,5 +71,18 @@ export default defineContentScript({
       document.removeEventListener("scroll", scrollListener, true)
       document.removeEventListener("mousemove", moveListener, true)
     }
+
+    addMessageListener((message) => {
+      switch (message.event) {
+        case MessageEvent.EXTRACTING_START: {
+          extractingStart()
+          break
+        }
+        case MessageEvent.EXTRACTING_STOP: {
+          extractingStop()
+          break
+        }
+      }
+    })
   },
 })
