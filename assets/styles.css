@@ -67,3 +67,26 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar::-webkit-scrollbar-track {
+    border-radius: 100vh;
+    background: hsl(var(--background));
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 100vh;
+    background: hsl(var(--muted-foreground));
+    border: 3px solid hsl(var(--muted-foreground));
+  }
+
+  .scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--foreground));
+    border: 3px solid hsl(var(--foreground));
+  }
+}

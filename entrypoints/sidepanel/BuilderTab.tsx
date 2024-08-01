@@ -84,7 +84,7 @@ const BuilderTab = () => {
       value={tabActive}
       onValueChange={setTabActive}
     >
-      <TabsList className="flex flex-wrap justify-start mt-2 mx-4">
+      <TabsList className="flex overflow-x-auto overflow-y-hidden scrollbar justify-start mt-2 mx-4">
         <TabsTrigger
           value="init"
           disabled={store.lockedBy.size > 0}
