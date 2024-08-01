@@ -1,40 +1,18 @@
 import React from "react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  MessageEvent,
-  addMessageListener,
-  removeMessageListener,
-} from "@/utils/messages"
 
-import { type TabValue, useHydration, useSharedStore } from "./store"
+import { type TabValue, useSharedStore } from "./store"
 import BuilderTab from "./BuilderTab"
 import LibraryTab from "./LibraryTab"
 import RunnerTab from "./RunnerTab"
 
 function App() {
-  const hydrated = useHydration()
   const store = useSharedStore()
 
   React.useEffect(() => {
     document.documentElement.classList.add("dark")
   }, [])
-
-  React.useEffect(() => {
-    if (!hydrated) {
-      return
-    }
-
-    const listener = addMessageListener((message) => {
-      switch (message.event) {
-        case MessageEvent.CAPTURE_QUERY: {
-          return Promise.resolve(store.isCapturing)
-        }
-      }
-    })
-
-    return () => removeMessageListener(listener)
-  }, [hydrated, store.isCapturing])
 
   return (
     <Tabs

@@ -102,25 +102,3 @@ export const useSharedStore = create<SharedState>()(
     }
   )
 )
-
-export const useHydration = () => {
-  const [hydrated, setHydrated] = React.useState(false)
-
-  React.useEffect(() => {
-    const unsubHydrate = useSharedStore.persist.onHydrate(() =>
-      setHydrated(false)
-    )
-    const unsubFinishHydration = useSharedStore.persist.onFinishHydration(() =>
-      setHydrated(true)
-    )
-
-    setHydrated(useSharedStore.persist.hasHydrated())
-
-    return () => {
-      unsubHydrate()
-      unsubFinishHydration()
-    }
-  }, [])
-
-  return hydrated
-}

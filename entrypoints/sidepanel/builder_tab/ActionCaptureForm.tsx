@@ -84,6 +84,9 @@ const ActionCaptureForm = ({ onChange }: ActionCaptureFormProps) => {
     }
     const listener = addMessageListener((message) => {
       switch (message.event) {
+        case MessageEvent.CAPTURE_QUERY: {
+          return Promise.resolve(true)
+        }
         case MessageEvent.CAPTURE_CLICK: {
           if (message.payload === null) {
             return
