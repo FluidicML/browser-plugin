@@ -8,18 +8,12 @@ import ActionRecordingForm from "./ActionRecordingForm"
 import ActionNavigateForm from "./ActionNavigateForm"
 import ActionPromptForm from "./ActionPromptForm"
 
-export type ActionTab = {
-  key: string
-  label: string
-  form?: ActionForm
-  params: Set<string>
-}
-
 type ActionTabPanelProps = {
+  params: Set<string>
   onChange: (values: ActionForm | null) => void
 }
 
-const ActionTabPanel = ({ onChange }: ActionTabPanelProps) => {
+const ActionTabPanel = ({ params, onChange }: ActionTabPanelProps) => {
   const [actionKindActive, setActionKindActive] = React.useState<ActionKind>(
     ActionKind.RECORDING
   )
@@ -61,6 +55,9 @@ const ActionTabPanel = ({ onChange }: ActionTabPanelProps) => {
           setActionKindActive(kind)
         }}
       />
+      {params.size > 0
+        ? [...params].map((p) => <span key={p}>{p}</span>)
+        : null}
       <hr className="bg-muted w-1/2 h-1 my-6 mx-auto" />
       {actionTabForm}
     </div>

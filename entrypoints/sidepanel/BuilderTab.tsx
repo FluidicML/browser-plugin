@@ -13,7 +13,14 @@ import {
   actionFormParams,
 } from "@/utils/workflow"
 import InitTabPanel from "./builder_tab/InitTabPanel"
-import ActionTabPanel, { type ActionTab } from "./builder_tab/ActionTabPanel"
+import ActionTabPanel from "./builder_tab/ActionTabPanel"
+
+type ActionTab = {
+  key: string
+  label: string
+  form?: ActionForm
+  params: Set<string>
+}
 
 const BuilderTab = () => {
   const store = useSharedStore()
@@ -159,6 +166,7 @@ const BuilderTab = () => {
           hidden={tabActive !== tab.key}
         >
           <ActionTabPanel
+            params={tab.params}
             onChange={(values) => updateActionTabs(values, index)}
           />
         </TabsContent>
@@ -174,7 +182,7 @@ const BuilderTab = () => {
                 {
                   key: nextKey,
                   label: `Step ${actionTabs.length + 1}`,
-                  params: accumParamsActionTab(tabActiveIndex),
+                  params: accumParamsActionTab(tabActiveIndex + 1),
                 },
               ])
             }
