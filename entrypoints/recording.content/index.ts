@@ -59,6 +59,7 @@ export default defineContentScript({
     const clickListener = (ev: MouseEvent) => {
       const target = document.elementFromPoint(ev.clientX, ev.clientY)
       if (!(target instanceof HTMLElement)) {
+        console.warn("FLUIDIC", "Clicked on non-HTMLElement.")
         return
       }
       sendExt({

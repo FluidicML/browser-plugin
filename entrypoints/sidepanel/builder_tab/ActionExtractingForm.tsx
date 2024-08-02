@@ -26,28 +26,40 @@ import { Button } from "@/components/ui/button"
 import { useSharedStore } from "../store"
 
 type ExtractionCardProps = {
-  index: number
   control: Control<ActionExtractingSchema>
+  index: number
+  selector: Selector
 }
 
-const ExtractionCard = ({ index, control }: ExtractionCardProps) => {
+const ExtractionCard = ({ control, index, selector }: ExtractionCardProps) => {
   return (
     <Card>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent className="pb-2 overflow-x-auto scrollbar">
         <FormField
           control={control}
           name={`extractions.${index}.name`}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input placeholder="Name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        SELECTOR
+        <hr className="my-4" />
+        {typeof selector === "string" ? (
+          <pre>{selector}</pre>
+        ) : (
+          <ul>
+            {[...locatorToMap(selector).entries()].map(([key, val]) => (
+              <li key={key} className="flex gap-2">
+                <pre className="w-12">{key}:</pre>
+                <pre>{val}</pre>
+              </li>
+            ))}
+          </ul>
+        )}
       </CardContent>
     </Card>
   )
@@ -151,15 +163,14 @@ const ActionExtractingForm = ({ onChange }: ActionExtractingFormProps) => {
         {extractions.fields.length > 0 && (
           <div className="flex flex-col gap-4">
             <p>Name each extraction for insertion into subsequent steps.</p>
-            {[...Array(extractions.fields.length).keys()].map((index) => {
-              return (
-                <ExtractionCard
-                  key={extractions.fields[index].id}
-                  index={index}
-                  control={form.control}
-                />
-              )
-            })}
+            {extractions.fields.map((extraction, index) => (
+              <ExtractionCard
+                key={extractions.fields[index].id}
+                control={form.control}
+                index={index}
+                selector={extraction.selector}
+              />
+            ))}
           </div>
         )}
       </form>

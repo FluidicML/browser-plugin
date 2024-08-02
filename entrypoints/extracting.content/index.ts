@@ -61,14 +61,20 @@ export default defineContentScript({
     }
 
     const clickListener = (ev: MouseEvent) => {
-      const target = document.elementFromPoint(ev.clientX, ev.clientY)
-      if (!(target instanceof HTMLElement)) {
-        return
+      forceStyle("pointer-events", "none")
+      try {
+        const target = document.elementFromPoint(ev.clientX, ev.clientY)
+        if (!(target instanceof HTMLElement)) {
+          console.warn("FLUIDIC", "Clicked on non-HTMLElement.")
+          return
+        }
+        sendExt({
+          event: MessageEvent.EXTRACTING_CLICK,
+          payload: getSelector(target),
+        })
+      } finally {
+        forceStyle("pointer-events", "auto")
       }
-      sendExt({
-        event: MessageEvent.EXTRACTING_CLICK,
-        payload: getSelector(target),
-      })
     }
 
     const extractingStart = () => {
