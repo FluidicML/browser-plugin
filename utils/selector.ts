@@ -71,7 +71,7 @@ class QueryBuilder {
       }
 
       if (role === "button") {
-        return m.tagName === "button"
+        return m.tagName.toLowerCase() === "button"
       }
 
       if (role === "textbox" && m instanceof HTMLTextAreaElement) {
@@ -248,7 +248,7 @@ const relativeSelectorOf = (el: HTMLElement) => {
   }
 
   if (!el.parentElement) {
-    return el.tagName
+    return el.tagName.toLowerCase()
   }
 
   // With the advent of utility and generated classes, the class list isn't a
@@ -258,7 +258,7 @@ const relativeSelectorOf = (el: HTMLElement) => {
   let suffix = ""
   for (const cls of el.classList) {
     suffix += `.${cls}`
-    const selector = `${el.tagName}${suffix}`
+    const selector = `${el.tagName.toLowerCase()}${suffix}`
     if (el.parentElement.querySelectorAll(selector).length === 1) {
       return selector
     }
@@ -275,7 +275,7 @@ const relativeSelectorOf = (el: HTMLElement) => {
     }
   }
 
-  return `${el.tagName}:nth-of-type(${index})`
+  return `${el.tagName.toLowerCase()}:nth-of-type(${index})`
 }
 
 // Build a series of selectors, starting from our specified element and working

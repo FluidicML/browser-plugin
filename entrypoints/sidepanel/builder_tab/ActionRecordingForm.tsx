@@ -34,7 +34,7 @@ const ActionCard = ({ index, recording }: ActionCardProps) => {
   const Subtitle = () => {
     switch (action) {
       case "click": {
-        return <p>Clicked on element:</p>
+        return <span>Clicked on element:</span>
       }
       case "keyup": {
         let prefix = recording.value.slice(0, 40)
@@ -42,9 +42,9 @@ const ActionCard = ({ index, recording }: ActionCardProps) => {
           prefix += "..."
         }
         return (
-          <p>
+          <span>
             Input <span className="font-bold">{prefix}</span> into element:
-          </p>
+          </span>
         )
       }
       default: {
