@@ -17,6 +17,10 @@ export const locatorSchema = z.object({
 
 export type Locator = z.infer<typeof locatorSchema>
 
+export const locatorToMap = (locator: Locator): Map<string, string> => {
+  return new Map(Object.entries(locator))
+}
+
 // Representation of either a locator or CSS selector string.
 export const selectorSchema = locatorSchema.or(z.string())
 

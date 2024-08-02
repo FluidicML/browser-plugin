@@ -122,7 +122,7 @@ const BuilderTab = () => {
       {actionTabs.map((tab, index) => (
         <TabsContent
           key={tab.key}
-          className="overflow-y-auto h-full px-4"
+          className="overflow-y-auto scrollbar h-full px-4"
           value={tab.key}
           forceMount
           hidden={tabActive !== tab.key}

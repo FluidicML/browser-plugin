@@ -12,32 +12,70 @@ import {
 } from "@/utils/messages"
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
-import { Card, CardContent, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { useSharedStore } from "../store"
 
-type ClickCardContentProps = {}
-
-const ClickCardContent = ({}: ClickCardContentProps) => {
-  return (
-    <CardContent>
-      <div>Clicked element.</div>
-    </CardContent>
-  )
+type ActionCardProps = {
+  index: number
+  recording: ActionClickSchema | ActionKeyupSchema
 }
 
-type KeyupCardContentProps = {
-  value: string
-}
+const ActionCard = ({ index, recording }: ActionCardProps) => {
+  const action = recording.action
+  const title = `Step ${index + 1} - ${action.slice(0, 1).toUpperCase() + action.slice(1)}`
 
-const KeyupCardContent = ({ value }: KeyupCardContentProps) => {
+  const Subtitle = () => {
+    switch (action) {
+      case "click": {
+        return <p>Clicked on element:</p>
+      }
+      case "keyup": {
+        let prefix = recording.value.slice(0, 40)
+        if (prefix.length < recording.value.length) {
+          prefix += "..."
+        }
+        return (
+          <p>
+            Input <span className="font-bold">{prefix}</span> into element:
+          </p>
+        )
+      }
+      default: {
+        const _exhaustivenessCheck: never = action
+        return null
+      }
+    }
+  }
+
   return (
-    <CardContent>
-      <div>
-        Input <pre className="pt-2 text-center">{value}</pre>
-      </div>
-    </CardContent>
+    <Card>
+      <CardTitle>{title}</CardTitle>
+      <CardDescription className="pb-2">{Subtitle()}</CardDescription>
+      <hr />
+      <CardContent className="pt-4 pb-2 overflow-x-auto scrollbar">
+        {typeof recording.selector === "string" ? (
+          <pre>{recording.selector}</pre>
+        ) : (
+          <ul>
+            {[...locatorToMap(recording.selector).entries()].map(
+              ([key, val]) => (
+                <li key={key} className="flex gap-2">
+                  <pre className="w-12">{key}:</pre>
+                  <pre>{val}</pre>
+                </li>
+              )
+            )}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 
@@ -155,22 +193,9 @@ const ActionRecordingForm = ({ onChange }: ActionRecordingFormProps) => {
           )}
         </Button>
         <div className="flex flex-col gap-4 pt-2">
-          {...recordings.fields.map((recording, index) => {
-            const action = recording.action
-            const step = `Step ${index + 1}`
-            const name = action.slice(0, 1).toUpperCase() + action.slice(1)
-
-            return (
-              <Card>
-                <CardTitle className="pb-4">{`${step} - ${name}`}</CardTitle>
-                {action === "click" ? (
-                  <ClickCardContent />
-                ) : action === "keyup" ? (
-                  <KeyupCardContent value={recording.value} />
-                ) : null}
-              </Card>
-            )
-          })}
+          {...recordings.fields.map((recording, index) => (
+            <ActionCard index={index} recording={recording} />
+          ))}
         </div>
       </form>
     </Form>

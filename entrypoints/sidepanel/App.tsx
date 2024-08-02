@@ -26,7 +26,7 @@ function App() {
         <TabsTrigger value="runner">Runner</TabsTrigger>
       </TabsList>
       <TabsContent
-        className="overflow-y-auto h-full"
+        className="overflow-y-auto scrollbar h-full"
         value="builder"
         forceMount
         hidden={store.activeTab !== "builder"}
@@ -34,7 +34,7 @@ function App() {
         <BuilderTab />
       </TabsContent>
       <TabsContent
-        className="overflow-y-auto"
+        className="overflow-y-auto scrollbar"
         value="library"
         forceMount
         hidden={store.activeTab !== "library"}
@@ -42,7 +42,7 @@ function App() {
         <LibraryTab />
       </TabsContent>
       <TabsContent
-        className="overflow-y-auto"
+        className="overflow-y-auto scrollbar"
         value="runner"
         forceMount
         hidden={store.activeTab !== "runner"}
