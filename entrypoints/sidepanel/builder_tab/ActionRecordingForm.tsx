@@ -42,18 +42,11 @@ const ActionCard = ({ index, recording, onRemove }: ActionCardProps) => {
   const Subtitle = () => {
     switch (action) {
       case "click": {
-        return <span>Clicked:</span>
+        return null
       }
       case "keyup": {
         let prefix = recording.value.slice(0, 24)
-        if (prefix.length < recording.value.length) {
-          prefix += "..."
-        }
-        return (
-          <span>
-            Input <span className="font-bold">{prefix}</span>:
-          </span>
-        )
+        return prefix.length < recording.value.length ? `${prefix}...` : prefix
       }
       default: {
         const _exhaustivenessCheck: never = action
@@ -63,24 +56,24 @@ const ActionCard = ({ index, recording, onRemove }: ActionCardProps) => {
   }
 
   return (
-    <Card className="relative">
+    <Card>
       <CardTitle>{title}</CardTitle>
       <CardDescription>{Subtitle()}</CardDescription>
-      <Separator className="my-4" />
-      <CardContent className="pb-2 overflow-x-auto scrollbar">
+      <CardContent className="pt-2 flex flex-col overflow-x-auto scrollbar">
         {typeof recording.selector === "string" ? (
           <pre>{recording.selector}</pre>
         ) : (
           <LocatorTable locator={recording.selector} />
         )}
+        <Separator className="my-4" />
+        <Button
+          size="xicon"
+          className="self-end group hover:bg-destructive/90"
+          onClick={onRemove}
+        >
+          <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
+        </Button>
       </CardContent>
-      <Button
-        size="xs"
-        className="group hover:bg-destructive/90 absolute right-4 top-4"
-        onClick={onRemove}
-      >
-        <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
-      </Button>
     </Card>
   )
 }

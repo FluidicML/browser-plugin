@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/form"
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
-import { Card, CardContent } from "@/components/ui/card"
+import TrashIcon from "@/components/icons/Trash"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -34,30 +35,43 @@ type ParameterCardProps = {
   control: Control<ActionExtractingSchema>
   index: number
   selector: Selector
+  onRemove: () => void
 }
 
-const ParameterCard = ({ control, index, selector }: ParameterCardProps) => {
+const ParameterCard = ({
+  control,
+  index,
+  selector,
+  onRemove,
+}: ParameterCardProps) => {
   return (
     <Card>
-      <CardContent className="pb-2 overflow-x-auto scrollbar">
+      <CardContent className="flex flex-col overflow-x-auto scrollbar">
         <FormField
           control={control}
           name={`params.${index}.name`}
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input placeholder="Name" {...field} />
+                <Input className="mb-4" placeholder="Name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Separator className="my-4" />
         {typeof selector === "string" ? (
           <pre>{selector}</pre>
         ) : (
           <LocatorTable locator={selector} />
         )}
+        <Separator className="my-4" />
+        <Button
+          size="xicon"
+          className="self-end group hover:bg-destructive/90"
+          onClick={onRemove}
+        >
+          <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
+        </Button>
       </CardContent>
     </Card>
   )
@@ -163,10 +177,11 @@ const ActionExtractingForm = ({ onChange }: ActionExtractingFormProps) => {
             <p>Name each extraction for insertion into subsequent steps.</p>
             {params.fields.map((param, index) => (
               <ParameterCard
-                key={params.fields[index].id}
+                key={param.id}
                 control={form.control}
                 index={index}
                 selector={param.selector}
+                onRemove={() => params.remove(index)}
               />
             ))}
           </div>
