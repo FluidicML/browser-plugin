@@ -24,7 +24,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import { Form } from "@/components/ui/form"
 import { useSharedStore } from "../store"
 import LocatorTable from "./LocatorTable"
@@ -56,24 +55,25 @@ const ActionCard = ({ index, recording, onRemove }: ActionCardProps) => {
   }
 
   return (
-    <Card>
+    <Card className="relative">
       <CardTitle>{title}</CardTitle>
       <CardDescription>{Subtitle()}</CardDescription>
-      <CardContent className="pt-2 flex flex-col overflow-x-auto scrollbar">
-        {typeof recording.selector === "string" ? (
-          <pre>{recording.selector}</pre>
-        ) : (
-          <LocatorTable locator={recording.selector} />
-        )}
-        <Separator className="my-4" />
-        <Button
-          size="xicon"
-          className="self-end group hover:bg-destructive/90"
-          onClick={onRemove}
-        >
-          <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
-        </Button>
+      <CardContent className="pt-2">
+        <div className="overflow-x-auto scrollbar">
+          {typeof recording.selector === "string" ? (
+            <pre>{recording.selector}</pre>
+          ) : (
+            <LocatorTable locator={recording.selector} />
+          )}
+        </div>
       </CardContent>
+      <Button
+        size="xicon"
+        className="absolute top-2 right-2 group hover:bg-destructive/90"
+        onClick={onRemove}
+      >
+        <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
+      </Button>
     </Card>
   )
 }

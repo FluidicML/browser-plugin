@@ -24,10 +24,9 @@ import {
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
 import TrashIcon from "@/components/icons/Trash"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import { useSharedStore } from "../store"
 import LocatorTable from "./LocatorTable"
 
@@ -46,7 +45,7 @@ const ParameterCard = ({
 }: ParameterCardProps) => {
   return (
     <Card>
-      <CardContent className="flex flex-col overflow-x-auto scrollbar">
+      <CardContent className="flex flex-col relative">
         <FormField
           control={control}
           name={`params.${index}.name`}
@@ -59,19 +58,20 @@ const ParameterCard = ({
             </FormItem>
           )}
         />
-        {typeof selector === "string" ? (
-          <pre>{selector}</pre>
-        ) : (
-          <LocatorTable locator={selector} />
-        )}
-        <Separator className="my-4" />
         <Button
           size="xicon"
-          className="self-end group hover:bg-destructive/90"
+          className="absolute right-1 top-1 group hover:bg-destructive/90"
           onClick={onRemove}
         >
           <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
         </Button>
+        <div className="overflow-x-auto scrollbar">
+          {typeof selector === "string" ? (
+            <pre>{selector}</pre>
+          ) : (
+            <LocatorTable locator={selector} />
+          )}
+        </div>
       </CardContent>
     </Card>
   )

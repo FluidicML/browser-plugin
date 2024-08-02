@@ -8,11 +8,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ComboBox } from "@/components/ui/combobox"
 import { Separator } from "@/components/ui/separator"
 import { type ActionForm, ActionKind } from "@/utils/schema"
 import BracesIcon from "@/components/icons/Braces"
+import TrashIcon from "@/components/icons/Trash"
 import ActionExtractingForm from "./ActionExtractingForm"
 import ActionRecordingForm from "./ActionRecordingForm"
 import ActionNavigateForm from "./ActionNavigateForm"
@@ -51,9 +53,14 @@ const ParameterSheet = ({ params }: ParameterSheetProps) => {
 type ActionTabPanelProps = {
   params: Set<string>
   onChange: (values: ActionForm | null) => void
+  onRemove: () => void
 }
 
-const ActionTabPanel = ({ params, onChange }: ActionTabPanelProps) => {
+const ActionTabPanel = ({
+  params,
+  onChange,
+  onRemove,
+}: ActionTabPanelProps) => {
   const [activeKind, setActiveKind] = React.useState<ActionKind>(
     ActionKind.NAVIGATE
   )
@@ -82,28 +89,27 @@ const ActionTabPanel = ({ params, onChange }: ActionTabPanelProps) => {
   return (
     <div>
       <div className="flex gap-2">
+        {params.size > 0 &&
+        [ActionKind.NAVIGATE, ActionKind.OPENAI].includes(activeKind) ? (
+          <ParameterSheet params={params} />
+        ) : null}
         <ComboBox
           value={activeKind}
           options={Object.values(ActionKind).map((value) => ({
             label: value,
             value,
           }))}
-          onSelect={(value) => {
-            const kind = value as ActionKind
-            if (kind !== activeKind) {
-              onChange(null)
-            }
-            setActiveKind(kind)
-          }}
+          onSelect={(value) => setActiveKind(value as ActionKind)}
         />
-        {params.size > 0 &&
-        [ActionKind.NAVIGATE, ActionKind.OPENAI].includes(activeKind) ? (
-          <ParameterSheet params={params} />
-        ) : null}
+        <Button
+          size="icon"
+          className="group hover:bg-destructive/90"
+          onClick={onRemove}
+        >
+          <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
+        </Button>
       </div>
-
       <Separator className="my-4" />
-
       {actionTabForm}
     </div>
   )

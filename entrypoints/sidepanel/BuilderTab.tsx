@@ -1,9 +1,9 @@
 import React from "react"
-
 import { cn } from "@/utils/shadcn"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSharedStore } from "./store"
+import { v4 as uuidv4 } from "uuid"
 
 import {
   type InitSchema,
@@ -29,18 +29,13 @@ const BuilderTab = () => {
   const [rootKey, setRootKey] = React.useState(0)
   const [initTab, setInitTab] = React.useState<InitSchema | null>(null)
   const [actionTabs, setActionTabs] = React.useState<ActionTab[]>([])
-  const [tabActive, setTabActive] = React.useState("init")
 
+  const [tabActive, setTabActive] = React.useState("-1")
   // Retrieves the index of the active tab. For uniformity, the "init" tab is
   // treated as if it has index `-1` in the `actionTabs` array.
-  const tabActiveIndex = React.useMemo(() => {
-    return actionTabs.findIndex((tab) => tab.key === tabActive)
-  }, [tabActive, actionTabs])
-
+  const tabActiveIndex = parseInt(tabActive)
   // Checks if the active tab is also the last tab in the workflow.
-  const tabActiveIsLast = React.useMemo(() => {
-    return tabActiveIndex === actionTabs.length - 1
-  }, [tabActive, actionTabs])
+  const tabActiveLast = tabActiveIndex === actionTabs.length - 1
 
   // Because we can edit steps out of order, we may also invalidate later steps
   // when updating a previous one. Indices before this one refer to validated
@@ -59,7 +54,7 @@ const BuilderTab = () => {
     return i
   }, [initTab, tabActiveIndex, actionTabs])
 
-  // Accumulate parameters specified in tabs before that of the specified
+  // Accumulate parameters specified in any action tabs before the specified
   // index.
   const accumulateParams = React.useCallback(
     (index: number) => {
@@ -109,7 +104,7 @@ const BuilderTab = () => {
         .map((t) => t.form)
         .filter((f): f is ActionForm => Boolean(f)),
     })
-    setTabActive("init")
+    setTabActive("-1")
     setInitTab(null)
     setActionTabs([])
     setRootKey((id) => id + 1)
@@ -132,7 +127,7 @@ const BuilderTab = () => {
     >
       <TabsList className="flex overflow-x-auto overflow-y-hidden scrollbar justify-start mt-2 mx-4">
         <TabsTrigger
-          value="init"
+          value="-1"
           disabled={store.lockedBy.size > 0}
           className={cn(
             validBeforeIndex === -1
@@ -145,7 +140,7 @@ const BuilderTab = () => {
         {actionTabs.map((tab, index) => (
           <TabsTrigger
             key={tab.key}
-            value={tab.key}
+            value={`${index}`}
             disabled={store.lockedBy.size > 0}
             className={cn(
               index >= validBeforeIndex
@@ -160,9 +155,9 @@ const BuilderTab = () => {
 
       <TabsContent
         className="h-full px-4"
-        value="init"
+        value="-1"
         forceMount
-        hidden={tabActive !== "init"}
+        hidden={tabActive !== "-1"}
       >
         <InitTabPanel onChange={setInitTab} />
       </TabsContent>
@@ -170,13 +165,23 @@ const BuilderTab = () => {
         <TabsContent
           key={tab.key}
           className="overflow-y-auto scrollbar h-full px-4"
-          value={tab.key}
+          value={`${index}`}
           forceMount
-          hidden={tabActive !== tab.key}
+          hidden={tabActive !== `${index}`}
         >
           <ActionTabPanel
             params={tab.params}
             onChange={(values) => propagateUpdateTabs(values, index)}
+            onRemove={() => {
+              setTabActive(`${index - (tabActiveLast ? 1 : 0)}`)
+              setActionTabs((tabs) => {
+                const spliced = [...tabs].toSpliced(index, 1)
+                for (let i = index; i < spliced.length; ++i) {
+                  spliced[i].label = `Step ${i + 1}`
+                }
+                return spliced
+              })
+            }}
           />
         </TabsContent>
       ))}
@@ -184,26 +189,25 @@ const BuilderTab = () => {
       <div className="flex border-t px-4 py-2">
         <Button
           onClick={() => {
-            const nextKey = `step${tabActiveIndex + 1}`
-            if (tabActiveIsLast) {
+            if (tabActiveLast) {
               setActionTabs((tabs) => [
                 ...tabs,
                 {
-                  key: nextKey,
+                  key: uuidv4(),
                   label: `Step ${actionTabs.length + 1}`,
                   params: accumulateParams(tabActiveIndex + 1),
                   form: null,
                 },
               ])
             }
-            setTabActive(nextKey)
+            setTabActive(`${tabActiveIndex + 1}`)
           }}
           disabled={
             store.lockedBy.size > 0 ||
-            (tabActiveIndex >= validBeforeIndex && tabActiveIsLast)
+            (tabActiveIndex >= validBeforeIndex && tabActiveLast)
           }
         >
-          {tabActiveIsLast ? "New Step" : "Continue"}
+          {tabActiveLast ? "New Step" : "Continue"}
         </Button>
         <Button
           variant="secondary"
