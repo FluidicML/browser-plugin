@@ -77,8 +77,8 @@ const runStep = async (
       await updateTabUntilComplete(browserTab, { url: action.values.url })
       return { success: true, messages: [] }
     }
-    case ActionKind.PROMPT: {
-      return { success: false, messages: ["Unsupported PROMPT action."] }
+    case ActionKind.OPENAI: {
+      return { success: false, messages: ["Unsupported OPENAI action."] }
     }
     default: {
       const _exhaustivenessCheck: never = kind

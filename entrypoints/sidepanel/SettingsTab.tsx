@@ -45,10 +45,9 @@ const SettingsTab = () => {
           name="openaiApiKey"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>OpenAI API Key</FormLabel>
+              <FormLabel>API Key</FormLabel>
               <FormDescription>
-                Used for <span className="font-bold">Prompt</span> actions. No
-                need to set this if you do not use them.
+                Used in <span className="font-bold">OpenAI</span> actions.
               </FormDescription>
               <FormControl>
                 <Input

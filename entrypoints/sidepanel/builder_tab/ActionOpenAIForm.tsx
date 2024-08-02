@@ -3,8 +3,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Control, useFieldArray, useForm } from "react-hook-form"
 
 import PlusIcon from "@/components/icons/Plus"
-import type { ActionPromptSchema, ActionForm } from "@/utils/workflow"
-import { ActionKind, actionPromptSchema } from "@/utils/workflow"
+import type { ActionOpenAISchema, ActionForm } from "@/utils/workflow"
+import { ActionKind, actionOpenAISchema } from "@/utils/workflow"
 import {
   Form,
   FormControl,
@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useSharedStore } from "../store"
 
 type ParameterFieldProps = {
-  control: Control<ActionPromptSchema>
+  control: Control<ActionOpenAISchema>
   index: number
 }
 
@@ -31,9 +31,9 @@ const ParameterField = ({ control, index }: ParameterFieldProps) => {
         name={`params.${index}.name`}
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Response {index + 1}</FormLabel>
+            <FormLabel>JSON Field {index + 1}</FormLabel>
             <FormControl>
-              <Input placeholder="name" {...field} />
+              <Input placeholder="Name" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -45,7 +45,7 @@ const ParameterField = ({ control, index }: ParameterFieldProps) => {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Textarea placeholder="description" {...field} />
+              <Textarea placeholder="Description" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -55,15 +55,15 @@ const ParameterField = ({ control, index }: ParameterFieldProps) => {
   )
 }
 
-type ActionPromptFormProps = {
+type ActionOpenAIFormProps = {
   onChange: (values: ActionForm | null) => void
 }
 
-const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
+const ActionOpenAIForm = ({ onChange }: ActionOpenAIFormProps) => {
   const store = useSharedStore()
 
-  const form = useForm<ActionPromptSchema>({
-    resolver: zodResolver(actionPromptSchema),
+  const form = useForm<ActionOpenAISchema>({
+    resolver: zodResolver(actionOpenAISchema),
     defaultValues: {
       system: "",
       user: "",
@@ -82,15 +82,15 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
       return
     }
 
-    const parsed = actionPromptSchema.safeParse(form.getValues())
+    const parsed = actionOpenAISchema.safeParse(form.getValues())
     onChange(
-      parsed.success ? { kind: ActionKind.PROMPT, values: parsed.data } : null
+      parsed.success ? { kind: ActionKind.OPENAI, values: parsed.data } : null
     )
 
     const subscription = form.watch((values) => {
-      const parsed = actionPromptSchema.safeParse(values)
+      const parsed = actionOpenAISchema.safeParse(values)
       onChange(
-        parsed.success ? { kind: ActionKind.PROMPT, values: parsed.data } : null
+        parsed.success ? { kind: ActionKind.OPENAI, values: parsed.data } : null
       )
     })
 
@@ -100,9 +100,9 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
   if (store.openaiApiKey === "") {
     return (
       <p>
-        To create a <span className="font-bold">Prompt</span> action, you must
-        set an OpenAI API key. Do so in the{" "}
-        <span className="font-bold">Settings</span> tab.
+        To create an <span className="font-bold">OpenAI</span> action, you must
+        set an API key. Do so in the <span className="font-bold">Settings</span>{" "}
+        tab.
       </p>
     )
   }
@@ -110,6 +110,7 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
   return (
     <Form {...form}>
       <form className="space-y-4">
+        <p>Send a chat completion request to OpenAI.</p>
         <FormField
           control={form.control}
           name="system"
@@ -145,8 +146,8 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
           )}
         />
         <p>
-          Define what values should be returned in the response. These can be
-          accessed from subsequent steps.
+          Values returned in the JSON-formatted response. These can be accessed
+          in subsequent steps.
         </p>
         <div className="flex flex-col gap-4">
           {...params.fields.map((field, index) => (
@@ -161,13 +162,13 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
             onClick={() => params.append({ name: "", description: "" })}
           >
             <PlusIcon className="w-3 h-3 fill-white dark:fill-black" />
-            Add Response Field
+            Add Field
           </Button>
         </div>
       </form>
     </Form>
   )
 }
-ActionPromptForm.displayName = "ActionPromptForm"
+ActionOpenAIForm.displayName = "ActionOpenAIForm"
 
-export default ActionPromptForm
+export default ActionOpenAIForm

@@ -34,11 +34,11 @@ const ActionNavigate = ({ isRunning, url }: ActionNavigateProps) => {
   )
 }
 
-type ActionPromptProps = {
+type ActionOpenAIProps = {
   isRunning: boolean
 }
 
-const ActionPrompt = ({ isRunning }: ActionPromptProps) => {
+const ActionOpenAI = ({ isRunning }: ActionOpenAIProps) => {
   if (isRunning) {
     return <span>Sending request to OpenAI...</span>
   }
@@ -74,8 +74,8 @@ const ActionContent = ({ action, isRunning, result }: ActionContentProps) => {
     case ActionKind.NAVIGATE: {
       return <ActionNavigate url={action.values.url} isRunning={isRunning} />
     }
-    case ActionKind.PROMPT: {
-      return <ActionPrompt isRunning={isRunning} />
+    case ActionKind.OPENAI: {
+      return <ActionOpenAI isRunning={isRunning} />
     }
     default: {
       const _exhaustivenessCheck: never = kind

@@ -89,7 +89,7 @@ export type ActionNavigateSchema = z.infer<typeof actionNavigateSchema>
 // Trigger a chat completion request to OpenAI. Responses are always structured
 // as a `Record<string, string>` corresponding to the parsed JSON response.
 // These values can then be accessed by all subsequent steps of the workflow.
-export const actionPromptSchema = z
+export const actionOpenAISchema = z
   .object({
     system: z.string().min(1, {
       message: "You must provide a system prompt.",
@@ -114,15 +114,15 @@ export const actionPromptSchema = z
   })
   .required()
 
-export type ActionPromptSchema = z.infer<typeof actionPromptSchema>
+export type ActionOpenAISchema = z.infer<typeof actionOpenAISchema>
 
 // Allow aggregating actions together. A workflow can consist of a sequence of
 // any type of actions, though it must always start with an `init`.
 export enum ActionKind {
-  EXTRACTING = "extracting",
-  RECORDING = "recording",
-  NAVIGATE = "navigate",
-  PROMPT = "prompt",
+  EXTRACTING = "Extracting",
+  NAVIGATE = "Navigate",
+  OPENAI = "OpenAI",
+  RECORDING = "Recording",
 }
 
 export type ActionForm =
@@ -139,8 +139,8 @@ export type ActionForm =
       values: ActionNavigateSchema
     }
   | {
-      kind: ActionKind.PROMPT
-      values: ActionPromptSchema
+      kind: ActionKind.OPENAI
+      values: ActionOpenAISchema
     }
 
 export const actionFormSafeParse = (form: ActionForm) => {
@@ -156,8 +156,8 @@ export const actionFormSafeParse = (form: ActionForm) => {
     case ActionKind.NAVIGATE: {
       return actionNavigateSchema.safeParse(form.values)
     }
-    case ActionKind.PROMPT: {
-      return actionPromptSchema.safeParse(form.values)
+    case ActionKind.OPENAI: {
+      return actionOpenAISchema.safeParse(form.values)
     }
     default: {
       const _exhaustivenessCheck: never = kind
@@ -180,8 +180,8 @@ export const actionFormParams = (form: ActionForm): string[] => {
     case ActionKind.NAVIGATE: {
       return []
     }
-    case ActionKind.PROMPT: {
-      const parsed = actionPromptSchema.safeParse(form.values)
+    case ActionKind.OPENAI: {
+      const parsed = actionOpenAISchema.safeParse(form.values)
       return parsed.success ? parsed.data.params.map((i) => i.name) : []
     }
     default: {

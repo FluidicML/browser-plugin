@@ -16,7 +16,7 @@ import BracesIcon from "@/components/icons/Braces"
 import ActionExtractingForm from "./ActionExtractingForm"
 import ActionRecordingForm from "./ActionRecordingForm"
 import ActionNavigateForm from "./ActionNavigateForm"
-import ActionPromptForm from "./ActionPromptForm"
+import ActionOpenAIForm from "./ActionOpenAIForm"
 
 type ParameterSheetProps = {
   params: Set<string>
@@ -34,7 +34,7 @@ const ParameterSheet = ({ params }: ParameterSheetProps) => {
         <SheetHeader>
           <SheetTitle>Parameters</SheetTitle>
           <SheetDescription>
-            Include any of the following parameters into your prompt. We will
+            Include any of the following parameters into form inputs. We will
             substitute them on running.
           </SheetDescription>
         </SheetHeader>
@@ -69,8 +69,8 @@ const ActionTabPanel = ({ params, onChange }: ActionTabPanelProps) => {
       case ActionKind.NAVIGATE: {
         return <ActionNavigateForm onChange={onChange} />
       }
-      case ActionKind.PROMPT: {
-        return <ActionPromptForm onChange={onChange} />
+      case ActionKind.OPENAI: {
+        return <ActionOpenAIForm onChange={onChange} />
       }
       default: {
         const _exhaustivenessCheck: never = actionKindActive
@@ -84,9 +84,9 @@ const ActionTabPanel = ({ params, onChange }: ActionTabPanelProps) => {
       <div className="flex gap-2">
         <ComboBox
           value={actionKindActive}
-          options={Object.keys(ActionKind).map((key) => ({
-            value: key.toLowerCase(),
-            label: key.slice(0, 1) + key.slice(1).toLowerCase(),
+          options={Object.values(ActionKind).map((value) => ({
+            label: value,
+            value,
           }))}
           onSelect={(value) => {
             const kind = value as ActionKind
@@ -97,7 +97,7 @@ const ActionTabPanel = ({ params, onChange }: ActionTabPanelProps) => {
           }}
         />
         {params.size > 0 &&
-        [ActionKind.NAVIGATE, ActionKind.PROMPT].includes(actionKindActive) ? (
+        [ActionKind.NAVIGATE, ActionKind.OPENAI].includes(actionKindActive) ? (
           <ParameterSheet params={params} />
         ) : null}
       </div>
