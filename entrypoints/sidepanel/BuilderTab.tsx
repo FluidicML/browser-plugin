@@ -18,7 +18,6 @@ import ActionTabPanel from "./builder_tab/ActionTabPanel"
 type ActionTab = {
   key: string
   label: string
-  params: Set<string>
   form: ActionForm | null
 }
 
@@ -37,29 +36,13 @@ const BuilderTab = () => {
   // Checks if the active tab is also the last tab in the workflow.
   const tabActiveLast = tabActiveIndex === actionTabs.length - 1
 
-  // Because we can edit steps out of order, we may also invalidate later steps
-  // when updating a previous one. Indices before this one refer to validated
-  // action forms.
-  const validBeforeIndex = React.useMemo(() => {
-    if (initTab === null || !initSchema.safeParse(initTab).success) {
-      return -1
-    }
-    let i = 0
-    for (; i < actionTabs.length; ++i) {
-      const form = actionTabs[i].form
-      if (form === null || actionFormSafeParse(form) === null) {
-        return i
-      }
-    }
-    return i
-  }, [initTab, tabActiveIndex, actionTabs])
-
-  // Accumulate parameters specified in any action tabs before the specified
-  // index.
-  const accumulateParams = React.useCallback(
+  const tabParams = React.useCallback(
     (index: number) => {
+      if (index < 0) {
+        return new Set()
+      }
       const params = new Set<string>()
-      for (let i = 0; i < index; ++i) {
+      for (let i = 0; i < Math.min(index, actionTabs.length); ++i) {
         const form = actionTabs[i].form
         if (form) {
           actionFormParams(form).forEach((p) => params.add(p))
@@ -70,28 +53,31 @@ const BuilderTab = () => {
     [actionTabs]
   )
 
-  const propagateUpdateTabs = React.useCallback(
-    (values: ActionForm | null, index: number) => {
-      setActionTabs((tabs) => {
-        const params = accumulateParams(index)
-
-        const shallowCopy = [...tabs]
-        shallowCopy[index].form = values
-        shallowCopy[index].params = new Set(params)
-
-        // Notify all subsequent tabs on parameter changes.
-        for (let i = index + 1; i < actionTabs.length; ++i) {
-          const form = shallowCopy[i].form
-          if (form !== null) {
-            actionFormParams(form).forEach((p) => params.add(p))
-          }
-          shallowCopy[i].params = new Set(params)
+  const tabValid = React.useCallback(
+    (index: number) => {
+      if (index < 0) {
+        return initTab !== null && initSchema.safeParse(initTab).success
+      }
+      for (let i = 0; i < Math.min(index + 1, actionTabs.length); ++i) {
+        const form = actionTabs[i].form
+        if (form === null || actionFormSafeParse(form)?.success !== true) {
+          return false
         }
+      }
+      return true
+    },
+    [initTab, actionTabs]
+  )
 
+  const tabUpdateForm = React.useCallback(
+    (form: ActionForm | null, index: number) => {
+      setActionTabs((tabs) => {
+        const shallowCopy = [...tabs]
+        shallowCopy[index].form = form
         return shallowCopy
       })
     },
-    [setActionTabs, accumulateParams]
+    [setActionTabs]
   )
 
   const saveWorkflow = React.useCallback(() => {
@@ -130,9 +116,9 @@ const BuilderTab = () => {
           value="-1"
           disabled={store.lockedBy.size > 0}
           className={cn(
-            validBeforeIndex === -1
-              ? "text-destructive data-[state=active]:bg-destructive"
-              : ""
+            tabValid(-1)
+              ? ""
+              : "text-destructive data-[state=active]:bg-destructive"
           )}
         >
           Start
@@ -143,9 +129,9 @@ const BuilderTab = () => {
             value={`${index}`}
             disabled={store.lockedBy.size > 0}
             className={cn(
-              index >= validBeforeIndex
-                ? "text-destructive data-[state=active]:bg-destructive"
-                : ""
+              tabValid(index)
+                ? ""
+                : "text-destructive data-[state=active]:bg-destructive"
             )}
           >
             {tab.label}
@@ -170,8 +156,8 @@ const BuilderTab = () => {
           hidden={tabActive !== `${index}`}
         >
           <ActionTabPanel
-            params={tab.params}
-            onChange={(values) => propagateUpdateTabs(values, index)}
+            params={tabParams(index)}
+            onChange={(form) => tabUpdateForm(form, index)}
             onRemove={() => {
               setTabActive(`${index - (tabActiveLast ? 1 : 0)}`)
               setActionTabs((tabs) => {
@@ -195,7 +181,6 @@ const BuilderTab = () => {
                 {
                   key: uuidv4(),
                   label: `Step ${actionTabs.length + 1}`,
-                  params: accumulateParams(tabActiveIndex + 1),
                   form: null,
                 },
               ])
@@ -204,7 +189,7 @@ const BuilderTab = () => {
           }}
           disabled={
             store.lockedBy.size > 0 ||
-            (tabActiveIndex >= validBeforeIndex && tabActiveLast)
+            (tabActiveLast && !tabValid(tabActiveIndex))
           }
         >
           {tabActiveLast ? "New Step" : "Continue"}
@@ -212,9 +197,7 @@ const BuilderTab = () => {
         <Button
           variant="secondary"
           className="ml-auto"
-          disabled={
-            store.lockedBy.size > 0 || validBeforeIndex < actionTabs.length
-          }
+          disabled={store.lockedBy.size > 0 || !tabValid(actionTabs.length - 1)}
           onClick={saveWorkflow}
         >
           Save Workflow

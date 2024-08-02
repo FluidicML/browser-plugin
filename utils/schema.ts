@@ -169,7 +169,7 @@ export const actionFormParams = (form: ActionForm): string[] => {
   switch (kind) {
     case ActionKind.EXTRACTING: {
       const parsed = actionExtractingSchema.safeParse(form.values)
-      return parsed.success ? parsed.data.params.map((ex) => ex.name) : []
+      return parsed.success ? parsed.data.params.map((p) => p.name) : []
     }
     case ActionKind.RECORDING: {
       return []
@@ -179,7 +179,7 @@ export const actionFormParams = (form: ActionForm): string[] => {
     }
     case ActionKind.OPENAI: {
       const parsed = actionOpenAISchema.safeParse(form.values)
-      return parsed.success ? parsed.data.params.map((i) => i.name) : []
+      return parsed.success ? parsed.data.params.map((p) => p.name) : []
     }
     default: {
       const _exhaustivenessCheck: never = kind
