@@ -10,6 +10,7 @@ import {
   ActionForm,
   initSchema,
   actionFormSafeParse,
+  actionFormParams,
 } from "@/utils/workflow"
 import InitTabPanel from "./builder_tab/InitTabPanel"
 import ActionTabPanel, { type ActionTab } from "./builder_tab/ActionTabPanel"
@@ -19,10 +20,9 @@ const BuilderTab = () => {
 
   // Used to re-render form on save.
   const [rootKey, setRootKey] = React.useState(0)
-
-  const [tabActive, setTabActive] = React.useState("init")
   const [initTab, setInitTab] = React.useState<InitSchema | null>(null)
   const [actionTabs, setActionTabs] = React.useState<ActionTab[]>([])
+  const [tabActive, setTabActive] = React.useState("init")
 
   // Retrieves the index of the active tab. For uniformity, the "init" tab is
   // treated as if it has index `-1` in the `actionTabs` array.
@@ -50,12 +50,42 @@ const BuilderTab = () => {
       }
     }
     return i
-  }, [initTab, actionTabs])
+  }, [initTab, tabActiveIndex, actionTabs])
 
-  const updateActionTab = React.useCallback(
+  // Accumulate parameters specified in tabs before that of the specified
+  // index.
+  const accumParamsActionTab = React.useCallback(
+    (index: number) => {
+      const params = new Set<string>()
+      for (let i = 0; i < index; ++i) {
+        const form = actionTabs[i].form
+        if (form) {
+          actionFormParams(form).forEach((p) => params.add(p))
+        }
+      }
+      return params
+    },
+    [actionTabs]
+  )
+
+  const updateActionTabs = React.useCallback(
     (values: ActionForm | null, index: number) => {
       const shallowCopy = [...actionTabs]
       shallowCopy[index].form = values ?? undefined
+
+      // Propagate changes to any parameters that may have been made.
+      const params = accumParamsActionTab(index)
+      shallowCopy[index].params = new Set(params)
+      for (let i = index + 1; i < actionTabs.length; ++i) {
+        const form = shallowCopy[i].form
+        if (form) {
+          actionFormParams(form).forEach((p) => params.add(p))
+          shallowCopy[i].params = new Set(params)
+        } else {
+          shallowCopy[i].params = new Set()
+        }
+      }
+
       setActionTabs(shallowCopy)
     },
     [actionTabs, setActionTabs]
@@ -129,7 +159,7 @@ const BuilderTab = () => {
           hidden={tabActive !== tab.key}
         >
           <ActionTabPanel
-            onChange={(values) => updateActionTab(values, index)}
+            onChange={(values) => updateActionTabs(values, index)}
           />
         </TabsContent>
       ))}
@@ -141,7 +171,11 @@ const BuilderTab = () => {
             if (tabActiveIsLast) {
               setActionTabs([
                 ...actionTabs,
-                { key: nextKey, label: `Step ${actionTabs.length + 1}` },
+                {
+                  key: nextKey,
+                  label: `Step ${actionTabs.length + 1}`,
+                  params: accumParamsActionTab(tabActiveIndex),
+                },
               ])
             }
             setTabActive(nextKey)

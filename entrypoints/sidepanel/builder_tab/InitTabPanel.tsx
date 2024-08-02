@@ -21,10 +21,7 @@ type InitTabPanelProps = {
 const InitTabPanel = ({ onChange }: InitTabPanelProps) => {
   const form = useForm<InitSchema>({
     resolver: zodResolver(initSchema),
-    defaultValues: {
-      name: "",
-      url: "",
-    },
+    defaultValues: { name: "", url: "" },
   })
 
   React.useEffect(() => {

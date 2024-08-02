@@ -25,19 +25,19 @@ import { Button } from "@/components/ui/button"
 import { useSharedStore } from "../store"
 import LocatorTable from "./LocatorTable"
 
-type ExtractionCardProps = {
+type ParameterCardProps = {
   control: Control<ActionExtractingSchema>
   index: number
   selector: Selector
 }
 
-const ExtractionCard = ({ control, index, selector }: ExtractionCardProps) => {
+const ParameterCard = ({ control, index, selector }: ParameterCardProps) => {
   return (
     <Card>
       <CardContent className="pb-2 overflow-x-auto scrollbar">
         <FormField
           control={control}
-          name={`extractions.${index}.name`}
+          name={`params.${index}.name`}
           render={({ field }) => (
             <FormItem>
               <FormControl>
@@ -69,12 +69,12 @@ const ActionExtractingForm = ({ onChange }: ActionExtractingFormProps) => {
 
   const form = useForm<ActionExtractingSchema>({
     resolver: zodResolver(actionExtractingSchema),
-    defaultValues: { extractions: [] },
+    defaultValues: { params: [] },
   })
 
-  const extractions = useFieldArray({
+  const params = useFieldArray({
     control: form.control,
-    name: "extractions",
+    name: "params",
   })
 
   React.useEffect(() => {
@@ -103,13 +103,13 @@ const ActionExtractingForm = ({ onChange }: ActionExtractingFormProps) => {
     const listener = addMessageListener((message) => {
       switch (message.event) {
         case MessageEvent.EXTRACTING_CLICK: {
-          extractions.append({ name: "", selector: message.payload })
+          params.append({ name: "", selector: message.payload })
           break
         }
       }
     })
     return () => removeMessageListener(listener)
-  }, [isExtracting, extractions])
+  }, [isExtracting, params])
 
   return (
     <Form {...form}>
@@ -153,15 +153,15 @@ const ActionExtractingForm = ({ onChange }: ActionExtractingFormProps) => {
             </>
           )}
         </Button>
-        {extractions.fields.length > 0 && (
+        {params.fields.length > 0 && (
           <div className="flex flex-col gap-4">
             <p>Name each extraction for insertion into subsequent steps.</p>
-            {extractions.fields.map((extraction, index) => (
-              <ExtractionCard
-                key={extractions.fields[index].id}
+            {params.fields.map((param, index) => (
+              <ParameterCard
+                key={params.fields[index].id}
                 control={form.control}
                 index={index}
-                selector={extraction.selector}
+                selector={param.selector}
               />
             ))}
           </div>

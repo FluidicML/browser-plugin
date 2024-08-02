@@ -18,17 +18,17 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useSharedStore } from "../store"
 
-type InterpolationFieldProps = {
+type ParameterFieldProps = {
   control: Control<ActionPromptSchema>
   index: number
 }
 
-const InterpolationField = ({ control, index }: InterpolationFieldProps) => {
+const ParameterField = ({ control, index }: ParameterFieldProps) => {
   return (
     <div className="flex flex-col gap-2">
       <FormField
         control={control}
-        name={`interpolations.${index}.name`}
+        name={`params.${index}.name`}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Response {index + 1}</FormLabel>
@@ -41,7 +41,7 @@ const InterpolationField = ({ control, index }: InterpolationFieldProps) => {
       />
       <FormField
         control={control}
-        name={`interpolations.${index}.description`}
+        name={`params.${index}.description`}
         render={({ field }) => (
           <FormItem>
             <FormControl>
@@ -67,13 +67,13 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
     defaultValues: {
       system: "",
       user: "",
-      interpolations: [{ name: "", description: "" }],
+      params: [{ name: "", description: "" }],
     },
   })
 
-  const interpolations = useFieldArray({
+  const params = useFieldArray({
     control: form.control,
-    name: "interpolations",
+    name: "params",
   })
 
   React.useEffect(() => {
@@ -145,12 +145,12 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
           )}
         />
         <p>
-          Define what values should be returned in the response for
-          interpolation into subsequent steps.
+          Define what values should be returned in the response. These can be
+          accessed from subsequent steps.
         </p>
         <div className="flex flex-col gap-4">
-          {...interpolations.fields.map((field, index) => (
-            <InterpolationField
+          {...params.fields.map((field, index) => (
+            <ParameterField
               key={field.id}
               control={form.control}
               index={index}
@@ -158,7 +158,7 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
           ))}
           <Button
             className="w-full flex gap-2"
-            onClick={() => interpolations.append({ name: "", description: "" })}
+            onClick={() => params.append({ name: "", description: "" })}
           >
             <PlusIcon className="w-3 h-3 fill-white dark:fill-black" />
             Add Response Field

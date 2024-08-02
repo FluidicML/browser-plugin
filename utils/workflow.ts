@@ -20,11 +20,11 @@ export type InitSchema = z.infer<typeof initSchema>
 // An extraction feature. Allows pulling the contents of elements out in a
 // general way for interpolation into subsequent steps.
 export const actionExtractingSchema = z.object({
-  extractions: z
+  params: z
     .array(
       z.object({
         name: z.string().min(1, {
-          message: "you must provide a valid name.",
+          message: "You must provide a valid name.",
         }),
         selector: selectorSchema,
       })
@@ -97,7 +97,7 @@ export const actionPromptSchema = z
     user: z.string().min(1, {
       message: "You must provide a user prompt.",
     }),
-    interpolations: z
+    params: z
       .array(
         z
           .object({
@@ -161,11 +161,34 @@ export const actionFormSafeParse = (form: ActionForm) => {
     }
     default: {
       const _exhaustivenessCheck: never = kind
-      break
+      return null
     }
   }
+}
 
-  return null
+export const actionFormParams = (form: ActionForm): string[] => {
+  const kind = form.kind
+
+  switch (kind) {
+    case ActionKind.EXTRACTING: {
+      const parsed = actionExtractingSchema.safeParse(form.values)
+      return parsed.success ? parsed.data.params.map((ex) => ex.name) : []
+    }
+    case ActionKind.RECORDING: {
+      return []
+    }
+    case ActionKind.NAVIGATE: {
+      return []
+    }
+    case ActionKind.PROMPT: {
+      const parsed = actionPromptSchema.safeParse(form.values)
+      return parsed.success ? parsed.data.params.map((i) => i.name) : []
+    }
+    default: {
+      const _exhaustivenessCheck: never = kind
+      return []
+    }
+  }
 }
 
 export type StepResult = {

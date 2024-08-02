@@ -12,6 +12,7 @@ export type ActionTab = {
   key: string
   label: string
   form?: ActionForm
+  params: Set<string>
 }
 
 type ActionTabPanelProps = {
