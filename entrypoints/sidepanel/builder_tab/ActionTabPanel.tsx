@@ -50,33 +50,71 @@ const ParameterSheet = ({ params }: ParameterSheetProps) => {
 }
 
 type ActionTabPanelProps = {
+  defaultValues: ActionForm | null
   params: Set<string>
   onChange: (values: ActionForm | null) => void
   onRemove: () => void
 }
 
 const ActionTabPanel = ({
+  defaultValues,
   params,
   onChange,
   onRemove,
 }: ActionTabPanelProps) => {
   const [activeKind, setActiveKind] = React.useState<ActionKind>(
-    ActionKind.NAVIGATE
+    defaultValues?.kind ?? ActionKind.NAVIGATE
   )
 
   const actionTabForm = React.useMemo(() => {
     switch (activeKind) {
       case ActionKind.EXTRACTING: {
-        return <ActionExtractingForm onChange={onChange} />
+        return (
+          <ActionExtractingForm
+            defaultValues={
+              defaultValues?.kind === ActionKind.EXTRACTING
+                ? defaultValues.values
+                : null
+            }
+            onChange={onChange}
+          />
+        )
       }
       case ActionKind.RECORDING: {
-        return <ActionRecordingForm onChange={onChange} />
+        return (
+          <ActionRecordingForm
+            defaultValues={
+              defaultValues?.kind === ActionKind.RECORDING
+                ? defaultValues.values
+                : null
+            }
+            onChange={onChange}
+          />
+        )
       }
       case ActionKind.NAVIGATE: {
-        return <ActionNavigateForm onChange={onChange} />
+        return (
+          <ActionNavigateForm
+            defaultValues={
+              defaultValues?.kind === ActionKind.NAVIGATE
+                ? defaultValues.values
+                : null
+            }
+            onChange={onChange}
+          />
+        )
       }
       case ActionKind.OPENAI: {
-        return <ActionOpenAIForm onChange={onChange} />
+        return (
+          <ActionOpenAIForm
+            defaultValues={
+              defaultValues?.kind === ActionKind.OPENAI
+                ? defaultValues.values
+                : null
+            }
+            onChange={onChange}
+          />
+        )
       }
       default: {
         const _exhaustivenessCheck: never = activeKind

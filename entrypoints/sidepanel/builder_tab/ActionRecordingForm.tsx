@@ -79,17 +79,21 @@ const ActionCard = ({ index, recording, onRemove }: ActionCardProps) => {
 }
 
 type ActionRecordingFormProps = {
+  defaultValues: ActionRecordingSchema | null
   onChange: (values: ActionForm | null) => void
 }
 
-const ActionRecordingForm = ({ onChange }: ActionRecordingFormProps) => {
+const ActionRecordingForm = ({
+  defaultValues,
+  onChange,
+}: ActionRecordingFormProps) => {
   const id = React.useId()
   const store = useSharedStore()
   const [isRecording, setIsRecording] = React.useState(false)
 
   const form = useForm<ActionRecordingSchema>({
     resolver: zodResolver(actionRecordingSchema),
-    defaultValues: {},
+    defaultValues: defaultValues ?? {},
   })
 
   const recordings = useFieldArray({

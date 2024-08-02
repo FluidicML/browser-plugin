@@ -78,17 +78,21 @@ const ParameterCard = ({
 }
 
 type ActionExtractingFormProps = {
+  defaultValues: ActionExtractingSchema | null
   onChange: (values: ActionForm | null) => void
 }
 
-const ActionExtractingForm = ({ onChange }: ActionExtractingFormProps) => {
+const ActionExtractingForm = ({
+  defaultValues,
+  onChange,
+}: ActionExtractingFormProps) => {
   const id = React.useId()
   const store = useSharedStore()
   const [isExtracting, setIsExtracting] = React.useState(false)
 
   const form = useForm<ActionExtractingSchema>({
     resolver: zodResolver(actionExtractingSchema),
-    defaultValues: { params: [] },
+    defaultValues: defaultValues ?? { params: [] },
   })
 
   const params = useFieldArray({

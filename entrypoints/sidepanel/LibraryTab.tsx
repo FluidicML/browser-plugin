@@ -1,6 +1,7 @@
 import React from "react"
 
 import BooksIcon from "@/components/icons/Books"
+import PencilIcon from "@/components/icons/Pencil"
 import LightningIcon from "@/components/icons/Lightning"
 import PlayCircleIcon from "@/components/icons/PlayCircle"
 import TrashIcon from "@/components/icons/Trash"
@@ -27,6 +28,13 @@ const WorkflowCard = (workflow: Workflow) => {
           {actions.length} Action{actions.length !== 1 ? "s" : ""}
         </div>
         <div className="flex gap-2 absolute right-0 bottom-0">
+          <Button
+            size="xs"
+            className="group hover:bg-muted-foreground/90"
+            onClick={() => store.actions.editWorkflow(workflow)}
+          >
+            <PencilIcon className="w-5 h-5 fill-white dark:fill-black group-hover:fill-white" />
+          </Button>
           <Button
             size="xs"
             className="group hover:bg-destructive/90"

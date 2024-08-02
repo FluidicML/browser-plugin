@@ -60,15 +60,19 @@ const ParameterField = ({ control, index }: ParameterFieldProps) => {
 }
 
 type ActionOpenAIFormProps = {
+  defaultValues: ActionOpenAISchema | null
   onChange: (values: ActionForm | null) => void
 }
 
-const ActionOpenAIForm = ({ onChange }: ActionOpenAIFormProps) => {
+const ActionOpenAIForm = ({
+  defaultValues,
+  onChange,
+}: ActionOpenAIFormProps) => {
   const store = useSharedStore()
 
   const form = useForm<ActionOpenAISchema>({
     resolver: zodResolver(actionOpenAISchema),
-    defaultValues: {
+    defaultValues: defaultValues ?? {
       system: "",
       user: "",
       params: [{ name: "", description: "" }],

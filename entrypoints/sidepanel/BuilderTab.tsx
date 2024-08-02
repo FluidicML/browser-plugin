@@ -24,8 +24,25 @@ type ActionTab = {
 const BuilderTab = () => {
   const store = useSharedStore()
 
+  const [uuid, setUUID] = React.useState(uuidv4())
   const [initTab, setInitTab] = React.useState<InitSchema | null>(null)
   const [actionTabs, setActionTabs] = React.useState<ActionTab[]>([])
+
+  React.useEffect(() => {
+    if (store.editing === null) {
+      return
+    }
+    setUUID(store.editing.uuid)
+    setInitTab(store.editing.init)
+    setActionTabs(
+      store.editing.actions.map((form, index) => ({
+        key: uuidv4(),
+        label: `Step ${index + 1}`,
+        form,
+      }))
+    )
+    store.actions.editWorkflow(null)
+  }, [store.editing])
 
   const [tabActive, setTabActive] = React.useState("-1")
   // Retrieves the index of the active tab. For uniformity, the "init" tab is
@@ -83,18 +100,22 @@ const BuilderTab = () => {
       throw new Error("Attempted to save invalid `InitSchema`.")
     }
     store.actions.saveWorkflow({
+      uuid: uuid,
       init: initTab,
       actions: actionTabs
         .map((t) => t.form)
         .filter((f): f is ActionForm => Boolean(f)),
     })
+    setUUID(uuidv4())
     setTabActive("-1")
     setInitTab(null)
     setActionTabs([])
   }, [
     store.actions,
+    uuid,
     initTab,
     actionTabs,
+    setUUID,
     setTabActive,
     setInitTab,
     setActionTabs,
@@ -102,6 +123,7 @@ const BuilderTab = () => {
 
   return (
     <Tabs
+      key={uuid}
       className="flex flex-col h-full gap-4"
       value={tabActive}
       onValueChange={setTabActive}
@@ -142,10 +164,9 @@ const BuilderTab = () => {
           key={tab.key}
           className="overflow-y-auto scrollbar h-full px-4"
           value={`${index}`}
-          forceMount
-          hidden={tabActive !== `${index}`}
         >
           <ActionTabPanel
+            defaultValues={tab.form}
             params={tabParams(index)}
             onChange={(form) => tabUpdateForm(form, index)}
             onRemove={() => {

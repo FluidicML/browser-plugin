@@ -22,6 +22,9 @@ export type SharedState = {
   lockedBy: Set<string>
   // A collection of locally saved workflows.
   library: Workflow[]
+  // The workflow being edited. This is set temporarily as a messaging
+  // mechanism. The library tab sets it and the builder tab unsets it.
+  editing: Workflow | null
   // The workflow being run.
   triggered: Workflow | null
 
@@ -30,7 +33,8 @@ export type SharedState = {
     unlock: (locker: string) => void
     setOpenaiApiKey: (key: string) => void
     setActiveTab: (tab: TabValue) => void
-    saveWorkflow: (workflow: Omit<Workflow, "uuid">) => void
+    editWorkflow: (workflow: Workflow | null) => void
+    saveWorkflow: (workflow: Workflow) => void
     removeWorkflow: (workflow: Workflow) => void
     triggerWorkflow: (workflow: Workflow) => void
   }
@@ -43,6 +47,7 @@ export const useSharedStore = create<SharedState>()(
       activeTab: "builder",
       lockedBy: new Set(),
       library: [],
+      editing: null,
       triggered: null,
 
       actions: {
@@ -66,10 +71,19 @@ export const useSharedStore = create<SharedState>()(
           set({ activeTab: tab })
         },
 
+        editWorkflow: (workflow) => {
+          set({
+            activeTab: "builder",
+            editing: workflow,
+          })
+        },
+
         saveWorkflow: (workflow) => {
+          const index = get().library.findIndex((w) => w.uuid === workflow.uuid)
           set((s) => {
+            const lib = index === -1 ? s.library : s.library.toSpliced(index, 1)
+            s.library = [workflow, ...lib]
             s.activeTab = "library"
-            s.library.unshift({ ...workflow, uuid: uuidv4() })
           })
         },
 

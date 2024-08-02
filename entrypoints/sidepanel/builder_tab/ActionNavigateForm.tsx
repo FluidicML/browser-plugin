@@ -19,13 +19,17 @@ import {
 import { Input } from "@/components/ui/input"
 
 type ActionNavigateFormProps = {
+  defaultValues: ActionNavigateSchema | null
   onChange: (values: ActionForm | null) => void
 }
 
-const ActionNavigateForm = ({ onChange }: ActionNavigateFormProps) => {
+const ActionNavigateForm = ({
+  defaultValues,
+  onChange,
+}: ActionNavigateFormProps) => {
   const form = useForm<ActionNavigateSchema>({
     resolver: zodResolver(actionNavigateSchema),
-    defaultValues: { url: "" },
+    defaultValues: defaultValues ?? { url: "" },
   })
 
   React.useEffect(() => {
