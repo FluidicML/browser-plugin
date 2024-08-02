@@ -5,6 +5,7 @@ import type {
   ReplayRecordingClickMessage,
   ReplayRecordingKeyupMessage,
 } from "@/utils/messages"
+import { mergeStepResults } from "@/utils/workflow"
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import FolderIcon from "@/components/icons/Folder"
@@ -28,16 +29,10 @@ const runExtractingStep = async (
   for (const param of values.params) {
     const next = await sendTab<ReplayExtractingClickMessage>(browserTab, {
       event: MessageEvent.REPLAY_EXTRACTING_CLICK,
-      payload: { selector: param.selector },
+      payload: { name: param.name, selector: param.selector },
     })
 
-    result.success = next.success
-    if (next.messages) {
-      result.messages = result.messages
-        ? [...result.messages, ...next.messages]
-        : next.messages
-    }
-
+    result = mergeStepResults(result, next)
     if (!result.success) {
       return result
     }
@@ -77,13 +72,7 @@ const runRecordingStep = async (
       }
     }
 
-    result.success = next.success
-    if (next.messages) {
-      result.messages = result.messages
-        ? [...result.messages, ...next.messages]
-        : next.messages
-    }
-
+    result = mergeStepResults(result, next)
     if (!result.success) {
       return result
     }

@@ -2,9 +2,24 @@ import type { ContentScriptContext } from "wxt/client"
 import { MessageEvent, addMessageListener } from "@/utils/messages"
 
 const replayExtractingClick = async (
+  paramName: string,
   selector: Selector
 ): Promise<StepResult> => {
-  return { success: true, messages: ["Extracted."] }
+  const matches = findSelector(selector)
+
+  if (matches.length === 0) {
+    return { success: false, messages: ["Could not find element."] }
+  } else if (matches.length > 1) {
+    return { success: false, messages: ["Too many matched elements."] }
+  }
+
+  const target = matches[0]
+
+  return {
+    success: true,
+    messages: [`Extracted {${paramName}}.`],
+    args: new Map([[paramName, target.innerText]]),
+  }
 }
 
 const replayRecordingClick = async (
@@ -68,7 +83,10 @@ export default defineContentScript({
     addMessageListener((message) => {
       switch (message.event) {
         case MessageEvent.REPLAY_EXTRACTING_CLICK: {
-          return replayExtractingClick(message.payload.selector)
+          return replayExtractingClick(
+            message.payload.name,
+            message.payload.selector
+          )
         }
         case MessageEvent.REPLAY_RECORDING_CLICK: {
           return replayRecordingClick(message.payload.selector)

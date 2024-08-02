@@ -55,7 +55,7 @@ export type RecordingStopMessage = BaseMessage<MessageEvent.RECORDING_STOP>
 
 export type ReplayExtractingClickMessage = BaseMessage<
   MessageEvent.REPLAY_EXTRACTING_CLICK,
-  { selector: Selector },
+  { name: string; selector: Selector },
   StepResult
 >
 
