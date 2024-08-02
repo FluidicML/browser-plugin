@@ -26,17 +26,29 @@ type Context = {
   params: Map<string, string>
 }
 
+const interpolate = (value: string, params: Map<string, string>): string => {
+  let interpolated = value
+  for (const [key, val] of params.entries()) {
+    const re = new RegExp(`{${key}}`, "g")
+    interpolated = interpolated.replace(re, val)
+  }
+  return interpolated
+}
+
 const runExtractingStep = async (
-  browserTab: number,
+  context: Context,
   values: ActionExtractingSchema
 ): Promise<StepResult> => {
   let result: StepResult = { success: true }
 
   for (const param of values.params) {
-    const next = await sendTab<ReplayExtractingClickMessage>(browserTab, {
-      event: MessageEvent.REPLAY_EXTRACTING_CLICK,
-      payload: { name: param.name, selector: param.selector },
-    })
+    const next = await sendTab<ReplayExtractingClickMessage>(
+      context.browserTab,
+      {
+        event: MessageEvent.REPLAY_EXTRACTING_CLICK,
+        payload: { name: param.name, selector: param.selector },
+      }
+    )
 
     result = mergeStepResults(result, next)
     if (!result.success) {
@@ -48,7 +60,7 @@ const runExtractingStep = async (
 }
 
 const replayRecording = async (
-  browserTab: number,
+  context: Context,
   recording: ActionRecordingSchema["recordings"][number]
 ): Promise<StepResult> => {
   let next: StepResult
@@ -56,14 +68,14 @@ const replayRecording = async (
 
   switch (action) {
     case "click": {
-      next = await sendTab<ReplayRecordingClickMessage>(browserTab, {
+      next = await sendTab<ReplayRecordingClickMessage>(context.browserTab, {
         event: MessageEvent.REPLAY_RECORDING_CLICK,
         payload: { selector: recording.selector },
       })
       break
     }
     case "keyup": {
-      next = await sendTab<ReplayRecordingKeyupMessage>(browserTab, {
+      next = await sendTab<ReplayRecordingKeyupMessage>(context.browserTab, {
         event: MessageEvent.REPLAY_RECORDING_KEYUP,
         payload: { selector: recording.selector, value: recording.value },
       })
@@ -79,7 +91,7 @@ const replayRecording = async (
 }
 
 const runRecordingStep = async (
-  browserTab: number,
+  context: Context,
   values: ActionRecordingSchema
 ): Promise<StepResult> => {
   let result: StepResult = { success: true }
@@ -88,7 +100,7 @@ const runRecordingStep = async (
     let next: StepResult
 
     try {
-      next = await replayRecording(browserTab, recording)
+      next = await replayRecording(context, recording)
     } catch (e) {
       // We may end up failing if the last action we invoked loaded a new page.
       // In these cases, we just need to wait for the page to reload. Try again
@@ -101,8 +113,8 @@ const runRecordingStep = async (
       //
       // TODO: This error handling needs to be expanded on once we're ready to
       // take on multi-tab flows.
-      await waitForTab(browserTab)
-      next = await replayRecording(browserTab, recording)
+      await waitForTab(context.browserTab)
+      next = await replayRecording(context, recording)
     }
 
     result = mergeStepResults(result, next)
@@ -115,25 +127,26 @@ const runRecordingStep = async (
 }
 
 const runNavigateStep = async (
-  browserTab: number,
-  url: string
+  context: Context,
+  values: ActionNavigateSchema
 ): Promise<StepResult> => {
-  await updateTab(browserTab, { url })
+  await updateTab(context.browserTab, {
+    url: interpolate(values.url, context.params),
+  })
   return { success: true }
 }
 
 const runOpenAIStep = async (
-  openaiApiKey: string,
-  systemPrompt: string,
-  userPrompt: string,
-  params: { name: string; description: string }[]
+  context: Context,
+  values: ActionOpenAISchema,
+  openaiApiKey: string
 ): Promise<StepResult> => {
   if (!openaiApiKey) {
     return { success: false, messages: ["Invalid OpenAI API key."] }
   }
 
   const props: { [key: string]: { type: string; description: string } } = {}
-  for (const param of params) {
+  for (const param of values.params) {
     props[param.name] = {
       type: "string",
       description: param.description,
@@ -143,8 +156,13 @@ const runOpenAIStep = async (
   try {
     const response = await chatCompletion({
       openaiApiKey,
-      systemPrompt: `${systemPrompt}\n\n# FORMATTING\nOutput responses in JSON.`,
-      userPrompt,
+      systemPrompt: `
+        ${interpolate(values.system, context.params)}
+
+        # FORMATTING
+        Output responses in JSON.
+      `,
+      userPrompt: interpolate(values.user, context.params),
       tools: [
         {
           type: "function",
@@ -195,21 +213,16 @@ const runStep = async (
 
   switch (kind) {
     case ActionKind.EXTRACTING: {
-      return await runExtractingStep(context.browserTab, action.values)
+      return await runExtractingStep(context, action.values)
     }
     case ActionKind.RECORDING: {
-      return await runRecordingStep(context.browserTab, action.values)
+      return await runRecordingStep(context, action.values)
     }
     case ActionKind.NAVIGATE: {
-      return await runNavigateStep(context.browserTab, action.values.url)
+      return await runNavigateStep(context, action.values)
     }
     case ActionKind.OPENAI: {
-      return await runOpenAIStep(
-        openaiApiKey,
-        action.values.system,
-        action.values.user,
-        action.values.params
-      )
+      return await runOpenAIStep(context, action.values, openaiApiKey)
     }
     default: {
       const _exhaustivenessCheck: never = kind
