@@ -44,8 +44,9 @@ const ActionNavigateForm = ({ onChange }: ActionNavigateFormProps) => {
     <Form {...form}>
       <form className="space-y-4">
         <p>
-          Navigate directly to the specified URL. Prefer recording if you can
-          navigate by clicking on a link.
+          Navigate directly to the specified URL. Prefer{" "}
+          <span className="font-bold">Recording</span> if you can navigate by
+          clicking on a link.
         </p>
         <FormField
           control={form.control}

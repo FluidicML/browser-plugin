@@ -120,7 +120,7 @@ const ActionExtractingForm = ({ onChange }: ActionExtractingFormProps) => {
     <Form {...form}>
       <form className="space-y-4">
         <p>
-          Click "Start" and then click on elements whose content you want to
+          Click "Start" and then click on elements whose text you want to
           extract.
         </p>
         <Button

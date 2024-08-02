@@ -6,7 +6,7 @@ export type StepResult = {
 
 export const mergeStepResults = (a: StepResult, b: StepResult) => {
   const merged: StepResult = {
-    success: a.success || b.success,
+    success: a.success && b.success,
     messages: [...(a.messages ?? []), ...(b.messages ?? [])],
   }
 
