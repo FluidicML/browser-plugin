@@ -20,7 +20,7 @@ const replayExtractingClick = async (
   return {
     success: true,
     messages: [`Extracted {${paramName}}.`],
-    args: new Map([[paramName, target.innerText]]),
+    params: [[paramName, target.innerText]],
   }
 }
 

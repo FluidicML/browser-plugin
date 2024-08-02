@@ -1,30 +1,23 @@
 export type StepResult = {
   success: boolean
   messages?: string[]
-  args?: Map<string, string>
+  // Use a list instead of `Map` since the latter isn't serializable. This
+  // would otherwise make communicating `StepResult`s with message passing
+  // impossible.
+  params?: [string, string][]
 }
 
-export const mergeStepResults = (a: StepResult, b: StepResult) => {
+export const mergeStepResults = (a: StepResult, b: StepResult): StepResult => {
   const merged: StepResult = {
     success: a.success && b.success,
-    messages: [...(a.messages ?? []), ...(b.messages ?? [])],
   }
-
-  if (a.args && b.args) {
-    if (a.args) {
-      merged.args = a.args
-    }
-    if (b.args) {
-      if (merged.args) {
-        for (const [k, v] of b.args.entries()) {
-          merged.args.set(k, v)
-        }
-      } else {
-        merged.args = b.args
-      }
-    }
+  if (a.messages || b.messages) {
+    merged.messages = [...(a.messages ?? []), ...(b.messages ?? [])]
   }
-
+  if (a.params || b.params) {
+    const uniq = new Map([...(a.params ?? []), ...(b.params ?? [])])
+    merged.params = [...uniq]
+  }
   return merged
 }
 

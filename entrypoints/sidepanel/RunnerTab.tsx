@@ -18,6 +18,14 @@ import { useSharedStore } from "./store"
 import { waitForTab, updateTab, queryTabs } from "@/utils/browser_tabs"
 import StepCard from "./runner_tab/StepCard"
 
+type Context = {
+  workflow: Workflow
+  browserTab: number
+  actionIndex: number
+  results: StepResult[]
+  params: Map<string, string>
+}
+
 const runExtractingStep = async (
   browserTab: number,
   values: ActionExtractingSchema
@@ -158,7 +166,7 @@ const runOpenAIStep = async (
       response_format: { type: "json_object" },
     })
 
-    const args = new Map()
+    const params = new Map()
     const messages = []
 
     for (const [key, val] of Object.entries(
@@ -167,11 +175,11 @@ const runOpenAIStep = async (
           ?.arguments
       )
     )) {
-      args.set(key, val)
+      params.set(key, val)
       messages.push(`Received value for {${key}}.`)
     }
 
-    return { success: true, messages, args }
+    return { success: true, messages, params: [...params] }
   } catch (e) {
     console.error(e)
     return { success: false, messages: ["Invalid OpenAI response."] }
@@ -179,21 +187,21 @@ const runOpenAIStep = async (
 }
 
 const runStep = async (
-  browserTab: number,
-  action: ActionForm,
+  context: Context,
   openaiApiKey: string
 ): Promise<StepResult> => {
+  const action = context.workflow.actions[context.actionIndex]
   const kind = action.kind
 
   switch (kind) {
     case ActionKind.EXTRACTING: {
-      return await runExtractingStep(browserTab, action.values)
+      return await runExtractingStep(context.browserTab, action.values)
     }
     case ActionKind.RECORDING: {
-      return await runRecordingStep(browserTab, action.values)
+      return await runRecordingStep(context.browserTab, action.values)
     }
     case ActionKind.NAVIGATE: {
-      return await runNavigateStep(browserTab, action.values.url)
+      return await runNavigateStep(context.browserTab, action.values.url)
     }
     case ActionKind.OPENAI: {
       return await runOpenAIStep(
@@ -212,65 +220,57 @@ const runStep = async (
   return { success: false, messages: [`Unsupported ${kind} action.`] }
 }
 
-type Running = {
-  workflow: Workflow
-  browserTab: number
-  actionIndex: number
-  results: StepResult[]
-}
-
 const RunnerTab = () => {
   const store = useSharedStore()
 
   // TODO: Should handle when the active tab is shutdown.
-  const [running, setRunning] = React.useState<Running | null>(null)
+  const [context, setContext] = React.useState<Context | null>(null)
 
   // Changes to our triggered workflow indicate either starting a workflow or
   // potentially deleting an active one.
   React.useEffect(() => {
     const workflow = store.triggered
     if (workflow === null) {
-      setRunning(null)
+      setContext(null)
       return
     }
-    setRunning({ workflow, browserTab: 0, actionIndex: 0, results: [] })
+    const defaultValues: Context = {
+      workflow,
+      browserTab: 0,
+      actionIndex: 0,
+      results: [],
+      params: new Map(),
+    }
+    setContext(defaultValues)
     queryTabs({ active: true, currentWindow: true }).then((tabs) => {
-      setRunning({
-        workflow,
-        browserTab: tabs[0].id!,
-        actionIndex: 0,
-        results: [],
-      })
+      setContext({ ...defaultValues, browserTab: tabs[0].id!, actionIndex: 0 })
     })
-  }, [store.triggered, setRunning])
+  }, [store.triggered, setContext])
 
   // Process each step of the workflow. On completion, trigger an update to
   // reinvoke this same effect.
   React.useEffect(() => {
     if (
-      running === null ||
-      running.browserTab === 0 ||
-      running.actionIndex >= running.workflow.actions.length ||
-      running.results[running.actionIndex]?.success === false
+      context === null ||
+      context.browserTab === 0 ||
+      context.actionIndex >= context.workflow.actions.length ||
+      context.results[context.actionIndex]?.success === false
     ) {
       return
     }
-    runStep(
-      running.browserTab,
-      running.workflow.actions[running.actionIndex],
-      store.openaiApiKey
-    ).then((result) => {
-      setRunning({
-        ...running,
-        results: [...running.results, result],
+    runStep(context, store.openaiApiKey).then((result) => {
+      setContext({
+        ...context,
         actionIndex: result.success
-          ? running.actionIndex + 1
-          : running.actionIndex,
+          ? context.actionIndex + 1
+          : context.actionIndex,
+        results: [...context.results, result],
+        params: new Map([...context.params, ...(result.params ?? [])]),
       })
     })
-  }, [running, store.openaiApiKey])
+  }, [context, store.openaiApiKey])
 
-  if (running === null) {
+  if (context === null) {
     return (
       <div className="flex flex-col items-center gap-2 p-4">
         <FolderIcon className="w-10 h-10 fill-black dark:fill-white" />
@@ -283,40 +283,40 @@ const RunnerTab = () => {
     <div className="flex flex-col gap-4 p-4">
       <Card>
         <CardTitle className="pt-2 flex items-center gap-2">
-          {running.results[running.actionIndex]?.success === false ? (
+          {context.results[context.actionIndex]?.success === false ? (
             <CloseIcon className="w-5 h-5 rounded-full fill-red-900" />
-          ) : running.actionIndex === running.workflow.actions.length ? (
+          ) : context.actionIndex === context.workflow.actions.length ? (
             <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
           ) : (
             <LoadingIcon className="w-5 h-5 fill-emerald-600" />
           )}
-          {running.workflow.init.name}{" "}
+          {context.workflow.init.name}{" "}
           <span className="text-xs text-muted-foreground ml-auto">
-            ({running.workflow.uuid.slice(0, 8)})
+            ({context.workflow.uuid.slice(0, 8)})
           </span>
         </CardTitle>
       </Card>
 
       <Separator />
 
-      {[...Array(running.actionIndex + 1).keys()].map((index) => {
-        if (index === running.workflow.actions.length) {
+      {[...Array(context.actionIndex + 1).keys()].map((index) => {
+        if (index === context.workflow.actions.length) {
           return null
         }
 
-        const actions = running.workflow.actions
+        const actions = context.workflow.actions
         const kind = actions[index].kind
         const title = `Step ${index + 1} / ${actions.length}`
         const subtitle = `${kind.slice(0, 1).toUpperCase() + kind.slice(1)}`
 
         return (
           <StepCard
-            key={`${running.workflow.uuid}-${index}`}
+            key={`${context.workflow.uuid}-${index}`}
             action={actions[index]}
             title={title}
             subtitle={subtitle}
-            isRunning={index === running.actionIndex}
-            result={running.results[index] ?? null}
+            isRunning={index === context.actionIndex}
+            result={context.results[index] ?? null}
           />
         )
       })}

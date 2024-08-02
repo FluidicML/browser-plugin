@@ -164,7 +164,6 @@ class QueryBuilder {
 const findSelector = (selector: Selector): HTMLElement[] => {
   // It's assumed the CSS selector is unique.
   if (typeof selector === "string") {
-    console.log(selector)
     const found = document.querySelector(selector)
     return found instanceof HTMLElement ? [found] : []
   }
