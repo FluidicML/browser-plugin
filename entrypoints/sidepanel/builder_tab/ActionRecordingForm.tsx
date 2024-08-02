@@ -19,6 +19,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import { Form } from "@/components/ui/form"
 import { useSharedStore } from "../store"
 import LocatorTable from "./LocatorTable"
@@ -58,9 +59,9 @@ const ActionCard = ({ index, recording }: ActionCardProps) => {
   return (
     <Card>
       <CardTitle>{title}</CardTitle>
-      <CardDescription className="pb-2">{Subtitle()}</CardDescription>
-      <hr />
-      <CardContent className="pt-4 pb-2 overflow-x-auto scrollbar">
+      <CardDescription>{Subtitle()}</CardDescription>
+      <Separator className="my-4" />
+      <CardContent className="pb-2 overflow-x-auto scrollbar">
         {typeof recording.selector === "string" ? (
           <pre>{recording.selector}</pre>
         ) : (

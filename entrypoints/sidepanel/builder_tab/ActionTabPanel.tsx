@@ -1,7 +1,7 @@
 import React from "react"
 
 import { ComboBox } from "@/components/ui/combobox"
-
+import { Separator } from "@/components/ui/separator"
 import { type ActionForm, ActionKind } from "@/utils/workflow"
 import ActionExtractingForm from "./ActionExtractingForm"
 import ActionRecordingForm from "./ActionRecordingForm"
@@ -58,7 +58,9 @@ const ActionTabPanel = ({ params, onChange }: ActionTabPanelProps) => {
       {params.size > 0
         ? [...params].map((p) => <span key={p}>{p}</span>)
         : null}
-      <hr className="bg-muted w-1/2 h-1 my-6 mx-auto" />
+
+      <Separator className="my-4" />
+
       {actionTabForm}
     </div>
   )

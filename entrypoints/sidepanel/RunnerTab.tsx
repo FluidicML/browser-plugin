@@ -8,6 +8,7 @@ import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import FolderIcon from "@/components/icons/Folder"
 import LoadingIcon from "@/components/icons/Loading"
+import { Separator } from "@/components/ui/separator"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { MessageEvent, sendTab } from "@/utils/messages"
 import { useSharedStore } from "./store"
@@ -170,7 +171,9 @@ const RunnerTab = () => {
           <span className="underline">{running.workflow.init.url}</span>.
         </CardDescription>
       </Card>
-      <hr className="bg-muted w-1/2 h-1 my-2 mx-auto" />
+
+      <Separator />
+
       {[...Array(running.actionIndex + 1).keys()].map((index) => {
         if (index === running.workflow.actions.length) {
           return null

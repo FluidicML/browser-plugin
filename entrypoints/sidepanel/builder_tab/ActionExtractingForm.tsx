@@ -22,6 +22,7 @@ import StopIcon from "@/components/icons/Stop"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import { useSharedStore } from "../store"
 import LocatorTable from "./LocatorTable"
 
@@ -47,7 +48,7 @@ const ParameterCard = ({ control, index, selector }: ParameterCardProps) => {
             </FormItem>
           )}
         />
-        <hr className="my-4" />
+        <Separator className="my-4" />
         {typeof selector === "string" ? (
           <pre>{selector}</pre>
         ) : (
