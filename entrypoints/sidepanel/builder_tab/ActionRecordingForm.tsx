@@ -67,7 +67,7 @@ const ActionCard = ({ index, recording }: ActionCardProps) => {
             {[...locatorToMap(recording.selector).entries()].map(
               ([key, val]) => (
                 <li key={key} className="flex gap-2">
-                  <pre className="w-12">{key}:</pre>
+                  <pre className="w-12 shrink-0">{key}:</pre>
                   <pre>{val}</pre>
                 </li>
               )
