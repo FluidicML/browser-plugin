@@ -15,7 +15,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form"
 import PlayIcon from "@/components/icons/Play"
@@ -24,6 +23,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useSharedStore } from "../store"
+import LocatorTable from "./LocatorTable"
 
 type ExtractionCardProps = {
   control: Control<ActionExtractingSchema>
@@ -51,14 +51,7 @@ const ExtractionCard = ({ control, index, selector }: ExtractionCardProps) => {
         {typeof selector === "string" ? (
           <pre>{selector}</pre>
         ) : (
-          <ul>
-            {[...locatorToMap(selector).entries()].map(([key, val]) => (
-              <li key={key} className="flex gap-2">
-                <pre className="w-12 shrink-0">{key}:</pre>
-                <pre>{val}</pre>
-              </li>
-            ))}
-          </ul>
+          <LocatorTable locator={selector} />
         )}
       </CardContent>
     </Card>

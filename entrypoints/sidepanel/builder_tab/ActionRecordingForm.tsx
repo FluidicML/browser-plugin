@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Form } from "@/components/ui/form"
 import { useSharedStore } from "../store"
+import LocatorTable from "./LocatorTable"
 
 type ActionCardProps = {
   index: number
@@ -63,16 +64,7 @@ const ActionCard = ({ index, recording }: ActionCardProps) => {
         {typeof recording.selector === "string" ? (
           <pre>{recording.selector}</pre>
         ) : (
-          <ul>
-            {[...locatorToMap(recording.selector).entries()].map(
-              ([key, val]) => (
-                <li key={key} className="flex gap-2">
-                  <pre className="w-12 shrink-0">{key}:</pre>
-                  <pre>{val}</pre>
-                </li>
-              )
-            )}
-          </ul>
+          <LocatorTable locator={recording.selector} />
         )}
       </CardContent>
     </Card>
