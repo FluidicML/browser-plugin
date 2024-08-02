@@ -24,8 +24,6 @@ type ActionTab = {
 const BuilderTab = () => {
   const store = useSharedStore()
 
-  // Used to re-render form on save.
-  const [rootKey, setRootKey] = React.useState(0)
   const [initTab, setInitTab] = React.useState<InitSchema | null>(null)
   const [actionTabs, setActionTabs] = React.useState<ActionTab[]>([])
 
@@ -39,7 +37,7 @@ const BuilderTab = () => {
   const tabParams = React.useCallback(
     (index: number) => {
       if (index < 0) {
-        return new Set()
+        return new Set<string>()
       }
       const params = new Set<string>()
       for (let i = 0; i < Math.min(index, actionTabs.length); ++i) {
@@ -93,7 +91,6 @@ const BuilderTab = () => {
     setTabActive("-1")
     setInitTab(null)
     setActionTabs([])
-    setRootKey((id) => id + 1)
   }, [
     store.actions,
     initTab,
@@ -101,12 +98,10 @@ const BuilderTab = () => {
     setTabActive,
     setInitTab,
     setActionTabs,
-    setRootKey,
   ])
 
   return (
     <Tabs
-      key={`${rootKey}`}
       className="flex flex-col h-full gap-4"
       value={tabActive}
       onValueChange={setTabActive}
@@ -139,13 +134,8 @@ const BuilderTab = () => {
         ))}
       </TabsList>
 
-      <TabsContent
-        className="h-full px-4"
-        value="-1"
-        forceMount
-        hidden={tabActive !== "-1"}
-      >
-        <InitTabPanel onChange={setInitTab} />
+      <TabsContent className="h-full px-4" value="-1">
+        <InitTabPanel defaultValues={initTab} onChange={setInitTab} />
       </TabsContent>
       {actionTabs.map((tab, index) => (
         <TabsContent

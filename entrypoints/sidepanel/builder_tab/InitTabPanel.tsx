@@ -14,13 +14,14 @@ import {
 import { Input } from "@/components/ui/input"
 
 type InitTabPanelProps = {
+  defaultValues: InitSchema | null
   onChange: (values: InitSchema | null) => void
 }
 
-const InitTabPanel = ({ onChange }: InitTabPanelProps) => {
+const InitTabPanel = ({ defaultValues, onChange }: InitTabPanelProps) => {
   const form = useForm<InitSchema>({
     resolver: zodResolver(initSchema),
-    defaultValues: { name: "" },
+    defaultValues: defaultValues ?? { name: "" },
   })
 
   React.useEffect(() => {
