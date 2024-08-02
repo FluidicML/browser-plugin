@@ -5,12 +5,7 @@ import LightningIcon from "@/components/icons/Lightning"
 import PlayCircleIcon from "@/components/icons/PlayCircle"
 import TrashIcon from "@/components/icons/Trash"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardDescription,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card"
+import { Card, CardTitle, CardContent } from "@/components/ui/card"
 import { useSharedStore } from "./store"
 import type { Workflow } from "@/utils/workflow"
 
@@ -26,13 +21,6 @@ const WorkflowCard = (workflow: Workflow) => {
           ({uuid.slice(0, 8)})
         </span>
       </CardTitle>
-      <CardDescription>
-        Launches{" "}
-        <a target="_blank" href={init.url} className="underline">
-          {init.url}
-        </a>
-        .
-      </CardDescription>
       <CardContent className="min-h-16 flex flex-col justify-end pt-4 relative">
         <div className="flex items-center gap-1">
           <LightningIcon className="w-4 h-4 fill-black dark:fill-white" />

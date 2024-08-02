@@ -1,11 +1,13 @@
 import type { ContentScriptContext } from "wxt/client"
 import { MessageEvent, addMessageListener } from "@/utils/messages"
 
+const TIMEOUT_MILLIS = 5_000
+
 const replayExtractingClick = async (
   paramName: string,
   selector: Selector
 ): Promise<StepResult> => {
-  const matches = findSelector(selector)
+  const matches = await waitForSelector(selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
     return { success: false, messages: ["Could not find element."] }
@@ -25,7 +27,7 @@ const replayExtractingClick = async (
 const replayRecordingClick = async (
   selector: Selector
 ): Promise<StepResult> => {
-  const matches = findSelector(selector)
+  const matches = await waitForSelector(selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
     return { success: false, messages: ["Could not find element."] }
@@ -47,7 +49,7 @@ const replayRecordingKeyup = async (
   selector: Selector,
   value: string
 ): Promise<StepResult> => {
-  const matches = findSelector(selector)
+  const matches = await waitForSelector(selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
     return { success: false, messages: ["Could not find element."] }

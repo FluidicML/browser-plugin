@@ -161,9 +161,10 @@ class QueryBuilder {
   }
 }
 
-export const findSelector = (selector: Selector): HTMLElement[] => {
+const findSelector = (selector: Selector): HTMLElement[] => {
   // It's assumed the CSS selector is unique.
   if (typeof selector === "string") {
+    console.log(selector)
     const found = document.querySelector(selector)
     return found instanceof HTMLElement ? [found] : []
   }
@@ -177,6 +178,43 @@ export const findSelector = (selector: Selector): HTMLElement[] => {
     .withTestId(selector.testId)
     .withText(selector.text)
     .query()
+}
+
+export const waitForSelector = async (
+  selector: Selector,
+  timeoutMillis: number
+): Promise<HTMLElement[]> => {
+  return new Promise((resolve) => {
+    const matches = findSelector(selector)
+    if (matches.length > 0) {
+      return resolve(matches)
+    }
+
+    let timeoutId: number | null = null
+
+    const observer = new MutationObserver(() => {
+      const matches = findSelector(selector)
+      if (matches.length > 0) {
+        if (timeoutId !== null) {
+          clearTimeout(timeoutId)
+        }
+        observer.disconnect()
+        resolve(matches)
+      }
+    })
+
+    timeoutId = window.setTimeout(() => {
+      observer.disconnect()
+      resolve([])
+    }, timeoutMillis)
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      characterData: true,
+    })
+  })
 }
 
 const getTag = (el: HTMLElement) => {

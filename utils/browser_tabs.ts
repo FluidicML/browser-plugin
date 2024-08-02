@@ -1,6 +1,6 @@
 import type { Tabs } from "wxt/browser"
 
-const waitTabCompleted = (tab: Tabs.Tab): Promise<Tabs.Tab> => {
+const waitUntilComplete = (tab: Tabs.Tab): Promise<Tabs.Tab> => {
   return new Promise((resolve) => {
     if (tab.status === "complete") {
       return resolve(tab)
@@ -18,33 +18,45 @@ const waitTabCompleted = (tab: Tabs.Tab): Promise<Tabs.Tab> => {
   })
 }
 
-export const createTabUntilComplete = (
-  createProperties: Tabs.CreateCreatePropertiesType
-): Promise<Tabs.Tab> => {
+// Wait until the tab with the specified id is in a completed state.
+export const waitForTab = (tabId: number): Promise<void> => {
   return new Promise((resolve) => {
-    browser.tabs.create(createProperties).then((tab) => {
-      waitTabCompleted(tab).then(resolve)
+    browser.tabs.get(tabId).then((tab) => {
+      waitUntilComplete(tab).then(() => resolve())
     })
   })
 }
 
-export const updateTabUntilComplete = (
+// Thin wrapper around tab creation. Waits until the tab has completely loaded.
+export const createTab = (
+  createProperties: Tabs.CreateCreatePropertiesType
+): Promise<Tabs.Tab> => {
+  return new Promise((resolve) => {
+    browser.tabs.create(createProperties).then((tab) => {
+      waitUntilComplete(tab).then(resolve)
+    })
+  })
+}
+
+// Thin wrapper around tab updates. Waits until the tab has completely loaded.
+export const updateTab = (
   tabId: number,
   updateProperties: Tabs.UpdateUpdatePropertiesType
 ): Promise<Tabs.Tab> => {
   return new Promise((resolve) => {
     browser.tabs.update(tabId, updateProperties).then((tab) => {
-      waitTabCompleted(tab).then(resolve)
+      waitUntilComplete(tab).then(resolve)
     })
   })
 }
 
-export const queryTabsUntilComplete = (
+// Thin wrapper around tab queries. Waits until each tab has completely loaded.
+export const queryTabs = (
   queryInfo: Tabs.QueryQueryInfoType
 ): Promise<Tabs.Tab[]> => {
   return new Promise((resolve) => {
     browser.tabs.query(queryInfo).then((tabs) => {
-      Promise.all(tabs.map((tab) => waitTabCompleted(tab))).then(resolve)
+      Promise.all(tabs.map((tab) => waitUntilComplete(tab))).then(resolve)
     })
   })
 }

@@ -12,13 +12,10 @@ import CloseIcon from "@/components/icons/Close"
 import FolderIcon from "@/components/icons/Folder"
 import LoadingIcon from "@/components/icons/Loading"
 import { Separator } from "@/components/ui/separator"
-import { Card, CardDescription, CardTitle } from "@/components/ui/card"
+import { Card, CardTitle } from "@/components/ui/card"
 import { MessageEvent, sendTab } from "@/utils/messages"
 import { useSharedStore } from "./store"
-import {
-  updateTabUntilComplete,
-  queryTabsUntilComplete,
-} from "@/utils/browser_tabs"
+import { waitForTab, updateTab, queryTabs } from "@/utils/browser_tabs"
 import StepCard from "./runner_tab/StepCard"
 
 const runExtractingStep = async (
@@ -42,6 +39,37 @@ const runExtractingStep = async (
   return result
 }
 
+const replayRecording = async (
+  browserTab: number,
+  recording: ActionRecordingSchema["recordings"][number]
+): Promise<StepResult> => {
+  let next: StepResult
+  const action = recording.action
+
+  switch (action) {
+    case "click": {
+      next = await sendTab<ReplayRecordingClickMessage>(browserTab, {
+        event: MessageEvent.REPLAY_RECORDING_CLICK,
+        payload: { selector: recording.selector },
+      })
+      break
+    }
+    case "keyup": {
+      next = await sendTab<ReplayRecordingKeyupMessage>(browserTab, {
+        event: MessageEvent.REPLAY_RECORDING_KEYUP,
+        payload: { selector: recording.selector, value: recording.value },
+      })
+      break
+    }
+    default: {
+      next = action // never
+      break
+    }
+  }
+
+  return next
+}
+
 const runRecordingStep = async (
   browserTab: number,
   values: ActionRecordingSchema
@@ -50,27 +78,23 @@ const runRecordingStep = async (
 
   for (const recording of values.recordings) {
     let next: StepResult
-    const action = recording.action
 
-    switch (action) {
-      case "click": {
-        next = await sendTab<ReplayRecordingClickMessage>(browserTab, {
-          event: MessageEvent.REPLAY_RECORDING_CLICK,
-          payload: { selector: recording.selector },
-        })
-        break
-      }
-      case "keyup": {
-        next = await sendTab<ReplayRecordingKeyupMessage>(browserTab, {
-          event: MessageEvent.REPLAY_RECORDING_KEYUP,
-          payload: { selector: recording.selector, value: recording.value },
-        })
-        break
-      }
-      default: {
-        next = action
-        break
-      }
+    try {
+      next = await replayRecording(browserTab, recording)
+    } catch (e) {
+      // We may end up failing if the last action we invoked loaded a new page.
+      // In these cases, we just need to wait for the page to reload. Try again
+      // once that finishes.
+      //
+      // WXT's error handling isn't particularly useful. Though we could
+      // hardcode the type of error on the message, this is prone to silently
+      // breaking on any updates. Instead, just assume we can recover by
+      // retrying.
+      //
+      // TODO: This error handling needs to be expanded on once we're ready to
+      // take on multi-tab flows.
+      await waitForTab(browserTab)
+      next = await replayRecording(browserTab, recording)
     }
 
     result = mergeStepResults(result, next)
@@ -86,7 +110,7 @@ const runNavigateStep = async (
   browserTab: number,
   url: string
 ): Promise<StepResult> => {
-  await updateTabUntilComplete(browserTab, { url })
+  await updateTab(browserTab, { url })
   return { success: true }
 }
 
@@ -210,16 +234,14 @@ const RunnerTab = () => {
       return
     }
     setRunning({ workflow, browserTab: 0, actionIndex: 0, results: [] })
-    queryTabsUntilComplete({ active: true, currentWindow: true }).then(
-      (tabs) => {
-        setRunning({
-          workflow,
-          browserTab: tabs[0].id!,
-          actionIndex: 0,
-          results: [],
-        })
-      }
-    )
+    queryTabs({ active: true, currentWindow: true }).then((tabs) => {
+      setRunning({
+        workflow,
+        browserTab: tabs[0].id!,
+        actionIndex: 0,
+        results: [],
+      })
+    })
   }, [store.triggered, setRunning])
 
   // Process each step of the workflow. On completion, trigger an update to
@@ -260,7 +282,7 @@ const RunnerTab = () => {
   return (
     <div className="flex flex-col gap-4 p-4">
       <Card>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="pt-2 flex items-center gap-2">
           {running.results[running.actionIndex]?.success === false ? (
             <CloseIcon className="w-5 h-5 rounded-full fill-red-900" />
           ) : running.actionIndex === running.workflow.actions.length ? (
@@ -269,10 +291,10 @@ const RunnerTab = () => {
             <LoadingIcon className="w-5 h-5 fill-emerald-600" />
           )}
           {running.workflow.init.name}{" "}
+          <span className="text-xs text-muted-foreground ml-auto">
+            ({running.workflow.uuid.slice(0, 8)})
+          </span>
         </CardTitle>
-        <CardDescription>
-          Launched ({running.workflow.uuid.slice(0, 8)})
-        </CardDescription>
       </Card>
 
       <Separator />
@@ -289,7 +311,7 @@ const RunnerTab = () => {
 
         return (
           <StepCard
-            key={running.workflow.uuid}
+            key={`${running.workflow.uuid}-${index}`}
             action={actions[index]}
             title={title}
             subtitle={subtitle}
