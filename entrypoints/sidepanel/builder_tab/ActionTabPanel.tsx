@@ -54,12 +54,12 @@ type ActionTabPanelProps = {
 }
 
 const ActionTabPanel = ({ params, onChange }: ActionTabPanelProps) => {
-  const [actionKindActive, setActionKindActive] = React.useState<ActionKind>(
-    ActionKind.RECORDING
+  const [activeKind, setActiveKind] = React.useState<ActionKind>(
+    ActionKind.NAVIGATE
   )
 
   const actionTabForm = React.useMemo(() => {
-    switch (actionKindActive) {
+    switch (activeKind) {
       case ActionKind.EXTRACTING: {
         return <ActionExtractingForm onChange={onChange} />
       }
@@ -73,31 +73,31 @@ const ActionTabPanel = ({ params, onChange }: ActionTabPanelProps) => {
         return <ActionOpenAIForm onChange={onChange} />
       }
       default: {
-        const _exhaustivenessCheck: never = actionKindActive
+        const _exhaustivenessCheck: never = activeKind
         break
       }
     }
-  }, [onChange, actionKindActive])
+  }, [onChange, activeKind])
 
   return (
     <div>
       <div className="flex gap-2">
         <ComboBox
-          value={actionKindActive}
+          value={activeKind}
           options={Object.values(ActionKind).map((value) => ({
             label: value,
             value,
           }))}
           onSelect={(value) => {
             const kind = value as ActionKind
-            if (kind !== actionKindActive) {
+            if (kind !== activeKind) {
               onChange(null)
             }
-            setActionKindActive(kind)
+            setActiveKind(kind)
           }}
         />
         {params.size > 0 &&
-        [ActionKind.NAVIGATE, ActionKind.OPENAI].includes(actionKindActive) ? (
+        [ActionKind.NAVIGATE, ActionKind.OPENAI].includes(activeKind) ? (
           <ParameterSheet params={params} />
         ) : null}
       </div>

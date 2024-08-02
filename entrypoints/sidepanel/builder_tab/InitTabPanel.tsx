@@ -6,7 +6,6 @@ import { type InitSchema, initSchema } from "@/utils/schema"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,7 +20,7 @@ type InitTabPanelProps = {
 const InitTabPanel = ({ onChange }: InitTabPanelProps) => {
   const form = useForm<InitSchema>({
     resolver: zodResolver(initSchema),
-    defaultValues: { name: "", url: "" },
+    defaultValues: { name: "" },
   })
 
   React.useEffect(() => {
@@ -35,6 +34,11 @@ const InitTabPanel = ({ onChange }: InitTabPanelProps) => {
   return (
     <Form {...form}>
       <form className="space-y-8">
+        <p>
+          Build a new workflow. All steps run relative to whichever page you
+          have open at time of running. For consistency, consider making the
+          first action a <span className="font-bold">Navigate</span>.
+        </p>
         <FormField
           control={form.control}
           name="name"
@@ -43,23 +47,6 @@ const InitTabPanel = ({ onChange }: InitTabPanelProps) => {
               <FormLabel>Workflow Name</FormLabel>
               <FormControl>
                 <Input placeholder="The name of your workflow" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Starting URL</FormLabel>
-              <FormDescription>
-                All workflows start in a new tab. Specify the URL this workflow
-                should begin at.
-              </FormDescription>
-              <FormControl>
-                <Input placeholder="Start workflow from this URL" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

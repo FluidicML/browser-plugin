@@ -16,8 +16,8 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { MessageEvent, sendTab } from "@/utils/messages"
 import { useSharedStore } from "./store"
 import {
-  createTabUntilComplete,
   updateTabUntilComplete,
+  queryTabsUntilComplete,
 } from "@/utils/browser_tabs"
 import StepCard from "./runner_tab/StepCard"
 
@@ -210,9 +210,16 @@ const RunnerTab = () => {
       return
     }
     setRunning({ workflow, browserTab: 0, actionIndex: 0, results: [] })
-    createTabUntilComplete({ url: workflow.init.url }).then((tab) => {
-      setRunning({ workflow, browserTab: tab.id!, actionIndex: 0, results: [] })
-    })
+    queryTabsUntilComplete({ active: true, currentWindow: true }).then(
+      (tabs) => {
+        setRunning({
+          workflow,
+          browserTab: tabs[0].id!,
+          actionIndex: 0,
+          results: [],
+        })
+      }
+    )
   }, [store.triggered, setRunning])
 
   // Process each step of the workflow. On completion, trigger an update to
@@ -262,13 +269,9 @@ const RunnerTab = () => {
             <LoadingIcon className="w-5 h-5 fill-emerald-600" />
           )}
           {running.workflow.init.name}{" "}
-          <span className="text-xs text-muted-foreground ml-auto">
-            ({running.workflow.uuid.slice(0, 8)})
-          </span>
         </CardTitle>
         <CardDescription>
-          Launched{" "}
-          <span className="underline">{running.workflow.init.url}</span>.
+          Launched ({running.workflow.uuid.slice(0, 8)})
         </CardDescription>
       </Card>
 

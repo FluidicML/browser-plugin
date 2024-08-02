@@ -38,3 +38,13 @@ export const updateTabUntilComplete = (
     })
   })
 }
+
+export const queryTabsUntilComplete = (
+  queryInfo: Tabs.QueryQueryInfoType
+): Promise<Tabs.Tab[]> => {
+  return new Promise((resolve) => {
+    browser.tabs.query(queryInfo).then((tabs) => {
+      Promise.all(tabs.map((tab) => waitTabCompleted(tab))).then(resolve)
+    })
+  })
+}

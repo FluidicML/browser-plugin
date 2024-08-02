@@ -9,9 +9,6 @@ export const initSchema = z
     name: z.string().min(1, {
       message: "You must provide a workflow name.",
     }),
-    url: z.string().url({
-      message: "You must provide a valid URL.",
-    }),
   })
   .required()
 
