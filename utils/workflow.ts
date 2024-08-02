@@ -193,7 +193,8 @@ export const actionFormParams = (form: ActionForm): string[] => {
 
 export type StepResult = {
   success: boolean
-  messages: string[]
+  messages?: string[]
+  args?: Map<string, string>
 }
 
 // Representation of the entire workflow end-to-end.

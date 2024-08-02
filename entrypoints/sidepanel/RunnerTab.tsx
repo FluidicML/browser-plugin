@@ -1,8 +1,9 @@
 import React from "react"
 
 import type {
-  ReplayingClickMessage,
-  ReplayingKeyupMessage,
+  ReplayExtractingClickMessage,
+  ReplayRecordingClickMessage,
+  ReplayRecordingKeyupMessage,
 } from "@/utils/messages"
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
@@ -18,11 +19,38 @@ import {
 } from "@/utils/browser_tabs"
 import StepCard from "./runner_tab/StepCard"
 
+const runExtractingStep = async (
+  browserTab: number,
+  values: ActionExtractingSchema
+): Promise<StepResult> => {
+  let result: StepResult = { success: true }
+
+  for (const param of values.params) {
+    const next = await sendTab<ReplayExtractingClickMessage>(browserTab, {
+      event: MessageEvent.REPLAY_EXTRACTING_CLICK,
+      payload: { selector: param.selector },
+    })
+
+    result.success = next.success
+    if (next.messages) {
+      result.messages = result.messages
+        ? [...result.messages, ...next.messages]
+        : next.messages
+    }
+
+    if (!result.success) {
+      return result
+    }
+  }
+
+  return result
+}
+
 const runRecordingStep = async (
   browserTab: number,
   values: ActionRecordingSchema
 ): Promise<StepResult> => {
-  let result: StepResult = { success: true, messages: [] }
+  let result: StepResult = { success: true }
 
   for (const recording of values.recordings) {
     let next: StepResult
@@ -30,15 +58,15 @@ const runRecordingStep = async (
 
     switch (action) {
       case "click": {
-        next = await sendTab<ReplayingClickMessage>(browserTab, {
-          event: MessageEvent.REPLAYING_CLICK,
+        next = await sendTab<ReplayRecordingClickMessage>(browserTab, {
+          event: MessageEvent.REPLAY_RECORDING_CLICK,
           payload: { selector: recording.selector },
         })
         break
       }
       case "keyup": {
-        next = await sendTab<ReplayingKeyupMessage>(browserTab, {
-          event: MessageEvent.REPLAYING_KEYUP,
+        next = await sendTab<ReplayRecordingKeyupMessage>(browserTab, {
+          event: MessageEvent.REPLAY_RECORDING_KEYUP,
           payload: { selector: recording.selector, value: recording.value },
         })
         break
@@ -50,7 +78,11 @@ const runRecordingStep = async (
     }
 
     result.success = next.success
-    result.messages.push(...next.messages)
+    if (next.messages) {
+      result.messages = result.messages
+        ? [...result.messages, ...next.messages]
+        : next.messages
+    }
 
     if (!result.success) {
       return result
@@ -68,14 +100,14 @@ const runStep = async (
 
   switch (kind) {
     case ActionKind.EXTRACTING: {
-      return { success: false, messages: ["Unsupported EXTRACTING action."] }
+      return await runExtractingStep(browserTab, action.values)
     }
     case ActionKind.RECORDING: {
       return await runRecordingStep(browserTab, action.values)
     }
     case ActionKind.NAVIGATE: {
       await updateTabUntilComplete(browserTab, { url: action.values.url })
-      return { success: true, messages: [] }
+      return { success: true }
     }
     case ActionKind.OPENAI: {
       return { success: false, messages: ["Unsupported OPENAI action."] }
@@ -182,7 +214,7 @@ const RunnerTab = () => {
         const actions = running.workflow.actions
         const kind = actions[index].kind
         const title = `Step ${index + 1} / ${actions.length}`
-        const subtitle = `Replay ${kind.slice(0, 1).toUpperCase() + kind.slice(1)}.`
+        const subtitle = `${kind.slice(0, 1).toUpperCase() + kind.slice(1)}`
 
         return (
           <StepCard

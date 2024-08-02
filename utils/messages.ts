@@ -9,8 +9,9 @@ export enum MessageEvent {
   RECORDING_QUERY = "RECORDING_QUERY",
   RECORDING_START = "RECORDING_START",
   RECORDING_STOP = "RECORDING_STOP",
-  REPLAYING_CLICK = "REPLAYING_CLICK",
-  REPLAYING_KEYUP = "REPLAYING_KEYUP",
+  REPLAY_EXTRACTING_CLICK = "REPLAY_EXTRACTING_CLICK",
+  REPLAY_RECORDING_CLICK = "REPLAY_RECORDING_CLICK",
+  REPLAY_RECORDING_KEYUP = "REPLAY_RECORDING_KEYUP",
 }
 
 type BaseMessage<
@@ -52,13 +53,20 @@ export type RecordingStartMessage = BaseMessage<MessageEvent.RECORDING_START>
 
 export type RecordingStopMessage = BaseMessage<MessageEvent.RECORDING_STOP>
 
-export type ReplayingClickMessage = BaseMessage<
-  MessageEvent.REPLAYING_CLICK,
+export type ReplayExtractingClickMessage = BaseMessage<
+  MessageEvent.REPLAY_EXTRACTING_CLICK,
   { selector: Selector },
   StepResult
 >
-export type ReplayingKeyupMessage = BaseMessage<
-  MessageEvent.REPLAYING_KEYUP,
+
+export type ReplayRecordingClickMessage = BaseMessage<
+  MessageEvent.REPLAY_RECORDING_CLICK,
+  { selector: Selector },
+  StepResult
+>
+
+export type ReplayRecordingKeyupMessage = BaseMessage<
+  MessageEvent.REPLAY_RECORDING_KEYUP,
   { selector: Selector; value: string },
   StepResult
 >
@@ -72,8 +80,9 @@ export type Message =
   | RecordingQueryMessage
   | RecordingStartMessage
   | RecordingStopMessage
-  | ReplayingClickMessage
-  | ReplayingKeyupMessage
+  | ReplayExtractingClickMessage
+  | ReplayRecordingClickMessage
+  | ReplayRecordingKeyupMessage
 
 export type LiveMessage<M extends Message> = Omit<M, "response">
 

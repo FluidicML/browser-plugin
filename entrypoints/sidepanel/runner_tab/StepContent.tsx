@@ -52,7 +52,7 @@ type ActionContentProps = {
 }
 
 const ActionContent = ({ action, isRunning, result }: ActionContentProps) => {
-  if (result && result.messages.length > 0) {
+  if (result?.messages && result.messages.length > 0) {
     return (
       <ol className="pl-4 list-decimal">
         {result.messages.map((m, index) => (

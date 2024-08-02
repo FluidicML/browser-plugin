@@ -1,7 +1,15 @@
 import type { ContentScriptContext } from "wxt/client"
 import { MessageEvent, addMessageListener } from "@/utils/messages"
 
-const replayClick = async (selector: Selector): Promise<StepResult> => {
+const replayExtractingClick = async (
+  selector: Selector
+): Promise<StepResult> => {
+  return { success: true, messages: ["Extracted."] }
+}
+
+const replayRecordingClick = async (
+  selector: Selector
+): Promise<StepResult> => {
   const matches = findSelector(selector)
 
   if (matches.length === 0) {
@@ -20,7 +28,7 @@ const replayClick = async (selector: Selector): Promise<StepResult> => {
   return { success: true, messages: ["Clicked."] }
 }
 
-const replayKeyup = async (
+const replayRecordingKeyup = async (
   selector: Selector,
   value: string
 ): Promise<StepResult> => {
@@ -59,11 +67,17 @@ export default defineContentScript({
   main(_context: ContentScriptContext) {
     addMessageListener((message) => {
       switch (message.event) {
-        case MessageEvent.REPLAYING_CLICK: {
-          return replayClick(message.payload.selector)
+        case MessageEvent.REPLAY_EXTRACTING_CLICK: {
+          return replayExtractingClick(message.payload.selector)
         }
-        case MessageEvent.REPLAYING_KEYUP: {
-          return replayKeyup(message.payload.selector, message.payload.value)
+        case MessageEvent.REPLAY_RECORDING_CLICK: {
+          return replayRecordingClick(message.payload.selector)
+        }
+        case MessageEvent.REPLAY_RECORDING_KEYUP: {
+          return replayRecordingKeyup(
+            message.payload.selector,
+            message.payload.value
+          )
         }
       }
     })
