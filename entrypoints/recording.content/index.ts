@@ -14,7 +14,7 @@ const OUTLINE_PADDING = 15
 export default defineContentScript({
   matches: ["*://*/*"],
 
-  main(_context: ContentScriptContext) {
+  async main(_context: ContentScriptContext) {
     const outline = document.createElement("div")
     outline.id = "fluidic-recording-outline"
     document.body.appendChild(outline)
@@ -70,20 +70,20 @@ export default defineContentScript({
     let lastKeyupTarget: HTMLElement | null = null
 
     const keyupListener = (ev: KeyboardEvent) => {
-      if (!(ev.target instanceof HTMLInputElement)) {
+      const target = ev.target
+      if (!(target instanceof HTMLInputElement)) {
         return
       }
       sendExt({
         event: MessageEvent.RECORDING_KEYUP,
         payload: {
           action: "keyup",
-          selector: getSelector(ev.target),
-          value:
-            ev.target instanceof HTMLInputElement ? ev.target.value : ev.key,
-          replace: lastKeyupTarget === ev.target,
+          selector: getSelector(target),
+          value: target instanceof HTMLInputElement ? target.value : ev.key,
+          replace: lastKeyupTarget === target,
         },
       })
-      lastKeyupTarget = ev.target
+      lastKeyupTarget = target
     }
 
     const recordingStart = () => {
@@ -125,13 +125,13 @@ export default defineContentScript({
     // On a new page load the content script is injected again. Check what
     // state we're in.
     try {
-      sendExt({ event: MessageEvent.RECORDING_QUERY, payload: null }).then(
-        (isRecording) => {
-          if (isRecording) {
-            recordingStart()
-          }
-        }
-      )
+      const isRecording = await sendExt({
+        event: MessageEvent.RECORDING_QUERY,
+        payload: null,
+      })
+      if (isRecording) {
+        recordingStart()
+      }
     } catch (err) {
       // A communication error indicates the sidepanel isn't open; assume we
       // aren't recording when this happens.

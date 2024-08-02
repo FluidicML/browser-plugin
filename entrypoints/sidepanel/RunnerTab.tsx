@@ -1,66 +1,22 @@
 import React from "react"
 
+import type {
+  ReplayingClickMessage,
+  ReplayingKeyupMessage,
+} from "@/utils/messages"
+
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import FolderIcon from "@/components/icons/Folder"
 import LoadingIcon from "@/components/icons/Loading"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
+import { MessageEvent, sendTab } from "@/utils/messages"
 import { useSharedStore } from "./store"
-import { Selector } from "@/utils/selector"
+import {
+  createTabUntilComplete,
+  updateTabUntilComplete,
+} from "@/utils/browser_tabs"
 import StepCard from "./runner_tab/StepCard"
-
-const waitForClick = async (
-  browserTab: number,
-  selector: Selector
-): Promise<StepResult> => {
-  await browser.scripting.executeScript({
-    target: { tabId: browserTab },
-    func: (selector: Selector) => {
-      window.fluidic_args = { selector }
-    },
-    args: [selector],
-  })
-
-  const responses = await browser.scripting.executeScript({
-    target: { tabId: browserTab },
-    files: ["injected_click.js"],
-  })
-
-  for (const response of responses) {
-    if (response.result) {
-      return response.result
-    }
-  }
-
-  return { success: false, messages: ["Unknown error"] }
-}
-
-const waitForKeyup = async (
-  browserTab: number,
-  selector: Selector,
-  value: string
-): Promise<StepResult> => {
-  await browser.scripting.executeScript({
-    target: { tabId: browserTab },
-    func: (selector: Selector) => {
-      window.fluidic_args = { selector, value }
-    },
-    args: [selector],
-  })
-
-  const responses = await browser.scripting.executeScript({
-    target: { tabId: browserTab },
-    files: ["injected_keyup.js"],
-  })
-
-  for (const response of responses) {
-    if (response.result) {
-      return response.result
-    }
-  }
-
-  return { success: false, messages: ["Unknown error"] }
-}
 
 const runRecordingStep = async (
   browserTab: number,
@@ -74,15 +30,17 @@ const runRecordingStep = async (
 
     switch (action) {
       case "click": {
-        next = await waitForClick(browserTab, recording.selector)
+        next = await sendTab<ReplayingClickMessage>(browserTab, {
+          event: MessageEvent.REPLAYING_CLICK,
+          payload: { selector: recording.selector },
+        })
         break
       }
       case "keyup": {
-        next = await waitForKeyup(
-          browserTab,
-          recording.selector,
-          recording.value
-        )
+        next = await sendTab<ReplayingKeyupMessage>(browserTab, {
+          event: MessageEvent.REPLAYING_KEYUP,
+          payload: { selector: recording.selector, value: recording.value },
+        })
         break
       }
       default: {
@@ -116,7 +74,7 @@ const runStep = async (
       return await runRecordingStep(browserTab, action.values)
     }
     case ActionKind.NAVIGATE: {
-      await browser.tabs.update(browserTab, { url: action.values.url })
+      await updateTabUntilComplete(browserTab, { url: action.values.url })
       return { success: true, messages: [] }
     }
     case ActionKind.PROMPT: {
@@ -152,7 +110,7 @@ const RunnerTab = () => {
       setRunning(null)
       return
     }
-    browser.tabs.create({ url: triggered.init.url }).then((tab) => {
+    createTabUntilComplete({ url: triggered.init.url }).then((tab) => {
       setRunning({
         workflow: triggered,
         browserTab: tab.id!,

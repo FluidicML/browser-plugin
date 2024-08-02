@@ -9,6 +9,8 @@ export enum MessageEvent {
   RECORDING_QUERY = "RECORDING_QUERY",
   RECORDING_START = "RECORDING_START",
   RECORDING_STOP = "RECORDING_STOP",
+  REPLAYING_CLICK = "REPLAYING_CLICK",
+  REPLAYING_KEYUP = "REPLAYING_KEYUP",
 }
 
 type BaseMessage<
@@ -21,28 +23,45 @@ type BaseMessage<
   response: Response // Exists solely for typing purposes.
 }
 
-type ExtractingClickMessage = BaseMessage<
+export type ExtractingClickMessage = BaseMessage<
   MessageEvent.EXTRACTING_CLICK,
   Selector
 >
-type ExtractingStartMessage = BaseMessage<MessageEvent.EXTRACTING_START>
-type ExtractingStopMessage = BaseMessage<MessageEvent.EXTRACTING_STOP>
 
-type RecordingClickMessage = BaseMessage<
+export type ExtractingStartMessage = BaseMessage<MessageEvent.EXTRACTING_START>
+
+export type ExtractingStopMessage = BaseMessage<MessageEvent.EXTRACTING_STOP>
+
+export type RecordingClickMessage = BaseMessage<
   MessageEvent.RECORDING_CLICK,
   { action: "click"; selector: Selector }
 >
-type RecordingKeyupMessage = BaseMessage<
+
+export type RecordingKeyupMessage = BaseMessage<
   MessageEvent.RECORDING_KEYUP,
   { action: "keyup"; selector: Selector; value: string; replace: boolean }
 >
-type RecordingQueryMessage = BaseMessage<
+
+export type RecordingQueryMessage = BaseMessage<
   MessageEvent.RECORDING_QUERY,
   null,
   boolean
 >
-type RecordingStartMessage = BaseMessage<MessageEvent.RECORDING_START>
-type RecordingStopMessage = BaseMessage<MessageEvent.RECORDING_STOP>
+
+export type RecordingStartMessage = BaseMessage<MessageEvent.RECORDING_START>
+
+export type RecordingStopMessage = BaseMessage<MessageEvent.RECORDING_STOP>
+
+export type ReplayingClickMessage = BaseMessage<
+  MessageEvent.REPLAYING_CLICK,
+  { selector: Selector },
+  StepResult
+>
+export type ReplayingKeyupMessage = BaseMessage<
+  MessageEvent.REPLAYING_KEYUP,
+  { selector: Selector; value: string },
+  StepResult
+>
 
 export type Message =
   | ExtractingClickMessage
@@ -53,31 +72,31 @@ export type Message =
   | RecordingQueryMessage
   | RecordingStartMessage
   | RecordingStopMessage
+  | ReplayingClickMessage
+  | ReplayingKeyupMessage
 
-export type LiveMessage =
-  | Omit<ExtractingClickMessage, "response">
-  | Omit<ExtractingStartMessage, "response">
-  | Omit<ExtractingStopMessage, "response">
-  | Omit<RecordingClickMessage, "response">
-  | Omit<RecordingKeyupMessage, "response">
-  | Omit<RecordingQueryMessage, "response">
-  | Omit<RecordingStartMessage, "response">
-  | Omit<RecordingStopMessage, "response">
+export type LiveMessage<M extends Message> = Omit<M, "response">
 
-export const sendTab = (
+export const sendTab = <M extends Message>(
   tabId: number,
-  message: LiveMessage,
+  message: LiveMessage<M>,
   options?: Runtime.SendMessageOptionsType
-) => {
-  return browser.tabs.sendMessage(tabId, message, options) as Promise<
-    Message["response"]
-  >
-}
+): Promise<M["response"]> => browser.tabs.sendMessage(tabId, message, options)
 
-export const broadcastTabs = async (
-  message: LiveMessage,
+export const sendExt = <M extends Message>(
+  message: LiveMessage<M>,
   options?: Runtime.SendMessageOptionsType
-) => {
+): Promise<M["response"]> => browser.runtime.sendMessage(message, options)
+
+export const broadcastTabs = async <M extends Message>(
+  message: LiveMessage<M>,
+  options?: Runtime.SendMessageOptionsType
+): Promise<
+  {
+    tab: number
+    response: M["response"]
+  }[]
+> => {
   const allTabs = await browser.tabs.query({})
   const contentScriptMatches = new MatchPattern("*://*/*")
   const contentScriptTabs = allTabs.filter(
@@ -90,20 +109,11 @@ export const broadcastTabs = async (
   const responses = await Promise.all(
     contentScriptTabs.map(async (tab) => {
       const response = await browser.tabs.sendMessage(tab.id!, message, options)
-      return { tab: tab.id, response }
+      return { tab: tab.id!, response }
     })
   )
 
   return responses
-}
-
-export const sendExt = (
-  message: LiveMessage,
-  options?: Runtime.SendMessageOptionsType
-) => {
-  return browser.runtime.sendMessage(message, options) as Promise<
-    Message["response"]
-  >
 }
 
 // A type-safe representation of the types of messages we anticipate handling

@@ -157,7 +157,9 @@ const BuilderTab = () => {
         <Button
           variant="secondary"
           className="ml-auto"
-          disabled={validBeforeIndex < actionTabs.length}
+          disabled={
+            store.lockedBy.size > 0 || validBeforeIndex < actionTabs.length
+          }
           onClick={saveWorkflow}
         >
           Save Workflow
