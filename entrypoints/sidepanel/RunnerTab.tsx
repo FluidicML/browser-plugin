@@ -12,7 +12,7 @@ import CloseIcon from "@/components/icons/Close"
 import FolderIcon from "@/components/icons/Folder"
 import LoadingIcon from "@/components/icons/Loading"
 import { Separator } from "@/components/ui/separator"
-import { Card, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { MessageEvent, sendTab } from "@/utils/messages"
 import { useSharedStore } from "./store"
 import { waitForTab, updateTab, queryTabs } from "@/utils/browser_tabs"
@@ -308,6 +308,25 @@ const RunnerTab = () => {
             ({context.workflow.uuid.slice(0, 8)})
           </span>
         </CardTitle>
+        {context.params.size > 0 && (
+          <CardContent className="overflow-x-auto scrollbar">
+            <Separator className="my-4" />
+            <table className="table-auto">
+              <tbody>
+                {[...context.params.entries()].map(([key, val]) => (
+                  <tr key={key}>
+                    <td className="text-right">
+                      <pre className="font-bold pr-1">{key}:</pre>
+                    </td>
+                    <td>
+                      <pre>{val}</pre>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        )}
       </Card>
 
       <Separator />
