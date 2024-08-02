@@ -96,7 +96,8 @@ const ActionTabPanel = ({ params, onChange }: ActionTabPanelProps) => {
             setActionKindActive(kind)
           }}
         />
-        {params.size > 0 && actionKindActive === ActionKind.PROMPT ? (
+        {params.size > 0 &&
+        [ActionKind.NAVIGATE, ActionKind.PROMPT].includes(actionKindActive) ? (
           <ParameterSheet params={params} />
         ) : null}
       </div>

@@ -18,8 +18,8 @@ import ActionTabPanel from "./builder_tab/ActionTabPanel"
 type ActionTab = {
   key: string
   label: string
-  form?: ActionForm
   params: Set<string>
+  form: ActionForm | null
 }
 
 const BuilderTab = () => {
@@ -52,7 +52,7 @@ const BuilderTab = () => {
     let i = 0
     for (; i < actionTabs.length; ++i) {
       const form = actionTabs[i].form
-      if (form === undefined || actionFormSafeParse(form) === null) {
+      if (form === null || actionFormSafeParse(form) === null) {
         return i
       }
     }
@@ -61,7 +61,7 @@ const BuilderTab = () => {
 
   // Accumulate parameters specified in tabs before that of the specified
   // index.
-  const accumParamsActionTab = React.useCallback(
+  const accumulateParams = React.useCallback(
     (index: number) => {
       const params = new Set<string>()
       for (let i = 0; i < index; ++i) {
@@ -75,27 +75,28 @@ const BuilderTab = () => {
     [actionTabs]
   )
 
-  const updateActionTabs = React.useCallback(
+  const propagateUpdateTabs = React.useCallback(
     (values: ActionForm | null, index: number) => {
-      const shallowCopy = [...actionTabs]
-      shallowCopy[index].form = values ?? undefined
+      setActionTabs((tabs) => {
+        const params = accumulateParams(index)
 
-      // Propagate changes to any parameters that may have been made.
-      const params = accumParamsActionTab(index)
-      shallowCopy[index].params = new Set(params)
-      for (let i = index + 1; i < actionTabs.length; ++i) {
-        const form = shallowCopy[i].form
-        if (form) {
-          actionFormParams(form).forEach((p) => params.add(p))
+        const shallowCopy = [...tabs]
+        shallowCopy[index].form = values
+        shallowCopy[index].params = new Set(params)
+
+        // Notify all subsequent tabs on parameter changes.
+        for (let i = index + 1; i < actionTabs.length; ++i) {
+          const form = shallowCopy[i].form
+          if (form !== null) {
+            actionFormParams(form).forEach((p) => params.add(p))
+          }
           shallowCopy[i].params = new Set(params)
-        } else {
-          shallowCopy[i].params = new Set()
         }
-      }
 
-      setActionTabs(shallowCopy)
+        return shallowCopy
+      })
     },
-    [actionTabs, setActionTabs]
+    [setActionTabs, accumulateParams]
   )
 
   const saveWorkflow = React.useCallback(() => {
@@ -112,7 +113,15 @@ const BuilderTab = () => {
     setInitTab(null)
     setActionTabs([])
     setRootKey((id) => id + 1)
-  }, [store.actions, initTab, actionTabs])
+  }, [
+    store.actions,
+    initTab,
+    actionTabs,
+    setTabActive,
+    setInitTab,
+    setActionTabs,
+    setRootKey,
+  ])
 
   return (
     <Tabs
@@ -167,7 +176,7 @@ const BuilderTab = () => {
         >
           <ActionTabPanel
             params={tab.params}
-            onChange={(values) => updateActionTabs(values, index)}
+            onChange={(values) => propagateUpdateTabs(values, index)}
           />
         </TabsContent>
       ))}
@@ -177,12 +186,13 @@ const BuilderTab = () => {
           onClick={() => {
             const nextKey = `step${tabActiveIndex + 1}`
             if (tabActiveIsLast) {
-              setActionTabs([
-                ...actionTabs,
+              setActionTabs((tabs) => [
+                ...tabs,
                 {
                   key: nextKey,
                   label: `Step ${actionTabs.length + 1}`,
-                  params: accumParamsActionTab(tabActiveIndex + 1),
+                  params: accumulateParams(tabActiveIndex + 1),
+                  form: null,
                 },
               ])
             }
