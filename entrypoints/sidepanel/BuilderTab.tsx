@@ -11,7 +11,7 @@ import {
   initSchema,
   actionFormSafeParse,
   actionFormParams,
-} from "@/utils/workflow"
+} from "@/utils/schema"
 import InitTabPanel from "./builder_tab/InitTabPanel"
 import ActionTabPanel from "./builder_tab/ActionTabPanel"
 

@@ -2,8 +2,12 @@ import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useFieldArray, useForm } from "react-hook-form"
 
-import type { ActionRecordingSchema, ActionForm } from "@/utils/workflow"
-import { ActionKind, actionRecordingSchema } from "@/utils/workflow"
+import {
+  type ActionRecordingSchema,
+  type ActionForm,
+  ActionKind,
+  actionRecordingSchema,
+} from "@/utils/schema"
 import {
   MessageEvent,
   addMessageListener,

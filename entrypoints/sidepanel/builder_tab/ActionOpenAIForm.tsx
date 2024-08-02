@@ -3,8 +3,12 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Control, useFieldArray, useForm } from "react-hook-form"
 
 import PlusIcon from "@/components/icons/Plus"
-import type { ActionOpenAISchema, ActionForm } from "@/utils/workflow"
-import { ActionKind, actionOpenAISchema } from "@/utils/workflow"
+import {
+  type ActionOpenAISchema,
+  type ActionForm,
+  ActionKind,
+  actionOpenAISchema,
+} from "@/utils/schema"
 import {
   Form,
   FormControl,

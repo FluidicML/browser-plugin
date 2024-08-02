@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { ComboBox } from "@/components/ui/combobox"
 import { Separator } from "@/components/ui/separator"
-import { type ActionForm, ActionKind } from "@/utils/workflow"
+import { type ActionForm, ActionKind } from "@/utils/schema"
 import BracesIcon from "@/components/icons/Braces"
 import ActionExtractingForm from "./ActionExtractingForm"
 import ActionRecordingForm from "./ActionRecordingForm"

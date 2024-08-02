@@ -2,8 +2,12 @@ import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
-import type { ActionNavigateSchema, ActionForm } from "@/utils/workflow"
-import { ActionKind, actionNavigateSchema } from "@/utils/workflow"
+import {
+  type ActionNavigateSchema,
+  type ActionForm,
+  ActionKind,
+  actionNavigateSchema,
+} from "@/utils/schema"
 import {
   Form,
   FormControl,
