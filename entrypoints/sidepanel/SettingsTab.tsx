@@ -30,7 +30,7 @@ const SettingsTab = () => {
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
-      if (values.openaiApiKey) {
+      if (values.openaiApiKey !== undefined) {
         store.actions.setOpenaiApiKey(values.openaiApiKey)
       }
     })

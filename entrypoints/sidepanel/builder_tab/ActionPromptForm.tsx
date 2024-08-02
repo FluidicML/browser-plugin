@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { useSharedStore } from "../store"
 
 type InterpolationFieldProps = {
   control: Control<ActionPromptSchema>
@@ -59,6 +60,8 @@ type ActionPromptFormProps = {
 }
 
 const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
+  const store = useSharedStore()
+
   const form = useForm<ActionPromptSchema>({
     resolver: zodResolver(actionPromptSchema),
     defaultValues: {
@@ -74,14 +77,35 @@ const ActionPromptForm = ({ onChange }: ActionPromptFormProps) => {
   })
 
   React.useEffect(() => {
+    if (!store.openaiApiKey) {
+      onChange(null)
+      return
+    }
+
+    const parsed = actionPromptSchema.safeParse(form.getValues())
+    onChange(
+      parsed.success ? { kind: ActionKind.PROMPT, values: parsed.data } : null
+    )
+
     const subscription = form.watch((values) => {
       const parsed = actionPromptSchema.safeParse(values)
       onChange(
         parsed.success ? { kind: ActionKind.PROMPT, values: parsed.data } : null
       )
     })
+
     return () => subscription.unsubscribe()
-  }, [form.watch])
+  }, [store.openaiApiKey, form.watch])
+
+  if (store.openaiApiKey === "") {
+    return (
+      <p>
+        To create a <span className="font-bold">Prompt</span> action, you must
+        set an OpenAI API key. Do so in the{" "}
+        <span className="font-bold">Settings</span> tab.
+      </p>
+    )
+  }
 
   return (
     <Form {...form}>

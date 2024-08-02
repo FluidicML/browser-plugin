@@ -14,7 +14,7 @@ export type TabValue = "builder" | "library" | "runner" | "settings"
 
 export type SharedState = {
   // OpenAI API key used for any chat completions.
-  openaiApiKey: string | null
+  openaiApiKey: string
   // Which tab of the sidepanel is selected.
   activeTab: TabValue
 
@@ -39,7 +39,7 @@ export type SharedState = {
 export const useSharedStore = create<SharedState>()(
   persist(
     immer((set, get, _api) => ({
-      openaiApiKey: null,
+      openaiApiKey: "",
       activeTab: "builder",
       lockedBy: new Set(),
       library: [],
