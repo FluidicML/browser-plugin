@@ -5,6 +5,7 @@ import type {
   ReplayRecordingClickMessage,
   ReplayRecordingKeyupMessage,
 } from "@/utils/messages"
+import { chatCompletion } from "@/utils/openai"
 import { mergeStepResults } from "@/utils/workflow"
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
@@ -81,9 +82,82 @@ const runRecordingStep = async (
   return result
 }
 
+const runNavigateStep = async (
+  browserTab: number,
+  url: string
+): Promise<StepResult> => {
+  await updateTabUntilComplete(browserTab, { url })
+  return { success: true }
+}
+
+const runOpenAIStep = async (
+  openaiApiKey: string,
+  systemPrompt: string,
+  userPrompt: string,
+  params: { name: string; description: string }[]
+): Promise<StepResult> => {
+  if (!openaiApiKey) {
+    return { success: false, messages: ["Invalid OpenAI API key."] }
+  }
+
+  const props: { [key: string]: { type: string; description: string } } = {}
+  for (const param of params) {
+    props[param.name] = {
+      type: "string",
+      description: param.description,
+    }
+  }
+
+  try {
+    const response = await chatCompletion({
+      openaiApiKey,
+      systemPrompt: `${systemPrompt}\n\n# FORMATTING\nOutput responses in JSON.`,
+      userPrompt,
+      tools: [
+        {
+          type: "function",
+          function: {
+            name: "fluidic_function",
+            parameters: {
+              type: "object",
+              properties: props,
+            },
+          },
+        },
+      ],
+      tool_choice: {
+        type: "function",
+        function: {
+          name: "fluidic_function",
+        },
+      },
+      response_format: { type: "json_object" },
+    })
+
+    const args = new Map()
+    const messages = []
+
+    for (const [key, val] of Object.entries(
+      JSON.parse(
+        response.data.choices?.[0]?.message?.tool_calls?.[0]?.function
+          ?.arguments
+      )
+    )) {
+      args.set(key, val)
+      messages.push(`Received value for {${key}}.`)
+    }
+
+    return { success: true, messages, args }
+  } catch (e) {
+    console.error(e)
+    return { success: false, messages: ["Invalid OpenAI response."] }
+  }
+}
+
 const runStep = async (
   browserTab: number,
-  action: ActionForm
+  action: ActionForm,
+  openaiApiKey: string
 ): Promise<StepResult> => {
   const kind = action.kind
 
@@ -95,11 +169,15 @@ const runStep = async (
       return await runRecordingStep(browserTab, action.values)
     }
     case ActionKind.NAVIGATE: {
-      await updateTabUntilComplete(browserTab, { url: action.values.url })
-      return { success: true }
+      return await runNavigateStep(browserTab, action.values.url)
     }
     case ActionKind.OPENAI: {
-      return { success: false, messages: ["Unsupported OPENAI action."] }
+      return await runOpenAIStep(
+        openaiApiKey,
+        action.values.system,
+        action.values.user,
+        action.values.params
+      )
     }
     default: {
       const _exhaustivenessCheck: never = kind
@@ -150,7 +228,8 @@ const RunnerTab = () => {
     }
     runStep(
       running.browserTab,
-      running.workflow.actions[running.actionIndex]
+      running.workflow.actions[running.actionIndex],
+      store.openaiApiKey
     ).then((result) => {
       setRunning({
         ...running,
@@ -160,7 +239,7 @@ const RunnerTab = () => {
           : running.actionIndex,
       })
     })
-  }, [running])
+  }, [running, store.openaiApiKey])
 
   if (running === null) {
     return (
