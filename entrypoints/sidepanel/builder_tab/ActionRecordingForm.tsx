@@ -16,6 +16,7 @@ import {
 } from "@/utils/messages"
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
+import TrashIcon from "@/components/icons/Trash"
 import {
   Card,
   CardContent,
@@ -31,25 +32,26 @@ import LocatorTable from "./LocatorTable"
 type ActionCardProps = {
   index: number
   recording: ActionClickSchema | ActionKeyupSchema
+  onRemove: () => void
 }
 
-const ActionCard = ({ index, recording }: ActionCardProps) => {
+const ActionCard = ({ index, recording, onRemove }: ActionCardProps) => {
   const action = recording.action
   const title = `Step ${index + 1} - ${action.slice(0, 1).toUpperCase() + action.slice(1)}`
 
   const Subtitle = () => {
     switch (action) {
       case "click": {
-        return <span>Clicked on element:</span>
+        return <span>Clicked:</span>
       }
       case "keyup": {
-        let prefix = recording.value.slice(0, 40)
+        let prefix = recording.value.slice(0, 24)
         if (prefix.length < recording.value.length) {
           prefix += "..."
         }
         return (
           <span>
-            Input <span className="font-bold">{prefix}</span> into element:
+            Input <span className="font-bold">{prefix}</span>:
           </span>
         )
       }
@@ -61,7 +63,7 @@ const ActionCard = ({ index, recording }: ActionCardProps) => {
   }
 
   return (
-    <Card>
+    <Card className="relative">
       <CardTitle>{title}</CardTitle>
       <CardDescription>{Subtitle()}</CardDescription>
       <Separator className="my-4" />
@@ -72,6 +74,13 @@ const ActionCard = ({ index, recording }: ActionCardProps) => {
           <LocatorTable locator={recording.selector} />
         )}
       </CardContent>
+      <Button
+        size="xs"
+        className="group hover:bg-destructive/90 absolute right-4 top-4"
+        onClick={onRemove}
+      >
+        <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
+      </Button>
     </Card>
   )
 }
@@ -191,7 +200,12 @@ const ActionRecordingForm = ({ onChange }: ActionRecordingFormProps) => {
         </Button>
         <div className="flex flex-col gap-4 pt-2">
           {...recordings.fields.map((recording, index) => (
-            <ActionCard index={index} recording={recording} />
+            <ActionCard
+              key={recording.id}
+              index={index}
+              recording={recording}
+              onRemove={() => recordings.remove(index)}
+            />
           ))}
         </div>
       </form>
