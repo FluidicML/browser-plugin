@@ -17,7 +17,7 @@ const replayClick = async (selector: Selector): Promise<StepResult> => {
   )
   target.click()
 
-  return { success: true, messages: [] }
+  return { success: true, messages: ["Clicked."] }
 }
 
 const replayKeyup = async (
@@ -50,7 +50,7 @@ const replayKeyup = async (
     }
   }
 
-  return { success: true, messages: [] }
+  return { success: true, messages: ["Keyup."] }
 }
 
 export default defineContentScript({

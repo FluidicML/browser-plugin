@@ -105,18 +105,14 @@ const RunnerTab = () => {
   // Changes to our triggered workflow indicate either starting a workflow or
   // potentially deleting an active one.
   React.useEffect(() => {
-    const triggered = store.triggered
-    if (triggered === null) {
+    const workflow = store.triggered
+    if (workflow === null) {
       setRunning(null)
       return
     }
-    createTabUntilComplete({ url: triggered.init.url }).then((tab) => {
-      setRunning({
-        workflow: triggered,
-        browserTab: tab.id!,
-        actionIndex: 0,
-        results: [],
-      })
+    setRunning({ workflow, browserTab: 0, actionIndex: 0, results: [] })
+    createTabUntilComplete({ url: workflow.init.url }).then((tab) => {
+      setRunning({ workflow, browserTab: tab.id!, actionIndex: 0, results: [] })
     })
   }, [store.triggered, setRunning])
 
@@ -125,6 +121,7 @@ const RunnerTab = () => {
   React.useEffect(() => {
     if (
       running === null ||
+      running.browserTab === 0 ||
       running.actionIndex >= running.workflow.actions.length ||
       running.results[running.actionIndex]?.success === false
     ) {
@@ -179,11 +176,18 @@ const RunnerTab = () => {
         if (index === running.workflow.actions.length) {
           return null
         }
+
+        const actions = running.workflow.actions
+        const kind = actions[index].kind
+        const title = `Step ${index + 1} / ${actions.length}`
+        const subtitle = `Replay ${kind.slice(0, 1).toUpperCase() + kind.slice(1)}.`
+
         return (
           <StepCard
-            key={`${running.workflow.uuid}-${index}`}
-            action={running.workflow.actions[index]}
-            title={`Step ${index + 1} / ${running.workflow.actions.length}`}
+            key={running.workflow.uuid}
+            action={actions[index]}
+            title={title}
+            subtitle={subtitle}
             isRunning={index === running.actionIndex}
             result={running.results[index] ?? null}
           />

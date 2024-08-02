@@ -3,18 +3,24 @@ import React from "react"
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import LoadingIcon from "@/components/icons/Loading"
-import { Card, CardTitle } from "@/components/ui/card"
-import StepDescription from "./StepDescription"
+import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import StepContent from "./StepContent"
 
 type StepCardProps = {
   title: string
+  subtitle: string
   action: ActionForm
   isRunning: boolean
   result: StepResult | null
 }
 
-const StepCard = ({ title, action, isRunning, result }: StepCardProps) => {
+const StepCard = ({
+  title,
+  subtitle,
+  action,
+  isRunning,
+  result,
+}: StepCardProps) => {
   return (
     <Card>
       <CardTitle className="flex items-center gap-2">
@@ -29,8 +35,8 @@ const StepCard = ({ title, action, isRunning, result }: StepCardProps) => {
         )}
         {title}
       </CardTitle>
-      <StepDescription action={action} isRunning={isRunning} result={result} />
-      <StepContent action={action} />
+      <CardDescription className="pb-2">{subtitle}</CardDescription>
+      <StepContent action={action} isRunning={isRunning} result={result} />
     </Card>
   )
 }
