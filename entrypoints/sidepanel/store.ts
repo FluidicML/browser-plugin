@@ -10,13 +10,16 @@ import type { Workflow } from "@/utils/workflow"
 import { enableMapSet } from "immer"
 enableMapSet()
 
-export type TabValue = "builder" | "library" | "runner"
+export type TabValue = "builder" | "library" | "runner" | "settings"
 
 export type SharedState = {
-  // A non-empty value indicates the top-level tabbing should be disabled.
-  lockedBy: Set<string>
+  // OpenAI API key used for any chat completions.
+  openaiApiKey: string | null
   // Which tab of the sidepanel is selected.
   activeTab: TabValue
+
+  // A non-empty value indicates the top-level tabbing should be disabled.
+  lockedBy: Set<string>
   // A collection of locally saved workflows.
   library: Workflow[]
   // The workflow being run.
@@ -25,6 +28,7 @@ export type SharedState = {
   actions: {
     lock: (locker: string) => void
     unlock: (locker: string) => void
+    setOpenaiApiKey: (key: string) => void
     setActiveTab: (tab: TabValue) => void
     saveWorkflow: (workflow: Omit<Workflow, "uuid">) => void
     removeWorkflow: (workflow: Workflow) => void
@@ -35,8 +39,9 @@ export type SharedState = {
 export const useSharedStore = create<SharedState>()(
   persist(
     immer((set, get, _api) => ({
-      lockedBy: new Set(),
+      openaiApiKey: null,
       activeTab: "builder",
+      lockedBy: new Set(),
       library: [],
       triggered: null,
 
@@ -51,6 +56,10 @@ export const useSharedStore = create<SharedState>()(
           set((s) => {
             s.lockedBy.delete(locker)
           })
+        },
+
+        setOpenaiApiKey: (key) => {
+          set({ openaiApiKey: key })
         },
 
         setActiveTab: (tab) => {
@@ -85,7 +94,10 @@ export const useSharedStore = create<SharedState>()(
     {
       name: "fluidic-workflows",
 
-      partialize: (state) => ({ library: state.library }),
+      partialize: (state) => ({
+        openaiApiKey: state.openaiApiKey,
+        library: state.library,
+      }),
 
       storage: createJSONStorage(() => ({
         getItem: async (name: string) => {

@@ -79,5 +79,6 @@ const LibraryTab = () => {
     </div>
   )
 }
+LibraryTab.displayName = "LibraryTab"
 
 export default LibraryTab

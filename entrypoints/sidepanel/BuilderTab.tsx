@@ -111,6 +111,7 @@ const BuilderTab = () => {
           </TabsTrigger>
         ))}
       </TabsList>
+
       <TabsContent
         className="h-full px-4"
         value="init"
@@ -128,13 +129,11 @@ const BuilderTab = () => {
           hidden={tabActive !== tab.key}
         >
           <ActionTabPanel
-            onChange={(values) => {
-              updateActionTab(values, index)
-              // TODO: Check which of any later tabs are valid.
-            }}
+            onChange={(values) => updateActionTab(values, index)}
           />
         </TabsContent>
       ))}
+
       <div className="flex border-t px-4 py-2">
         <Button
           onClick={() => {

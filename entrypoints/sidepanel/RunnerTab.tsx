@@ -4,7 +4,6 @@ import type {
   ReplayingClickMessage,
   ReplayingKeyupMessage,
 } from "@/utils/messages"
-
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import FolderIcon from "@/components/icons/Folder"
@@ -196,5 +195,6 @@ const RunnerTab = () => {
     </div>
   )
 }
+RunnerTab.displayName = "RunnerTab"
 
 export default RunnerTab
