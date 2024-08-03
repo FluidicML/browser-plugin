@@ -26,12 +26,12 @@ Install and run the following:
 
 ```bash
 $ pnpm install
-$ pnpm dev
+$ pnpm build
 ```
 
-This will produce a `dist` directory containing the unpacked extension. Navigate
-to `Chrome > Manage Extensions > Load unpacked` and select this directory.
-Consider pinning the newly installed extension.
+This will produce a `dist/chrome-mv3` directory containing the unpacked
+extension. Navigate to `Chrome > Manage Extensions > Load unpacked` and select
+this directory. Consider pinning the newly installed extension.
 
 ### Actions
 
