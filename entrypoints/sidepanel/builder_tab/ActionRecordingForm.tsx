@@ -95,7 +95,6 @@ const ActionRecordingForm = ({
     resolver: zodResolver(actionRecordingSchema),
     defaultValues: defaultValues ?? {},
   })
-
   const recordings = useFieldArray({
     control: form.control,
     name: "recordings",

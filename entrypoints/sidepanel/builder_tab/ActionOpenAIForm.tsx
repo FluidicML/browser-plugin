@@ -78,7 +78,6 @@ const ActionOpenAIForm = ({
       params: [{ name: "", description: "" }],
     },
   })
-
   const params = useFieldArray({
     control: form.control,
     name: "params",

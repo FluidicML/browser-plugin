@@ -50,6 +50,9 @@ const ParameterCard = ({
           control={control}
           name={`params.${index}.name`}
           render={({ field }) => (
+            // This form field also forces the form to scroll to the bottom
+            // automatically when new entries are inserted. If removed, make
+            // sure we still continue automatically scrolling.
             <FormItem>
               <FormControl>
                 <Input className="mb-4" placeholder="Name" {...field} />
@@ -94,7 +97,6 @@ const ActionExtractingForm = ({
     resolver: zodResolver(actionExtractingSchema),
     defaultValues: defaultValues ?? { params: [] },
   })
-
   const params = useFieldArray({
     control: form.control,
     name: "params",

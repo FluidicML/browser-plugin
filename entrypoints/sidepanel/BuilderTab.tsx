@@ -128,7 +128,7 @@ const BuilderTab = () => {
       value={tabActive}
       onValueChange={setTabActive}
     >
-      <TabsList className="flex overflow-x-auto overflow-y-hidden scrollbar justify-start mt-2 mx-4">
+      <TabsList className="shrink-0 flex overflow-x-auto overflow-y-hidden scrollbar justify-start mt-2 mx-4">
         <TabsTrigger
           value="-1"
           disabled={store.lockedBy.size > 0}
@@ -156,31 +156,31 @@ const BuilderTab = () => {
         ))}
       </TabsList>
 
-      <TabsContent className="h-full px-4" value="-1">
-        <InitTabPanel defaultValues={initTab} onChange={setInitTab} />
-      </TabsContent>
+      <InitTabPanel
+        className="grow px-4 overflow-y-auto scrollbar"
+        value="-1"
+        defaultValues={initTab}
+        onChange={setInitTab}
+      />
       {actionTabs.map((tab, index) => (
-        <TabsContent
+        <ActionTabPanel
           key={tab.key}
-          className="overflow-y-auto scrollbar h-full px-4"
+          className="grow px-4 overflow-y-auto scrollbar"
           value={`${index}`}
-        >
-          <ActionTabPanel
-            defaultValues={tab.form}
-            params={tabParams(index)}
-            onChange={(form) => tabUpdateForm(form, index)}
-            onRemove={() => {
-              setTabActive(`${index - (tabActiveLast ? 1 : 0)}`)
-              setActionTabs((tabs) => {
-                const spliced = [...tabs].toSpliced(index, 1)
-                for (let i = index; i < spliced.length; ++i) {
-                  spliced[i].label = `Step ${i + 1}`
-                }
-                return spliced
-              })
-            }}
-          />
-        </TabsContent>
+          defaultValues={tab.form}
+          params={tabParams(index)}
+          onChange={(form) => tabUpdateForm(form, index)}
+          onRemove={() => {
+            setTabActive(`${index - (tabActiveLast ? 1 : 0)}`)
+            setActionTabs((tabs) => {
+              const spliced = [...tabs].toSpliced(index, 1)
+              for (let i = index; i < spliced.length; ++i) {
+                spliced[i].label = `Step ${i + 1}`
+              }
+              return spliced
+            })
+          }}
+        />
       ))}
 
       <div className="flex border-t px-4 py-2">

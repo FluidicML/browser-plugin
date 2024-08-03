@@ -8,6 +8,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { ComboBox } from "@/components/ui/combobox"
 import { Separator } from "@/components/ui/separator"
@@ -49,22 +50,31 @@ const ParameterSheet = ({ params }: ParameterSheetProps) => {
   )
 }
 
-type ActionTabPanelProps = {
+type ActionTabPanelProps = Omit<
+  React.ComponentPropsWithoutRef<typeof TabsContent>,
+  "onChange"
+> & {
   defaultValues: ActionForm | null
   params: Set<string>
   onChange: (values: ActionForm | null) => void
   onRemove: () => void
 }
 
-const ActionTabPanel = ({
-  defaultValues,
-  params,
-  onChange,
-  onRemove,
-}: ActionTabPanelProps) => {
+const ActionTabPanel = React.forwardRef<
+  React.ElementRef<typeof TabsContent>,
+  ActionTabPanelProps
+>(({ defaultValues, params, onChange, onRemove, ...props }, ref) => {
   const [activeKind, setActiveKind] = React.useState<ActionKind>(
     defaultValues?.kind ?? ActionKind.NAVIGATE
   )
+
+  const scrollRef = React.useRef<HTMLElement | null>(null)
+  const scrollOnChange = (values: ActionForm | null) => {
+    onChange(values)
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo(0, scrollRef.current.scrollHeight)
+    }
+  }
 
   const actionTabForm = React.useMemo(() => {
     switch (activeKind) {
@@ -76,7 +86,7 @@ const ActionTabPanel = ({
                 ? defaultValues.values
                 : null
             }
-            onChange={onChange}
+            onChange={scrollOnChange}
           />
         )
       }
@@ -88,7 +98,7 @@ const ActionTabPanel = ({
                 ? defaultValues.values
                 : null
             }
-            onChange={onChange}
+            onChange={scrollOnChange}
           />
         )
       }
@@ -100,7 +110,7 @@ const ActionTabPanel = ({
                 ? defaultValues.values
                 : null
             }
-            onChange={onChange}
+            onChange={scrollOnChange}
           />
         )
       }
@@ -112,7 +122,7 @@ const ActionTabPanel = ({
                 ? defaultValues.values
                 : null
             }
-            onChange={onChange}
+            onChange={scrollOnChange}
           />
         )
       }
@@ -124,7 +134,17 @@ const ActionTabPanel = ({
   }, [onChange, activeKind])
 
   return (
-    <div>
+    <TabsContent
+      ref={(node) => {
+        scrollRef.current = node
+        if (typeof ref === "function") {
+          ref(node)
+        } else if (ref) {
+          ref.current = node
+        }
+      }}
+      {...props}
+    >
       <div className="flex gap-2">
         {params.size > 0 &&
         [ActionKind.NAVIGATE, ActionKind.OPENAI].includes(activeKind) ? (
@@ -148,9 +168,9 @@ const ActionTabPanel = ({
       </div>
       <Separator className="my-4" />
       {actionTabForm}
-    </div>
+    </TabsContent>
   )
-}
+})
 ActionTabPanel.displayName = "ActionTabPanel"
 
 export default ActionTabPanel
