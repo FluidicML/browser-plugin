@@ -151,6 +151,10 @@ const ActionRecordingForm = ({
     name: "recordings",
   })
 
+  // Maintain a separate count so that we can distinguish between insertions
+  // and deletions. Insertions should scroll downward. Deletions should not.
+  const recordingsCount = React.useRef(defaultValues?.recordings.length ?? 0)
+
   React.useEffect(() => {
     return () => {
       broadcastTabs({ event: Event.RECORDING_STOP, payload: null })
@@ -160,6 +164,12 @@ const ActionRecordingForm = ({
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
+      if (values.recordings) {
+        if (values.recordings.length > recordingsCount.current) {
+          triggerScroll()
+        }
+        recordingsCount.current = values.recordings.length
+      }
       const parsed = actionRecordingSchema.safeParse(values)
       onChange(
         parsed.success
@@ -168,7 +178,7 @@ const ActionRecordingForm = ({
       )
     })
     return () => subscription.unsubscribe()
-  }, [form.watch])
+  }, [triggerScroll, form.watch])
 
   React.useEffect(() => {
     if (!isRecording) {
@@ -184,7 +194,6 @@ const ActionRecordingForm = ({
             return
           }
           recordings.append(message.payload)
-          triggerScroll()
           break
         }
         case Event.RECORDING_KEYUP: {
@@ -196,7 +205,6 @@ const ActionRecordingForm = ({
             recordings.update(recordings.fields.length - 1, message.payload)
           } else {
             recordings.append(message.payload)
-            triggerScroll()
           }
           break
         }
