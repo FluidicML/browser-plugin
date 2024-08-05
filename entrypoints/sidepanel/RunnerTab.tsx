@@ -147,8 +147,12 @@ const runOpenAIStep = async (
 ): Promise<StepResult> => {
   if (!openaiApiKey) {
     return new StepResult({
-      status: "FAILURE",
-      messages: ["Invalid OpenAI API Key."],
+      tasks: [
+        {
+          status: "FAILURE",
+          message: "Invalid OpenAI API Key.",
+        },
+      ],
     })
   }
 
@@ -191,25 +195,29 @@ const runOpenAIStep = async (
       response_format: { type: "json_object" },
     })
 
-    const params = new Map()
-    const messages = []
-
+    const tasks: TaskResult[] = []
     for (const [key, val] of Object.entries(
       JSON.parse(
         response.data.choices?.[0]?.message?.tool_calls?.[0]?.function
           ?.arguments
       )
     )) {
-      params.set(key, val)
-      messages.push(`Received value for {${key}}.`)
+      tasks.push({
+        status: "SUCCESS",
+        params: [[key, val as string]],
+        message: `Received value for {${key}}.`,
+      })
     }
-
-    return new StepResult({ messages, params })
+    return new StepResult({ tasks })
   } catch (e) {
     console.error(e)
     return new StepResult({
-      status: "FAILURE",
-      messages: ["Invalid OpenAI response."],
+      tasks: [
+        {
+          status: "FAILURE",
+          message: "Invalid OpenAI response.",
+        },
+      ],
     })
   }
 }
@@ -241,8 +249,12 @@ const runStep = async (
   }
 
   return new StepResult({
-    status: "FAILURE",
-    messages: [`Unsupported ${kind} action.`],
+    tasks: [
+      {
+        status: "FAILURE",
+        message: `Unsupported ${kind} action.`,
+      },
+    ],
   })
 }
 

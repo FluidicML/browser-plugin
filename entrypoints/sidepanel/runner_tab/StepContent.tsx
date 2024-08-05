@@ -1,4 +1,5 @@
 import { CardContent } from "@/components/ui/card"
+import { StepResult } from "@/utils/workflow"
 
 type ActionRecordingProps = {
   result: StepResult | null
@@ -51,11 +52,11 @@ type ActionContentProps = {
 }
 
 const ActionContent = ({ action, result }: ActionContentProps) => {
-  if (result?.messages && result.messages.length > 0) {
+  if (result?.tasks && result.tasks.length > 0) {
     return (
       <ol className="pl-4 list-decimal">
-        {result.messages.map((m, index) => (
-          <li key={index}>{m}</li>
+        {result.tasks.map((task, index) => (
+          <li key={`${task.message}${index}`}>{task.message}</li>
         ))}
       </ol>
     )
