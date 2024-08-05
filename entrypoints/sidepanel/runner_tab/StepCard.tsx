@@ -8,19 +8,12 @@ import StepContent from "./StepContent"
 
 type StepCardProps = {
   title: string
-  subtitle: string
+  description: string
   action: ActionForm
-  isRunning: boolean
   result: StepResult | null
 }
 
-const StepCard = ({
-  title,
-  subtitle,
-  action,
-  isRunning,
-  result,
-}: StepCardProps) => {
+const StepCard = ({ title, description, action, result }: StepCardProps) => {
   return (
     <Card>
       <CardTitle className="flex items-center gap-2">
@@ -28,15 +21,13 @@ const StepCard = ({
           <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
         ) : result?.status === "FAILURE" ? (
           <CloseIcon className="w-5 h-5 fill-red-700" />
-        ) : isRunning ? (
-          <LoadingIcon className="w-5 h-5 fill-emerald-600" />
         ) : (
-          <div className="w-5 h-5 rounded-full" />
+          <LoadingIcon className="w-5 h-5 fill-emerald-600" />
         )}
         {title}
       </CardTitle>
-      <CardDescription className="pb-2">{subtitle}</CardDescription>
-      <StepContent action={action} isRunning={isRunning} result={result} />
+      <CardDescription className="pb-2">{description}</CardDescription>
+      <StepContent action={action} result={result} />
     </Card>
   )
 }

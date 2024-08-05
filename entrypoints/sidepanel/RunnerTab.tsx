@@ -250,7 +250,12 @@ const RunnerTab = () => {
   const store = useSharedStore()
 
   // TODO: Should handle when the active tab is shutdown.
+
   const [context, setContext] = React.useState<Context | null>(null)
+  const latestStep = context?.results[context.results.length - 1]
+  const finished = context
+    ? context.actionIndex >= context.workflow.actions.length
+    : false
 
   // Changes to our triggered workflow indicate either starting a workflow or
   // potentially deleting an active one.
@@ -279,8 +284,8 @@ const RunnerTab = () => {
     if (
       context === null ||
       context.browserTab === 0 ||
-      context.actionIndex >= context.workflow.actions.length ||
-      context.results[context.actionIndex]?.status === "FAILURE"
+      latestStep?.status === "FAILURE" ||
+      finished
     ) {
       return
     }
@@ -310,9 +315,9 @@ const RunnerTab = () => {
     <div className="flex flex-col gap-4 p-4">
       <Card>
         <CardTitle className="pt-2 flex items-center gap-2">
-          {context.results[context.actionIndex]?.status === "FAILURE" ? (
+          {latestStep?.status === "FAILURE" ? (
             <CloseIcon className="w-5 h-5 rounded-full fill-red-700" />
-          ) : context.actionIndex === context.workflow.actions.length ? (
+          ) : finished ? (
             <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
           ) : (
             <LoadingIcon className="w-5 h-5 fill-emerald-600" />
@@ -345,23 +350,20 @@ const RunnerTab = () => {
 
       <Separator />
 
-      {[...Array(context.actionIndex + 1).keys()].map((index) => {
-        if (index === context.workflow.actions.length) {
+      {context.workflow.actions.map((action, index) => {
+        const title = `Step ${index + 1} / ${context.workflow.actions.length}`
+        const description = `${action.kind.slice(0, 1).toUpperCase() + action.kind.slice(1)}`
+
+        if (index > context.actionIndex) {
           return null
         }
-
-        const actions = context.workflow.actions
-        const kind = actions[index].kind
-        const title = `Step ${index + 1} / ${actions.length}`
-        const subtitle = `${kind.slice(0, 1).toUpperCase() + kind.slice(1)}`
 
         return (
           <StepCard
             key={`${context.workflow.uuid}-${index}`}
-            action={actions[index]}
             title={title}
-            subtitle={subtitle}
-            isRunning={index === context.actionIndex}
+            description={description}
+            action={action}
             result={context.results[index] ?? null}
           />
         )

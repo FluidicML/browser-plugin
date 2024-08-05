@@ -1,25 +1,25 @@
 import { CardContent } from "@/components/ui/card"
 
 type ActionRecordingProps = {
-  isRunning: boolean
+  result: StepResult | null
 }
 
-const ActionRecording = ({ isRunning }: ActionRecordingProps) => {
-  if (isRunning) {
+const ActionRecording = ({ result }: ActionRecordingProps) => {
+  if (result === null) {
     return <span>Replaying recording...</span>
   }
   return <span>Replayed recording.</span>
 }
 
 type ActionNavigateProps = {
-  isRunning: boolean
+  result: StepResult | null
   url: string
 }
 
-const ActionNavigate = ({ isRunning, url }: ActionNavigateProps) => {
+const ActionNavigate = ({ result, url }: ActionNavigateProps) => {
   const Link = () => <span className="underline">{url}</span>
 
-  if (isRunning) {
+  if (result === null) {
     return (
       <span>
         Navigating to <Link />
@@ -35,11 +35,11 @@ const ActionNavigate = ({ isRunning, url }: ActionNavigateProps) => {
 }
 
 type ActionOpenAIProps = {
-  isRunning: boolean
+  result: StepResult | null
 }
 
-const ActionOpenAI = ({ isRunning }: ActionOpenAIProps) => {
-  if (isRunning) {
+const ActionOpenAI = ({ result }: ActionOpenAIProps) => {
+  if (result === null) {
     return <span>Sending request to OpenAI...</span>
   }
   return <span>Sent request to OpenAI.</span>
@@ -47,11 +47,10 @@ const ActionOpenAI = ({ isRunning }: ActionOpenAIProps) => {
 
 type ActionContentProps = {
   action: ActionForm
-  isRunning: boolean
   result: StepResult | null
 }
 
-const ActionContent = ({ action, isRunning, result }: ActionContentProps) => {
+const ActionContent = ({ action, result }: ActionContentProps) => {
   if (result?.messages && result.messages.length > 0) {
     return (
       <ol className="pl-4 list-decimal">
@@ -69,13 +68,13 @@ const ActionContent = ({ action, isRunning, result }: ActionContentProps) => {
       return null
     }
     case ActionKind.RECORDING: {
-      return <ActionRecording isRunning={isRunning} />
+      return <ActionRecording result={result} />
     }
     case ActionKind.NAVIGATE: {
-      return <ActionNavigate url={action.values.url} isRunning={isRunning} />
+      return <ActionNavigate url={action.values.url} result={result} />
     }
     case ActionKind.OPENAI: {
-      return <ActionOpenAI isRunning={isRunning} />
+      return <ActionOpenAI result={result} />
     }
     default: {
       const _exhaustivenessCheck: never = kind
