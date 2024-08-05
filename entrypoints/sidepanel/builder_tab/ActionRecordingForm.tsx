@@ -24,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Form } from "@/components/ui/form"
 import { useSharedStore } from "../store"
 import LocatorTable from "./LocatorTable"
@@ -31,10 +32,16 @@ import LocatorTable from "./LocatorTable"
 type ActionCardProps = {
   index: number
   recording: ActionClickSchema | ActionKeyupSchema
+  onCheck: (field: "fallible" | "confirmed", value: boolean) => void
   onRemove: () => void
 }
 
-const ActionCard = ({ index, recording, onRemove }: ActionCardProps) => {
+const ActionCard = ({
+  index,
+  recording,
+  onCheck,
+  onRemove,
+}: ActionCardProps) => {
   const action = recording.action
   const title = `Step ${index + 1} - ${action.slice(0, 1).toUpperCase() + action.slice(1)}`
 
@@ -65,6 +72,16 @@ const ActionCard = ({ index, recording, onRemove }: ActionCardProps) => {
           ) : (
             <LocatorTable locator={recording.selector} />
           )}
+        </div>
+        <div className="flex items-center">
+          <div className="flex items-center">
+            <Checkbox onCheckedChange={(v) => onCheck("fallible", !!v)} />
+            Fallible?
+          </div>
+          <div className="flex items-center">
+            <Checkbox onCheckedChange={(v) => onCheck("confirmed", !!v)} />
+            Confirmed?
+          </div>
         </div>
       </CardContent>
       <Button
@@ -201,6 +218,9 @@ const ActionRecordingForm = ({
               index={index}
               recording={recording}
               onRemove={() => recordings.remove(index)}
+              onCheck={(field, value) => {
+                // TODO: Update confirmation here.
+              }}
             />
           ))}
         </div>
