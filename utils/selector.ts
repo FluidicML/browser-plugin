@@ -4,6 +4,8 @@
 
 import { z } from "zod"
 
+import { subrolesOf, getRole } from "./roles"
+
 export const locatorSchema = z.object({
   tag: z.string(),
   role: z.string().optional(),
@@ -22,33 +24,6 @@ export const selectorSchema = locatorSchema.or(z.string())
 
 export type Selector = z.infer<typeof selectorSchema>
 
-const TEXTBOX_INPUT_TYPES = [
-  null,
-  "date",
-  "datetime-local",
-  "email",
-  "month",
-  "number",
-  "password",
-  "tel",
-  "text",
-  "time",
-]
-
-// Build up a query from a locator. There is a bit of a balancing act being
-// performed at the moment. If we attempt to only return elements that match
-// all of our fields exactly, any minor change to the DOM could result in a
-// failed match that the user would expect to continue succeeding. If on the
-// other hand we are too loose, we may end up matching too many elements and
-// not being able to decide how to proceed (on e.g. replay).
-//
-// As a compromise, allow the caller to specify a prioritized list of all
-// locator fields. As soon as we are able to filter down the number of matched
-// elements to one (or, in failed cases, zero), stop processing any further.
-//
-// TODO: In practice, we probably need to make this much stricter. This fuzzy
-// approach could lead to potentially harmful edge cases on replay if we aren't
-// careful. For now, ignoring this issue.
 class QueryBuilder {
   private matches: HTMLElement[]
 
@@ -57,36 +32,21 @@ class QueryBuilder {
   }
 
   withRole(role?: string): QueryBuilder {
-    if (role === undefined || this.matches.length <= 1) {
+    if (role === undefined) {
       return this
     }
 
+    const subroles = subrolesOf(role)
     this.matches = this.matches.filter((m) => {
-      if (m.getAttribute("role") === role) {
-        return true
-      }
-
-      if (role === "button") {
-        return m.tagName.toLowerCase() === "button"
-      }
-
-      if (role === "textbox" && m instanceof HTMLTextAreaElement) {
-        return true
-      }
-
-      if (role === "textbox" && m instanceof HTMLInputElement) {
-        return TEXTBOX_INPUT_TYPES.includes(m.getAttribute("type"))
-      }
-
-      // Encountered either an invalid or unsupported role.
-      return false
+      const roleAttr = m.getAttribute("role") ?? getRole(m)
+      return roleAttr && subroles.includes(roleAttr)
     })
 
     return this
   }
 
   withTitle(title?: string): QueryBuilder {
-    if (title === undefined || this.matches.length <= 1) {
+    if (title === undefined) {
       return this
     }
 
@@ -96,7 +56,7 @@ class QueryBuilder {
   }
 
   withLabel(label?: string): QueryBuilder {
-    if (label === undefined || this.matches.length <= 1) {
+    if (label === undefined) {
       return this
     }
 
@@ -113,7 +73,7 @@ class QueryBuilder {
   }
 
   withPlaceholder(placeholder?: string): QueryBuilder {
-    if (placeholder === undefined || this.matches.length <= 1) {
+    if (placeholder === undefined) {
       return this
     }
 
@@ -125,7 +85,7 @@ class QueryBuilder {
   }
 
   withAltText(altText?: string): QueryBuilder {
-    if (altText === undefined || this.matches.length <= 1) {
+    if (altText === undefined) {
       return this
     }
 
@@ -135,7 +95,7 @@ class QueryBuilder {
   }
 
   withTestId(testId?: string): QueryBuilder {
-    if (testId === undefined || this.matches.length <= 1) {
+    if (testId === undefined) {
       return this
     }
 
@@ -147,7 +107,7 @@ class QueryBuilder {
   }
 
   withText(text?: string): QueryBuilder {
-    if (text === undefined || this.matches.length <= 1) {
+    if (text === undefined) {
       return this
     }
 
@@ -218,30 +178,6 @@ export const waitForSelector = async (
 
 const getTag = (el: HTMLElement) => {
   return el.tagName.toLowerCase()
-}
-
-const getRole = (el: HTMLElement) => {
-  const roleAttr = el.getAttribute("role")
-  if (roleAttr) {
-    return roleAttr
-  }
-
-  if (el instanceof HTMLButtonElement) {
-    return "button"
-  }
-
-  if (el instanceof HTMLTextAreaElement) {
-    return "textbox"
-  }
-
-  if (
-    el instanceof HTMLInputElement &&
-    TEXTBOX_INPUT_TYPES.includes(el.getAttribute("type"))
-  ) {
-    return "textbox"
-  }
-
-  return undefined
 }
 
 const getTitle = (el: HTMLElement) => {
@@ -332,23 +268,34 @@ const getCSS = (el: HTMLElement) => {
 }
 
 export const getSelector = (el: HTMLElement): Selector => {
-  const locator: Locator = {
-    tag: getTag(el),
-    role: getRole(el),
-    title: getTitle(el),
-    label: getLabel(el),
-    placeholder: getPlaceholder(el),
-    altText: getAltText(el),
-    testId: getTestId(el),
-    text: getText(el),
+  const locator: Locator = { tag: getTag(el) }
+
+  if (findSelector(locator).length === 1) {
+    return locator
   }
 
-  if (
-    Object.values(locator).filter(Boolean).length === 0 ||
-    findSelector(locator).length !== 1
-  ) {
-    return getCSS(el)
+  const fields: [keyof Locator, (el: HTMLElement) => string | undefined][] = [
+    ["role", getRole],
+    ["title", getTitle],
+    ["label", getLabel],
+    ["altText", getAltText],
+    ["placeholder", getPlaceholder],
+    ["testId", getTestId],
+    ["text", getText],
+  ]
+
+  for (const [key, func] of fields) {
+    const result = func(el)
+    if (result) {
+      locator[key] = result
+      const found = findSelector(locator)
+      if (found.length === 0) {
+        return getCSS(el)
+      } else if (found.length === 1) {
+        return locator
+      }
+    }
   }
 
-  return locator
+  return getCSS(el)
 }
