@@ -9,16 +9,16 @@ const replayExtractingClick = async (
   const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
-    return { success: false, messages: ["Could not find element."] }
+    return { status: "FAILURE", message: "Could not find element." }
   } else if (matches.length > 1) {
-    return { success: false, messages: ["Too many matched elements."] }
+    return { status: "FAILURE", message: "Too many matched elements." }
   }
 
   const target = matches[0]
 
   return {
-    success: true,
-    messages: [`Extracted {${payload.name}}.`],
+    status: "SUCCESS",
+    message: `Extracted {${payload.name}}.`,
     params: [[payload.name, target.innerText]],
   }
 }
@@ -29,9 +29,9 @@ const replayRecordingClick = async (
   const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
-    return { success: false, messages: ["Could not find element."] }
+    return { status: "FAILURE", message: "Could not find element." }
   } else if (matches.length > 1) {
-    return { success: false, messages: ["Too many matched elements."] }
+    return { status: "FAILURE", message: "Too many matched elements." }
   }
 
   const target = matches[0]
@@ -41,7 +41,7 @@ const replayRecordingClick = async (
   )
   target.click()
 
-  return { success: true, messages: ["Clicked."] }
+  return { status: "SUCCESS", message: "Clicked." }
 }
 
 const replayRecordingKeyup = async (
@@ -50,9 +50,9 @@ const replayRecordingKeyup = async (
   const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
-    return { success: false, messages: ["Could not find element."] }
+    return { status: "FAILURE", message: "Could not find element." }
   } else if (matches.length > 1) {
-    return { success: false, messages: ["Too many matched elements."] }
+    return { status: "FAILURE", message: "Too many matched elements." }
   }
 
   const target = matches[0]
@@ -73,7 +73,7 @@ const replayRecordingKeyup = async (
     }
   }
 
-  return { success: true, messages: ["Keyup."] }
+  return { status: "SUCCESS", message: "Keyup." }
 }
 
 export default defineContentScript({

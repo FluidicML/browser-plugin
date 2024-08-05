@@ -6,7 +6,7 @@ import type {
   ReplayRecordingKeyupMessage,
 } from "@/utils/messages"
 import { chatCompletion } from "@/utils/openai"
-import { mergeStepResults } from "@/utils/workflow"
+import { StepResult } from "@/utils/workflow"
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import FolderIcon from "@/components/icons/Folder"
@@ -39,10 +39,10 @@ const runExtractingStep = async (
   context: Context,
   values: ActionExtractingSchema
 ): Promise<StepResult> => {
-  let result: StepResult = { success: true }
+  const result = new StepResult()
 
   for (const param of values.params) {
-    const next = await sendTab<ReplayExtractingClickMessage>(
+    const task = await sendTab<ReplayExtractingClickMessage>(
       context.browserTab,
       {
         event: Event.REPLAY_EXTRACTING_CLICK,
@@ -50,8 +50,8 @@ const runExtractingStep = async (
       }
     )
 
-    result = mergeStepResults(result, next)
-    if (!result.success) {
+    result.pushTaskResult(task)
+    if (result.status === "FAILURE") {
       return result
     }
   }
@@ -59,52 +59,48 @@ const runExtractingStep = async (
   return result
 }
 
-const replayRecording = async (
+const runRecordingTask = async (
   context: Context,
   recording: ActionRecordingSchema["recordings"][number]
-): Promise<StepResult> => {
-  let next: StepResult
+): Promise<TaskResult> => {
+  let result: TaskResult
   const action = recording.action
 
   switch (action) {
     case "click": {
-      next = await sendTab<ReplayRecordingClickMessage>(context.browserTab, {
+      result = await sendTab<ReplayRecordingClickMessage>(context.browserTab, {
         event: Event.REPLAY_RECORDING_CLICK,
         payload: { selector: recording.selector },
       })
       break
     }
     case "keyup": {
-      next = await sendTab<ReplayRecordingKeyupMessage>(context.browserTab, {
+      result = await sendTab<ReplayRecordingKeyupMessage>(context.browserTab, {
         event: Event.REPLAY_RECORDING_KEYUP,
         payload: { selector: recording.selector, value: recording.value },
       })
       break
     }
     default: {
-      next = action // never
+      result = action // never
       break
     }
   }
 
-  if (!next.success && recording.fallible) {
-    next.success = null
-  }
-
-  return next
+  return result
 }
 
 const runRecordingStep = async (
   context: Context,
   values: ActionRecordingSchema
 ): Promise<StepResult> => {
-  let result: StepResult = { success: true }
+  const result = new StepResult()
 
   for (const recording of values.recordings) {
-    let next: StepResult
+    let task: TaskResult
 
     try {
-      next = await replayRecording(context, recording)
+      task = await runRecordingTask(context, recording)
     } catch (e) {
       // We may end up failing if the last action we invoked loaded a new page.
       // In these cases, we just need to wait for the page to reload. Try again
@@ -118,11 +114,15 @@ const runRecordingStep = async (
       // TODO: This error handling needs to be expanded on once we're ready to
       // take on multi-tab flows.
       await waitForTab(context.browserTab)
-      next = await replayRecording(context, recording)
+      task = await runRecordingTask(context, recording)
     }
 
-    result = mergeStepResults(result, next)
-    if (result.success === false) {
+    if (task.status === "FAILURE" && recording.fallible) {
+      task.status = "SKIPPED"
+    }
+
+    result.pushTaskResult(task)
+    if (result.status === "FAILURE") {
       return result
     }
   }
@@ -137,7 +137,7 @@ const runNavigateStep = async (
   await updateTab(context.browserTab, {
     url: interpolate(values.url, context.params),
   })
-  return { success: true }
+  return new StepResult()
 }
 
 const runOpenAIStep = async (
@@ -146,7 +146,10 @@ const runOpenAIStep = async (
   openaiApiKey: string
 ): Promise<StepResult> => {
   if (!openaiApiKey) {
-    return { success: false, messages: ["Invalid OpenAI API key."] }
+    return new StepResult({
+      status: "FAILURE",
+      messages: ["Invalid OpenAI API Key."],
+    })
   }
 
   const props: { [key: string]: { type: string; description: string } } = {}
@@ -201,10 +204,13 @@ const runOpenAIStep = async (
       messages.push(`Received value for {${key}}.`)
     }
 
-    return { success: true, messages, params: [...params] }
+    return new StepResult({ messages, params })
   } catch (e) {
     console.error(e)
-    return { success: false, messages: ["Invalid OpenAI response."] }
+    return new StepResult({
+      status: "FAILURE",
+      messages: ["Invalid OpenAI response."],
+    })
   }
 }
 
@@ -234,7 +240,10 @@ const runStep = async (
     }
   }
 
-  return { success: false, messages: [`Unsupported ${kind} action.`] }
+  return new StepResult({
+    status: "FAILURE",
+    messages: [`Unsupported ${kind} action.`],
+  })
 }
 
 const RunnerTab = () => {
@@ -271,7 +280,7 @@ const RunnerTab = () => {
       context === null ||
       context.browserTab === 0 ||
       context.actionIndex >= context.workflow.actions.length ||
-      context.results[context.actionIndex]?.success === false
+      context.results[context.actionIndex]?.status === "FAILURE"
     ) {
       return
     }
@@ -279,7 +288,7 @@ const RunnerTab = () => {
       setContext({
         ...context,
         actionIndex:
-          result.success !== false
+          result.status === "SUCCESS"
             ? context.actionIndex + 1
             : context.actionIndex,
         results: [...context.results, result],
@@ -301,7 +310,7 @@ const RunnerTab = () => {
     <div className="flex flex-col gap-4 p-4">
       <Card>
         <CardTitle className="pt-2 flex items-center gap-2">
-          {context.results[context.actionIndex]?.success === false ? (
+          {context.results[context.actionIndex]?.status === "FAILURE" ? (
             <CloseIcon className="w-5 h-5 rounded-full fill-red-700" />
           ) : context.actionIndex === context.workflow.actions.length ? (
             <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
