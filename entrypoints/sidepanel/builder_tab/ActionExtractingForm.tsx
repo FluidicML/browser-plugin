@@ -68,7 +68,7 @@ const ParameterCard = ({
         >
           <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
         </Button>
-        <div className="overflow-x-auto scrollbar">
+        <div className="overflow-x-auto scrollbar-hidden">
           {typeof selector === "string" ? (
             <pre>{selector}</pre>
           ) : (

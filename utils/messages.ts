@@ -70,7 +70,7 @@ export type Response<M extends Message> =
       | ReplayExtractingClickMessage
       | ReplayRecordingClickMessage
       | ReplayRecordingKeyupMessage
-  ? StepResult
+  ? TaskResult
   : null
 
 export const sendTab = <M extends Message>(

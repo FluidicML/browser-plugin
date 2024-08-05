@@ -61,9 +61,7 @@ const SettingsTab = () => {
           )}
         />
         <div className="flex gap-2 align-items">
-          <Checkbox
-            onCheckedChange={(checked) => setApiKeyVisible(!!checked)}
-          />
+          <Checkbox onCheckedChange={(v) => setApiKeyVisible(!!v)} />
           Toggle Visibility
         </div>
       </form>

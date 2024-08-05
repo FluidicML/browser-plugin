@@ -60,7 +60,18 @@ export const actionRecordingSchema = z
   .object({
     recordings: z
       .array(
-        z.discriminatedUnion("action", [actionClickSchema, actionKeyupSchema])
+        z.intersection(
+          z.discriminatedUnion("action", [
+            actionClickSchema,
+            actionKeyupSchema,
+          ]),
+          z.object({
+            // Indicates the action can fail. Doing so does not stop execution.
+            fallible: z.boolean().optional(),
+            // Indicates the action requires confirmation before continuing.
+            confirmed: z.boolean().optional(),
+          })
+        )
       )
       .nonempty(),
   })

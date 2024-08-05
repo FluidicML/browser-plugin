@@ -1,6 +1,6 @@
 import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useFieldArray, useForm } from "react-hook-form"
+import { Control, useFieldArray, useForm } from "react-hook-form"
 
 import {
   type ActionRecordingSchema,
@@ -24,17 +24,31 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Form } from "@/components/ui/form"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form"
+import { Separator } from "@/components/ui/separator"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useSharedStore } from "../store"
 import LocatorTable from "./LocatorTable"
 
 type ActionCardProps = {
+  control: Control<ActionRecordingSchema>
   index: number
-  recording: ActionClickSchema | ActionKeyupSchema
+  recording: ActionRecordingSchema["recordings"][number]
   onRemove: () => void
 }
 
-const ActionCard = ({ index, recording, onRemove }: ActionCardProps) => {
+const ActionCard = ({
+  control,
+  index,
+  recording,
+  onRemove,
+}: ActionCardProps) => {
   const action = recording.action
   const title = `Step ${index + 1} - ${action.slice(0, 1).toUpperCase() + action.slice(1)}`
 
@@ -59,12 +73,47 @@ const ActionCard = ({ index, recording, onRemove }: ActionCardProps) => {
       <CardTitle>{title}</CardTitle>
       <CardDescription>{Subtitle()}</CardDescription>
       <CardContent className="pt-2">
-        <div className="overflow-x-auto scrollbar">
+        <div className="overflow-x-auto scrollbar-hidden">
           {typeof recording.selector === "string" ? (
             <pre>{recording.selector}</pre>
           ) : (
             <LocatorTable locator={recording.selector} />
           )}
+        </div>
+        <Separator className="my-3" />
+        <div className="flex">
+          <div className="basis-1/2 flex gap-1 items-center">
+            <FormField
+              control={control}
+              name={`recordings.${index}.fallible`}
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <TooltipProvider delayDuration={250}>
+                    <Tooltip>
+                      <TooltipTrigger
+                        type="button"
+                        className="cursor-help underline"
+                      >
+                        Can fail?
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-72">
+                        <p>
+                          If this action were to fail, continue executing the
+                          remainder of the workflow.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
       </CardContent>
       <Button
@@ -81,11 +130,13 @@ const ActionCard = ({ index, recording, onRemove }: ActionCardProps) => {
 type ActionRecordingFormProps = {
   defaultValues: ActionRecordingSchema | null
   onChange: (values: ActionForm | null) => void
+  triggerScroll: () => void
 }
 
 const ActionRecordingForm = ({
   defaultValues,
   onChange,
+  triggerScroll,
 }: ActionRecordingFormProps) => {
   const id = React.useId()
   const store = useSharedStore()
@@ -100,6 +151,10 @@ const ActionRecordingForm = ({
     name: "recordings",
   })
 
+  // Maintain a separate count so that we can distinguish between insertions
+  // and deletions. Insertions should scroll downward. Deletions should not.
+  const recordingsCount = React.useRef(defaultValues?.recordings.length ?? 0)
+
   React.useEffect(() => {
     return () => {
       broadcastTabs({ event: Event.RECORDING_STOP, payload: null })
@@ -109,6 +164,12 @@ const ActionRecordingForm = ({
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
+      if (values.recordings) {
+        if (values.recordings.length > recordingsCount.current) {
+          triggerScroll()
+        }
+        recordingsCount.current = values.recordings.length
+      }
       const parsed = actionRecordingSchema.safeParse(values)
       onChange(
         parsed.success
@@ -117,7 +178,7 @@ const ActionRecordingForm = ({
       )
     })
     return () => subscription.unsubscribe()
-  }, [form.watch])
+  }, [triggerScroll, form.watch])
 
   React.useEffect(() => {
     if (!isRecording) {
@@ -198,6 +259,7 @@ const ActionRecordingForm = ({
           {...recordings.fields.map((recording, index) => (
             <ActionCard
               key={recording.id}
+              control={form.control}
               index={index}
               recording={recording}
               onRemove={() => recordings.remove(index)}
