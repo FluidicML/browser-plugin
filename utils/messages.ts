@@ -1,6 +1,6 @@
 import { browser, Runtime } from "wxt/browser"
 
-export enum MessageEvent {
+export enum Event {
   EXTRACTING_CLICK = "EXTRACTING_CLICK",
   EXTRACTING_START = "EXTRACTING_START",
   EXTRACTING_STOP = "EXTRACTING_STOP",
@@ -14,61 +14,39 @@ export enum MessageEvent {
   REPLAY_RECORDING_KEYUP = "REPLAY_RECORDING_KEYUP",
 }
 
-type BaseMessage<
-  Event extends MessageEvent,
-  Payload = null,
-  Response = null,
-> = {
-  event: Event
-  payload: Payload
-  response: Response // Exists solely for typing purposes.
+type BaseMessage<E extends Event, P = null> = {
+  event: E
+  payload: P
 }
 
 export type ExtractingClickMessage = BaseMessage<
-  MessageEvent.EXTRACTING_CLICK,
+  Event.EXTRACTING_CLICK,
   Selector
 >
-
-export type ExtractingStartMessage = BaseMessage<MessageEvent.EXTRACTING_START>
-
-export type ExtractingStopMessage = BaseMessage<MessageEvent.EXTRACTING_STOP>
-
+export type ExtractingStartMessage = BaseMessage<Event.EXTRACTING_START>
+export type ExtractingStopMessage = BaseMessage<Event.EXTRACTING_STOP>
 export type RecordingClickMessage = BaseMessage<
-  MessageEvent.RECORDING_CLICK,
+  Event.RECORDING_CLICK,
   { action: "click"; selector: Selector }
 >
-
 export type RecordingKeyupMessage = BaseMessage<
-  MessageEvent.RECORDING_KEYUP,
+  Event.RECORDING_KEYUP,
   { action: "keyup"; selector: Selector; value: string; replace: boolean }
 >
-
-export type RecordingQueryMessage = BaseMessage<
-  MessageEvent.RECORDING_QUERY,
-  null,
-  boolean
->
-
-export type RecordingStartMessage = BaseMessage<MessageEvent.RECORDING_START>
-
-export type RecordingStopMessage = BaseMessage<MessageEvent.RECORDING_STOP>
-
+export type RecordingQueryMessage = BaseMessage<Event.RECORDING_QUERY>
+export type RecordingStartMessage = BaseMessage<Event.RECORDING_START>
+export type RecordingStopMessage = BaseMessage<Event.RECORDING_STOP>
 export type ReplayExtractingClickMessage = BaseMessage<
-  MessageEvent.REPLAY_EXTRACTING_CLICK,
-  { name: string; selector: Selector },
-  StepResult
+  Event.REPLAY_EXTRACTING_CLICK,
+  { name: string; selector: Selector }
 >
-
 export type ReplayRecordingClickMessage = BaseMessage<
-  MessageEvent.REPLAY_RECORDING_CLICK,
-  { selector: Selector },
-  StepResult
+  Event.REPLAY_RECORDING_CLICK,
+  { selector: Selector }
 >
-
 export type ReplayRecordingKeyupMessage = BaseMessage<
-  MessageEvent.REPLAY_RECORDING_KEYUP,
-  { selector: Selector; value: string },
-  StepResult
+  Event.REPLAY_RECORDING_KEYUP,
+  { selector: Selector; value: string }
 >
 
 export type Message =
@@ -84,26 +62,35 @@ export type Message =
   | ReplayRecordingClickMessage
   | ReplayRecordingKeyupMessage
 
-export type LiveMessage<M extends Message> = Omit<M, "response">
+// prettier-ignore
+export type Response<M extends Message> =
+    M extends RecordingQueryMessage
+  ? boolean
+  : M extends
+      | ReplayExtractingClickMessage
+      | ReplayRecordingClickMessage
+      | ReplayRecordingKeyupMessage
+  ? StepResult
+  : null
 
 export const sendTab = <M extends Message>(
   tabId: number,
-  message: LiveMessage<M>,
+  message: M,
   options?: Runtime.SendMessageOptionsType
-): Promise<M["response"]> => browser.tabs.sendMessage(tabId, message, options)
+): Promise<Response<M>> => browser.tabs.sendMessage(tabId, message, options)
 
 export const sendExt = <M extends Message>(
-  message: LiveMessage<M>,
+  message: M,
   options?: Runtime.SendMessageOptionsType
-): Promise<M["response"]> => browser.runtime.sendMessage(message, options)
+): Promise<Response<M>> => browser.runtime.sendMessage(message, options)
 
 export const broadcastTabs = async <M extends Message>(
-  message: LiveMessage<M>,
+  message: M,
   options?: Runtime.SendMessageOptionsType
 ): Promise<
   {
     tab: number
-    response: M["response"]
+    response: Response<M>
   }[]
 > => {
   const allTabs = await browser.tabs.query({})
@@ -127,11 +114,10 @@ export const broadcastTabs = async <M extends Message>(
 
 // A type-safe representation of the types of messages we anticipate handling
 // within the content scripts/extension.
-type MessageListener = (
-  message: LiveMessage,
-  sender?: Runtime.MessageSender,
-  sendResponse?: () => void
-) => Promise<any> | true | void
+type MessageListener<M extends Message> = (
+  message: M,
+  sender?: Runtime.MessageSender
+) => Promise<Response<M>> | true | void
 
 // If passing an async function, the listener will return a Promise for every
 // message it receives, preventing other listeners from responding. If the
@@ -140,19 +126,23 @@ type MessageListener = (
 // the listener is meant to respond to. Otherwise return false or undefined.
 // Refer to the following for details:
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage
-export const addMessageListener = (listener: MessageListener) => {
-  const wrapper: MessageListener = (message, sender, sendResponse) => {
+export const addMessageListener = <M extends Message>(
+  listener: MessageListener<M>
+) => {
+  const wrapper: MessageListener<M> = (message, sender) => {
     if (
       typeof message === "object" &&
-      Object.keys(MessageEvent).includes(message.event)
+      Object.keys(Event).includes(message.event)
     ) {
-      return listener(message, sender, sendResponse)
+      return listener(message, sender)
     }
   }
   browser.runtime.onMessage.addListener(wrapper)
   return wrapper
 }
 
-export const removeMessageListener = (listener: MessageListener) => {
+export const removeMessageListener = <M extends Message>(
+  listener: MessageListener<M>
+) => {
   return browser.runtime.onMessage.removeListener(listener)
 }

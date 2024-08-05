@@ -9,7 +9,7 @@ import {
   actionExtractingSchema,
 } from "@/utils/schema"
 import {
-  MessageEvent,
+  Event,
   addMessageListener,
   removeMessageListener,
   broadcastTabs,
@@ -104,7 +104,7 @@ const ActionExtractingForm = ({
 
   React.useEffect(() => {
     return () => {
-      broadcastTabs({ event: MessageEvent.EXTRACTING_STOP, payload: null })
+      broadcastTabs({ event: Event.EXTRACTING_STOP, payload: null })
       store.actions.unlock(id)
     }
   }, [store.actions])
@@ -127,7 +127,7 @@ const ActionExtractingForm = ({
     }
     const listener = addMessageListener((message) => {
       switch (message.event) {
-        case MessageEvent.EXTRACTING_CLICK: {
+        case Event.EXTRACTING_CLICK: {
           params.append({ name: "", selector: message.payload })
           break
         }
@@ -149,7 +149,7 @@ const ActionExtractingForm = ({
           onClick={() => {
             if (isExtracting) {
               broadcastTabs({
-                event: MessageEvent.EXTRACTING_STOP,
+                event: Event.EXTRACTING_STOP,
                 payload: null,
               }).then(() => {
                 store.actions.unlock(id)
@@ -157,7 +157,7 @@ const ActionExtractingForm = ({
               })
             } else {
               broadcastTabs({
-                event: MessageEvent.EXTRACTING_START,
+                event: Event.EXTRACTING_START,
                 payload: null,
               }).then(() => {
                 setIsExtracting(true)

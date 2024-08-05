@@ -13,7 +13,7 @@ import FolderIcon from "@/components/icons/Folder"
 import LoadingIcon from "@/components/icons/Loading"
 import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
-import { MessageEvent, sendTab } from "@/utils/messages"
+import { Event, sendTab } from "@/utils/messages"
 import { useSharedStore } from "./store"
 import { waitForTab, updateTab, queryTabs } from "@/utils/browser_tabs"
 import StepCard from "./runner_tab/StepCard"
@@ -45,7 +45,7 @@ const runExtractingStep = async (
     const next = await sendTab<ReplayExtractingClickMessage>(
       context.browserTab,
       {
-        event: MessageEvent.REPLAY_EXTRACTING_CLICK,
+        event: Event.REPLAY_EXTRACTING_CLICK,
         payload: { name: param.name, selector: param.selector },
       }
     )
@@ -69,14 +69,14 @@ const replayRecording = async (
   switch (action) {
     case "click": {
       next = await sendTab<ReplayRecordingClickMessage>(context.browserTab, {
-        event: MessageEvent.REPLAY_RECORDING_CLICK,
+        event: Event.REPLAY_RECORDING_CLICK,
         payload: { selector: recording.selector },
       })
       break
     }
     case "keyup": {
       next = await sendTab<ReplayRecordingKeyupMessage>(context.browserTab, {
-        event: MessageEvent.REPLAY_RECORDING_KEYUP,
+        event: Event.REPLAY_RECORDING_KEYUP,
         payload: { selector: recording.selector, value: recording.value },
       })
       break

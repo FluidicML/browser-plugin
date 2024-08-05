@@ -7,7 +7,7 @@
 import "./styles.css"
 
 import type { ContentScriptContext } from "wxt/client"
-import { MessageEvent, addMessageListener, sendExt } from "@/utils/messages"
+import { Event, addMessageListener, sendExt } from "@/utils/messages"
 
 const OUTLINE_PADDING = 15
 
@@ -63,7 +63,7 @@ export default defineContentScript({
         return
       }
       sendExt({
-        event: MessageEvent.RECORDING_CLICK,
+        event: Event.RECORDING_CLICK,
         payload: { action: "click", selector: getSelector(target) },
       })
     }
@@ -76,7 +76,7 @@ export default defineContentScript({
         return
       }
       sendExt({
-        event: MessageEvent.RECORDING_KEYUP,
+        event: Event.RECORDING_KEYUP,
         payload: {
           action: "keyup",
           selector: getSelector(target),
@@ -112,11 +112,11 @@ export default defineContentScript({
 
     addMessageListener((message) => {
       switch (message.event) {
-        case MessageEvent.RECORDING_START: {
+        case Event.RECORDING_START: {
           recordingStart()
           break
         }
-        case MessageEvent.RECORDING_STOP: {
+        case Event.RECORDING_STOP: {
           recordingStop()
           break
         }
@@ -127,7 +127,7 @@ export default defineContentScript({
     // state we're in.
     try {
       const isRecording = await sendExt({
-        event: MessageEvent.RECORDING_QUERY,
+        event: Event.RECORDING_QUERY,
         payload: null,
       })
       if (isRecording) {

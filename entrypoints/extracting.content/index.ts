@@ -6,7 +6,7 @@
 import "./styles.css"
 
 import type { ContentScriptContext } from "wxt/client"
-import { MessageEvent, addMessageListener } from "@/utils/messages"
+import { Event, addMessageListener } from "@/utils/messages"
 
 const OUTLINE_PADDING = 15
 
@@ -69,7 +69,7 @@ export default defineContentScript({
           return
         }
         sendExt({
-          event: MessageEvent.EXTRACTING_CLICK,
+          event: Event.EXTRACTING_CLICK,
           payload: getSelector(target),
         })
       } finally {
@@ -93,11 +93,11 @@ export default defineContentScript({
 
     addMessageListener((message) => {
       switch (message.event) {
-        case MessageEvent.EXTRACTING_START: {
+        case Event.EXTRACTING_START: {
           extractingStart()
           break
         }
-        case MessageEvent.EXTRACTING_STOP: {
+        case Event.EXTRACTING_STOP: {
           extractingStop()
           break
         }

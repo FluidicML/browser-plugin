@@ -1,5 +1,5 @@
 import type { ContentScriptContext } from "wxt/client"
-import { MessageEvent, addMessageListener } from "@/utils/messages"
+import { Event, addMessageListener } from "@/utils/messages"
 
 const TIMEOUT_MILLIS = 5_000
 
@@ -84,16 +84,16 @@ export default defineContentScript({
   main(_context: ContentScriptContext) {
     addMessageListener((message) => {
       switch (message.event) {
-        case MessageEvent.REPLAY_EXTRACTING_CLICK: {
+        case Event.REPLAY_EXTRACTING_CLICK: {
           return replayExtractingClick(
             message.payload.name,
             message.payload.selector
           )
         }
-        case MessageEvent.REPLAY_RECORDING_CLICK: {
+        case Event.REPLAY_RECORDING_CLICK: {
           return replayRecordingClick(message.payload.selector)
         }
-        case MessageEvent.REPLAY_RECORDING_KEYUP: {
+        case Event.REPLAY_RECORDING_KEYUP: {
           return replayRecordingKeyup(
             message.payload.selector,
             message.payload.value

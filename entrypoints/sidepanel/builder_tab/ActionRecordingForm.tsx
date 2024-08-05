@@ -9,7 +9,7 @@ import {
   actionRecordingSchema,
 } from "@/utils/schema"
 import {
-  MessageEvent,
+  Event,
   addMessageListener,
   removeMessageListener,
   broadcastTabs,
@@ -102,7 +102,7 @@ const ActionRecordingForm = ({
 
   React.useEffect(() => {
     return () => {
-      broadcastTabs({ event: MessageEvent.RECORDING_STOP, payload: null })
+      broadcastTabs({ event: Event.RECORDING_STOP, payload: null })
       store.actions.unlock(id)
     }
   }, [store.actions])
@@ -125,17 +125,17 @@ const ActionRecordingForm = ({
     }
     const listener = addMessageListener((message) => {
       switch (message.event) {
-        case MessageEvent.RECORDING_QUERY: {
+        case Event.RECORDING_QUERY: {
           return Promise.resolve(true)
         }
-        case MessageEvent.RECORDING_CLICK: {
+        case Event.RECORDING_CLICK: {
           if (message.payload === null) {
             return
           }
           recordings.append(message.payload)
           break
         }
-        case MessageEvent.RECORDING_KEYUP: {
+        case Event.RECORDING_KEYUP: {
           if (message.payload === null) {
             return
           }
@@ -165,7 +165,7 @@ const ActionRecordingForm = ({
           onClick={() => {
             if (isRecording) {
               broadcastTabs({
-                event: MessageEvent.RECORDING_STOP,
+                event: Event.RECORDING_STOP,
                 payload: null,
               }).then(() => {
                 store.actions.unlock(id)
@@ -173,7 +173,7 @@ const ActionRecordingForm = ({
               })
             } else {
               broadcastTabs({
-                event: MessageEvent.RECORDING_START,
+                event: Event.RECORDING_START,
                 payload: null,
               }).then(() => {
                 setIsRecording(true)
