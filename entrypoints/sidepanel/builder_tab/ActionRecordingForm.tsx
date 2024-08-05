@@ -1,6 +1,6 @@
 import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useFieldArray, useForm } from "react-hook-form"
+import { Control, useFieldArray, useForm } from "react-hook-form"
 
 import {
   type ActionRecordingSchema,
@@ -25,21 +25,28 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Form } from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem } from "@/components/ui/form"
+import { Separator } from "@/components/ui/separator"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useSharedStore } from "../store"
 import LocatorTable from "./LocatorTable"
 
 type ActionCardProps = {
+  control: Control<ActionRecordingSchema>
   index: number
-  recording: ActionClickSchema | ActionKeyupSchema
-  onCheck: (field: "fallible" | "confirmed", value: boolean) => void
+  recording: ActionRecordingSchema["recordings"][number]
   onRemove: () => void
 }
 
 const ActionCard = ({
+  control,
   index,
   recording,
-  onCheck,
   onRemove,
 }: ActionCardProps) => {
   const action = recording.action
@@ -73,14 +80,71 @@ const ActionCard = ({
             <LocatorTable locator={recording.selector} />
           )}
         </div>
-        <div className="flex items-center">
-          <div className="flex items-center">
-            <Checkbox onCheckedChange={(v) => onCheck("fallible", !!v)} />
-            Fallible?
+        <Separator className="my-3" />
+        <div className="flex">
+          <div className="basis-1/2 flex gap-1 items-center">
+            <FormField
+              control={control}
+              name={`recordings.${index}.fallible`}
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <TooltipProvider delayDuration={250}>
+                    <Tooltip>
+                      <TooltipTrigger
+                        type="button"
+                        className="cursor-help underline"
+                      >
+                        Can fail?
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-72">
+                        <p>
+                          If this action were to fail, continue executing the
+                          remainder of the workflow.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </FormItem>
+              )}
+            />
           </div>
-          <div className="flex items-center">
-            <Checkbox onCheckedChange={(v) => onCheck("confirmed", !!v)} />
-            Confirmed?
+          <div className="basis-1/2 flex gap-1 items-center">
+            <FormField
+              control={control}
+              name={`recordings.${index}.confirmed`}
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <TooltipProvider delayDuration={250}>
+                    <Tooltip>
+                      <TooltipTrigger
+                        type="button"
+                        className="cursor-help underline"
+                      >
+                        Should Confirm?
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-72">
+                        <p>
+                          Confirm the step executed correctly before continuing.
+                          Gives a change to edit the page in between steps.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </FormItem>
+              )}
+            />
           </div>
         </div>
       </CardContent>
@@ -98,11 +162,13 @@ const ActionCard = ({
 type ActionRecordingFormProps = {
   defaultValues: ActionRecordingSchema | null
   onChange: (values: ActionForm | null) => void
+  triggerScroll: () => void
 }
 
 const ActionRecordingForm = ({
   defaultValues,
   onChange,
+  triggerScroll,
 }: ActionRecordingFormProps) => {
   const id = React.useId()
   const store = useSharedStore()
@@ -150,6 +216,7 @@ const ActionRecordingForm = ({
             return
           }
           recordings.append(message.payload)
+          triggerScroll()
           break
         }
         case Event.RECORDING_KEYUP: {
@@ -161,6 +228,7 @@ const ActionRecordingForm = ({
             recordings.update(recordings.fields.length - 1, message.payload)
           } else {
             recordings.append(message.payload)
+            triggerScroll()
           }
           break
         }
@@ -215,12 +283,10 @@ const ActionRecordingForm = ({
           {...recordings.fields.map((recording, index) => (
             <ActionCard
               key={recording.id}
+              control={form.control}
               index={index}
               recording={recording}
               onRemove={() => recordings.remove(index)}
-              onCheck={(field, value) => {
-                // TODO: Update confirmation here.
-              }}
             />
           ))}
         </div>

@@ -69,8 +69,7 @@ const ActionTabPanel = React.forwardRef<
   )
 
   const scrollRef = React.useRef<HTMLElement | null>(null)
-  const scrollOnChange = (values: ActionForm | null) => {
-    onChange(values)
+  const triggerScroll = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo(0, scrollRef.current.scrollHeight)
     }
@@ -98,7 +97,8 @@ const ActionTabPanel = React.forwardRef<
                 ? defaultValues.values
                 : null
             }
-            onChange={scrollOnChange}
+            onChange={onChange}
+            triggerScroll={triggerScroll}
           />
         )
       }
