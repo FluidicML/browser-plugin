@@ -73,7 +73,7 @@ const ActionCard = ({
       <CardTitle>{title}</CardTitle>
       <CardDescription>{Subtitle()}</CardDescription>
       <CardContent className="pt-2">
-        <div className="overflow-x-auto scrollbar">
+        <div className="overflow-x-auto scrollbar-hidden">
           {typeof recording.selector === "string" ? (
             <pre>{recording.selector}</pre>
           ) : (
@@ -106,38 +106,6 @@ const ActionCard = ({
                         <p>
                           If this action were to fail, continue executing the
                           remainder of the workflow.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="basis-1/2 flex gap-1 items-center">
-            <FormField
-              control={control}
-              name={`recordings.${index}.confirmed`}
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <TooltipProvider delayDuration={250}>
-                    <Tooltip>
-                      <TooltipTrigger
-                        type="button"
-                        className="cursor-help underline"
-                      >
-                        Should Confirm?
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-72">
-                        <p>
-                          Confirm the step executed correctly before continuing.
-                          Gives a change to edit the page in between steps.
                         </p>
                       </TooltipContent>
                     </Tooltip>

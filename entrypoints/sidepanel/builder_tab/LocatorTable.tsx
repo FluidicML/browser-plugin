@@ -12,15 +12,15 @@ type LocatorTableProps = {
 
 const LocatorTable = ({ locator }: LocatorTableProps) => {
   return (
-    <table className="table-auto">
+    <table className="table-auto border-t muted">
       <tbody>
         {[...locatorToMap(locator).entries()].map(([key, val]) => (
-          <tr key={key}>
-            <td className="text-right">
-              <pre className="font-bold pr-1">{key}:</pre>
+          <tr key={key} className="border-b muted">
+            <td className="text-right align-top">
+              <pre className="font-bold py-1 pr-1">{key}:</pre>
             </td>
-            <td>
-              <pre>{val}</pre>
+            <td className="align-top">
+              <pre className="py-1">{val}</pre>
             </td>
           </tr>
         ))}
