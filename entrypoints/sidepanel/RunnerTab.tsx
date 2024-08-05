@@ -87,6 +87,10 @@ const replayRecording = async (
     }
   }
 
+  if (!next.success && recording.fallible) {
+    next.success = null
+  }
+
   return next
 }
 
@@ -118,7 +122,7 @@ const runRecordingStep = async (
     }
 
     result = mergeStepResults(result, next)
-    if (!result.success) {
+    if (result.success === false) {
       return result
     }
   }
@@ -274,9 +278,10 @@ const RunnerTab = () => {
     runStep(context, store.openaiApiKey).then((result) => {
       setContext({
         ...context,
-        actionIndex: result.success
-          ? context.actionIndex + 1
-          : context.actionIndex,
+        actionIndex:
+          result.success !== false
+            ? context.actionIndex + 1
+            : context.actionIndex,
         results: [...context.results, result],
         params: new Map([...context.params, ...(result.params ?? [])]),
       })
@@ -297,7 +302,7 @@ const RunnerTab = () => {
       <Card>
         <CardTitle className="pt-2 flex items-center gap-2">
           {context.results[context.actionIndex]?.success === false ? (
-            <CloseIcon className="w-5 h-5 rounded-full fill-red-900" />
+            <CloseIcon className="w-5 h-5 rounded-full fill-red-700" />
           ) : context.actionIndex === context.workflow.actions.length ? (
             <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
           ) : (

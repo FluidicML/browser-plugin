@@ -1,5 +1,9 @@
 export type StepResult = {
-  success: boolean
+  // We return a `null` value if our step fails but success is optional.
+  // Otherwise return true or false.
+  success: boolean | null
+  // A list of messages to return from the content script. These are displayed
+  // under each step.
   messages?: string[]
   // Use a list instead of `Map` since the latter isn't serializable. This
   // would otherwise make communicating `StepResult`s with message passing
@@ -9,7 +13,12 @@ export type StepResult = {
 
 export const mergeStepResults = (a: StepResult, b: StepResult): StepResult => {
   const merged: StepResult = {
-    success: a.success && b.success,
+    success:
+      a.success && b.success
+        ? true
+        : a.success !== false && b.success !== false
+          ? null
+          : false,
   }
   if (a.messages || b.messages) {
     merged.messages = [...(a.messages ?? []), ...(b.messages ?? [])]

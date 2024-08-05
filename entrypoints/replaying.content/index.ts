@@ -1,13 +1,12 @@
 import type { ContentScriptContext } from "wxt/client"
-import { Event, addMessageListener } from "@/utils/messages"
+import { Event, type Response, addMessageListener } from "@/utils/messages"
 
 const TIMEOUT_MILLIS = 5_000
 
 const replayExtractingClick = async (
-  paramName: string,
-  selector: Selector
-): Promise<StepResult> => {
-  const matches = await waitForSelector(selector, TIMEOUT_MILLIS)
+  payload: ReplayExtractingClickMessage["payload"]
+): Promise<Response<ReplayExtractingClickMessage>> => {
+  const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
     return { success: false, messages: ["Could not find element."] }
@@ -19,15 +18,15 @@ const replayExtractingClick = async (
 
   return {
     success: true,
-    messages: [`Extracted {${paramName}}.`],
-    params: [[paramName, target.innerText]],
+    messages: [`Extracted {${payload.name}}.`],
+    params: [[payload.name, target.innerText]],
   }
 }
 
 const replayRecordingClick = async (
-  selector: Selector
-): Promise<StepResult> => {
-  const matches = await waitForSelector(selector, TIMEOUT_MILLIS)
+  payload: ReplayRecordingClickMessage["payload"]
+): Promise<Response<ReplayRecordingClickMessage>> => {
+  const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
     return { success: false, messages: ["Could not find element."] }
@@ -46,10 +45,9 @@ const replayRecordingClick = async (
 }
 
 const replayRecordingKeyup = async (
-  selector: Selector,
-  value: string
-): Promise<StepResult> => {
-  const matches = await waitForSelector(selector, TIMEOUT_MILLIS)
+  payload: ReplayRecordingKeyupMessage["payload"]
+): Promise<Response<ReplayRecordingKeyupMessage>> => {
+  const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
     return { success: false, messages: ["Could not find element."] }
@@ -59,7 +57,7 @@ const replayRecordingKeyup = async (
 
   const target = matches[0]
 
-  for (const key of value) {
+  for (const key of payload.value) {
     target.dispatchEvent(
       new KeyboardEvent("keyup", {
         bubbles: true,
@@ -85,19 +83,13 @@ export default defineContentScript({
     addMessageListener((message) => {
       switch (message.event) {
         case Event.REPLAY_EXTRACTING_CLICK: {
-          return replayExtractingClick(
-            message.payload.name,
-            message.payload.selector
-          )
+          return replayExtractingClick(message.payload)
         }
         case Event.REPLAY_RECORDING_CLICK: {
-          return replayRecordingClick(message.payload.selector)
+          return replayRecordingClick(message.payload)
         }
         case Event.REPLAY_RECORDING_KEYUP: {
-          return replayRecordingKeyup(
-            message.payload.selector,
-            message.payload.value
-          )
+          return replayRecordingKeyup(message.payload)
         }
       }
     })
