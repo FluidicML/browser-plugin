@@ -11,8 +11,8 @@ export const locatorSchema = z.object({
   role: z.string().optional(),
   title: z.string().optional(),
   label: z.string().optional(),
-  placeholder: z.string().optional(),
   altText: z.string().optional(),
+  placeholder: z.string().optional(),
   testId: z.string().optional(),
   text: z.string().optional(),
 })
@@ -192,12 +192,12 @@ const getLabel = (el: HTMLElement) => {
   )
 }
 
-const getPlaceholder = (el: HTMLElement) => {
-  return el.getAttribute("placeholder") ?? undefined
-}
-
 const getAltText = (el: HTMLElement) => {
   return el.getAttribute("alt") ?? undefined
+}
+
+const getPlaceholder = (el: HTMLElement) => {
+  return el.getAttribute("placeholder") ?? undefined
 }
 
 const getTestId = (el: HTMLElement) => {
@@ -208,28 +208,35 @@ const getText = (el: HTMLElement) => {
   return el.innerText || undefined
 }
 
+// TODO: With the advent of utility and generated classes, the class list isn't
+// a particularly useful means of distinguishing elements. We assume the same
+// for ids. How much could we leverage these if we filter out by spellchecking
+// and text entropy?
 const relativeSelectorOf = (el: HTMLElement) => {
-  const idAttr = el.getAttribute("id")
-  if (idAttr) {
-    // Avoid using `#` to identify an id. Though typically not the case, it is
-    // possible an id specifies whitespace.
-    return `[id="${idAttr}"]`
+  const tagName = el.tagName.toLowerCase()
+  if (
+    !el.parentElement ||
+    el.parentElement.querySelectorAll(tagName).length === 1
+  ) {
+    return tagName
   }
 
-  if (!el.parentElement) {
-    return el.tagName.toLowerCase()
-  }
-
-  // With the advent of utility and generated classes, the class list isn't a
-  // particularly useful means of distinguishing elements. Still, it's
-  // something. Try to match on the smallest subset of classes we can,
-  // starting with no class.
-  let suffix = ""
-  for (const cls of el.classList) {
-    suffix += `.${cls}`
-    const selector = `${el.tagName.toLowerCase()}${suffix}`
-    if (el.parentElement.querySelectorAll(selector).length === 1) {
-      return selector
+  // Check if any of these attributes are available.
+  let selector = tagName
+  for (const attrName of [
+    "title",
+    "aria-label",
+    "aria-labelledby",
+    "alt",
+    "placeholder",
+    "data-testid",
+  ]) {
+    const attrValue = el.getAttribute(attrName)
+    if (attrValue) {
+      selector += `[${attrName}="${attrValue}"]`
+      if (el.parentElement.querySelectorAll(selector).length === 1) {
+        return selector
+      }
     }
   }
 
@@ -244,27 +251,26 @@ const relativeSelectorOf = (el: HTMLElement) => {
     }
   }
 
-  return `${el.tagName.toLowerCase()}:nth-of-type(${index})`
+  return `${tagName}:nth-of-type(${index})`
 }
 
 // Build a series of selectors, starting from our specified element and working
 // our way up to each subsequent parent node. Stop as soon as we finished
 // building a nonambiguous selector.
 const getCSS = (el: HTMLElement) => {
-  const selectors = []
+  let joined = ""
+  let handle: HTMLElement | null = el
 
-  while (el) {
-    selectors.unshift(relativeSelectorOf(el))
-    if (document.querySelectorAll(selectors.join(" ")).length === 1) {
-      return selectors.join(" ")
+  while (handle) {
+    const rel = relativeSelectorOf(handle)
+    joined = joined ? `${rel} > ${joined}` : rel
+    if (document.querySelectorAll(joined).length === 1) {
+      return joined
     }
-    if (!el.parentElement) {
-      break
-    }
-    el = el.parentElement
+    handle = handle.parentElement
   }
 
-  return ""
+  return joined
 }
 
 export const getSelector = (el: HTMLElement): Selector => {
