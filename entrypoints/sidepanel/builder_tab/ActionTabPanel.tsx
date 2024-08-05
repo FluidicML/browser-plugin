@@ -86,7 +86,7 @@ const ActionTabPanel = React.forwardRef<
                 ? defaultValues.values
                 : null
             }
-            onChange={scrollOnChange}
+            onChange={onChange}
           />
         )
       }
@@ -110,7 +110,7 @@ const ActionTabPanel = React.forwardRef<
                 ? defaultValues.values
                 : null
             }
-            onChange={scrollOnChange}
+            onChange={onChange}
           />
         )
       }
@@ -122,7 +122,7 @@ const ActionTabPanel = React.forwardRef<
                 ? defaultValues.values
                 : null
             }
-            onChange={scrollOnChange}
+            onChange={onChange}
           />
         )
       }
