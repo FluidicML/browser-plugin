@@ -306,9 +306,9 @@ const RunnerTab = () => {
 
       <Separator />
 
-      {sharedStore.runnerResults.map((result, index) => {
+      {[...Array(sharedStore.runnerStepIndex + 1).keys()].map((index) => {
         const workflow = sharedStore.runnerActive
-        if (workflow === null) {
+        if (workflow === null || index >= workflow.steps.length) {
           return null
         }
 
@@ -322,7 +322,7 @@ const RunnerTab = () => {
             title={title}
             description={desc}
             step={step}
-            result={result}
+            result={sharedStore.runnerResults[index] ?? { results: [] }}
           />
         )
       })}

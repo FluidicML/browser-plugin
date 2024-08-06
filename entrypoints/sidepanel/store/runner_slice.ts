@@ -38,7 +38,7 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
         runnerActive: workflow,
         runnerStepIndex: 0,
         runnerTaskIndex: 0,
-        runnerResults: [{ results: [] }],
+        runnerResults: [],
         runnerTabId: tabs[0].id ?? null,
       })
     },
@@ -64,7 +64,6 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
     getStatus: () => {
       const step = get().runnerResults[get().runnerStepIndex]
       if (!step) {
-        console.error("Getting runner status with no active workflow set.")
         return "SUCCESS"
       }
       return getStepResultStatus(step)
@@ -124,16 +123,8 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
             result,
           ],
         }
-
         s.runnerStepIndex = stepIndex
         s.runnerTaskIndex = taskIndex
-
-        if (
-          !s.runnerResults[stepIndex] &&
-          stepIndex < active.steps.length - 1
-        ) {
-          s.runnerResults.push({ results: [] })
-        }
       })
     },
   },
