@@ -89,19 +89,6 @@ const StepTabPanel = React.forwardRef<
           />
         )
       }
-      case StepKind.RECORDING: {
-        return (
-          <StepRecordingForm
-            defaultValues={
-              defaultValues?.kind === StepKind.RECORDING
-                ? defaultValues.values
-                : null
-            }
-            onChange={onChange}
-            triggerScroll={triggerScroll}
-          />
-        )
-      }
       case StepKind.NAVIGATE: {
         return (
           <StepNavigateForm
@@ -123,6 +110,19 @@ const StepTabPanel = React.forwardRef<
                 : null
             }
             onChange={onChange}
+          />
+        )
+      }
+      case StepKind.RECORDING: {
+        return (
+          <StepRecordingForm
+            defaultValues={
+              defaultValues?.kind === StepKind.RECORDING
+                ? defaultValues.values
+                : null
+            }
+            onChange={onChange}
+            triggerScroll={triggerScroll}
           />
         )
       }

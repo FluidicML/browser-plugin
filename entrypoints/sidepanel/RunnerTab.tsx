@@ -89,17 +89,17 @@ class Context {
         }
         return [this._stepIndex, this._taskIndex + 1]
       }
-      case StepKind.RECORDING: {
-        if (this.taskIndex >= step.values.recordings.length - 1) {
-          return [this._stepIndex + 1, 0]
-        }
-        return [this._stepIndex, this._taskIndex + 1]
-      }
       case StepKind.NAVIGATE: {
         return [this._stepIndex + 1, 0]
       }
       case StepKind.OPENAI: {
         return [this._stepIndex + 1, 0]
+      }
+      case StepKind.RECORDING: {
+        if (this.taskIndex >= step.values.recordings.length - 1) {
+          return [this._stepIndex + 1, 0]
+        }
+        return [this._stepIndex, this._taskIndex + 1]
       }
       default: {
         const _exhaustivenessCheck = kind // never
@@ -129,69 +129,6 @@ const runExtractingTask = async (
       selector: values.params[context.taskIndex].selector,
     },
   })
-}
-
-const replayRecordingTask = async (
-  context: Context,
-  recording: StepRecordingSchema["recordings"][number]
-): Promise<TaskResult> => {
-  const action = recording.action
-
-  let result: TaskResult
-  switch (action) {
-    case "click": {
-      result = await sendTab<ReplayRecordingClickMessage>(context.tabId, {
-        event: Event.REPLAY_RECORDING_CLICK,
-        payload: { selector: recording.selector },
-      })
-      break
-    }
-    case "keyup": {
-      result = await sendTab<ReplayRecordingKeyupMessage>(context.tabId, {
-        event: Event.REPLAY_RECORDING_KEYUP,
-        payload: { selector: recording.selector, value: recording.value },
-      })
-      break
-    }
-    default: {
-      result = action // never
-      break
-    }
-  }
-
-  return result
-}
-
-const runRecordingTask = async (
-  context: Context,
-  values: StepRecordingSchema
-): Promise<TaskResult> => {
-  const recording = values.recordings[context.taskIndex]
-
-  let result: TaskResult
-  try {
-    result = await replayRecordingTask(context, recording)
-  } catch (e) {
-    // We may end up failing if the last action we invoked loaded a new page.
-    // In these cases, we just need to wait for the page to reload. Try again
-    // once that finishes.
-    //
-    // WXT's error handling isn't particularly useful. Though we could
-    // hardcode the type of error on the message, this is prone to silently
-    // breaking on any updates. Instead, just assume we can recover by
-    // retrying.
-    //
-    // TODO: This error handling needs to be expanded on once we're ready to
-    // take on multi-tab flows.
-    await waitForTab(context.tabId)
-    result = await replayRecordingTask(context, recording)
-  }
-
-  if (result.status === "FAILURE" && recording.fallible) {
-    result.status = "SKIPPED"
-  }
-
-  return result
 }
 
 const runNavigateTask = async (
@@ -268,6 +205,69 @@ const runOpenAITask = async (
   }
 }
 
+const replayRecordingTask = async (
+  context: Context,
+  recording: StepRecordingSchema["recordings"][number]
+): Promise<TaskResult> => {
+  const action = recording.action
+
+  let result: TaskResult
+  switch (action) {
+    case "click": {
+      result = await sendTab<ReplayRecordingClickMessage>(context.tabId, {
+        event: Event.REPLAY_RECORDING_CLICK,
+        payload: { selector: recording.selector },
+      })
+      break
+    }
+    case "keyup": {
+      result = await sendTab<ReplayRecordingKeyupMessage>(context.tabId, {
+        event: Event.REPLAY_RECORDING_KEYUP,
+        payload: { selector: recording.selector, value: recording.value },
+      })
+      break
+    }
+    default: {
+      result = action // never
+      break
+    }
+  }
+
+  return result
+}
+
+const runRecordingTask = async (
+  context: Context,
+  values: StepRecordingSchema
+): Promise<TaskResult> => {
+  const recording = values.recordings[context.taskIndex]
+
+  let result: TaskResult
+  try {
+    result = await replayRecordingTask(context, recording)
+  } catch (e) {
+    // We may end up failing if the last action we invoked loaded a new page.
+    // In these cases, we just need to wait for the page to reload. Try again
+    // once that finishes.
+    //
+    // WXT's error handling isn't particularly useful. Though we could
+    // hardcode the type of error on the message, this is prone to silently
+    // breaking on any updates. Instead, just assume we can recover by
+    // retrying.
+    //
+    // TODO: This error handling needs to be expanded on once we're ready to
+    // take on multi-tab flows.
+    await waitForTab(context.tabId)
+    result = await replayRecordingTask(context, recording)
+  }
+
+  if (result.status === "FAILURE" && recording.fallible) {
+    result.status = "SKIPPED"
+  }
+
+  return result
+}
+
 const runTask = async (
   context: Context,
   openaiApiKey: string
@@ -281,16 +281,16 @@ const runTask = async (
       result = await runExtractingTask(context, step.values)
       break
     }
-    case StepKind.RECORDING: {
-      result = await runRecordingTask(context, step.values)
-      break
-    }
     case StepKind.NAVIGATE: {
       result = await runNavigateTask(context, step.values)
       break
     }
     case StepKind.OPENAI: {
       result = await runOpenAITask(context, step.values, openaiApiKey)
+      break
+    }
+    case StepKind.RECORDING: {
+      result = await runRecordingTask(context, step.values)
       break
     }
     default: {

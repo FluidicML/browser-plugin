@@ -146,14 +146,14 @@ const StepCardContent = ({ step, result }: StepCardContentProps) => {
     case StepKind.EXTRACTING: {
       return <StepExtracting values={step.values} result={result} />
     }
-    case StepKind.RECORDING: {
-      return <StepRecording values={step.values} result={result} />
-    }
     case StepKind.NAVIGATE: {
       return <StepNavigate url={step.values.url} result={result} />
     }
     case StepKind.OPENAI: {
       return <StepOpenAI result={result} />
+    }
+    case StepKind.RECORDING: {
+      return <StepRecording values={step.values} result={result} />
     }
     default: {
       const _exhaustivenessCheck: never = kind

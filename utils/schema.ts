@@ -31,51 +31,6 @@ export const stepExtractingSchema = z.object({
 
 export type StepExtractingSchema = z.infer<typeof stepExtractingSchema>
 
-// A recording feature. Triggering a recording means to start tracking discrete
-// user events like mouse clicks or key presses. Each event is stored in a list
-// for later replay.
-
-export const stepClickSchema = z
-  .object({
-    action: z.literal("click"),
-    selector: selectorSchema,
-  })
-  .required()
-
-export type StepClickSchema = z.infer<typeof stepClickSchema>
-
-export const stepKeyupSchema = z
-  .object({
-    action: z.literal("keyup"),
-    selector: selectorSchema,
-    value: z.string().min(1, {
-      message: "You must provide a value.",
-    }),
-  })
-  .required()
-
-export type StepKeyupSchema = z.infer<typeof stepKeyupSchema>
-
-export const stepRecordingSchema = z
-  .object({
-    recordings: z
-      .array(
-        z.intersection(
-          z.discriminatedUnion("action", [stepClickSchema, stepKeyupSchema]),
-          z.object({
-            // Indicates the action can fail. Doing so does not stop execution.
-            fallible: z.boolean().optional(),
-            // Indicates the action requires confirmation before continuing.
-            confirmed: z.boolean().optional(),
-          })
-        )
-      )
-      .nonempty(),
-  })
-  .required()
-
-export type StepRecordingSchema = z.infer<typeof stepRecordingSchema>
-
 // Navigates to the specified domain. In general, the step is considered
 // complete as soon as the `DomContentLoaded` event fires. This means the
 // actual contents of the page may not have finished rendering yet; you'll
@@ -121,6 +76,51 @@ export const stepOpenAISchema = z
 
 export type StepOpenAISchema = z.infer<typeof stepOpenAISchema>
 
+// A recording feature. Triggering a recording means to start tracking discrete
+// user events like mouse clicks or key presses. Each event is stored in a list
+// for later replay.
+
+export const stepClickSchema = z
+  .object({
+    action: z.literal("click"),
+    selector: selectorSchema,
+  })
+  .required()
+
+export type StepClickSchema = z.infer<typeof stepClickSchema>
+
+export const stepKeyupSchema = z
+  .object({
+    action: z.literal("keyup"),
+    selector: selectorSchema,
+    value: z.string().min(1, {
+      message: "You must provide a value.",
+    }),
+  })
+  .required()
+
+export type StepKeyupSchema = z.infer<typeof stepKeyupSchema>
+
+export const stepRecordingSchema = z
+  .object({
+    recordings: z
+      .array(
+        z.intersection(
+          z.discriminatedUnion("action", [stepClickSchema, stepKeyupSchema]),
+          z.object({
+            // Indicates the action can fail. Doing so does not stop execution.
+            fallible: z.boolean().optional(),
+            // Indicates the action requires confirmation before continuing.
+            confirmed: z.boolean().optional(),
+          })
+        )
+      )
+      .nonempty(),
+  })
+  .required()
+
+export type StepRecordingSchema = z.infer<typeof stepRecordingSchema>
+
 // Allow aggregating steps together. A workflow can consist of a sequence of
 // any type of steps, though it must always start with an `init`.
 export enum StepKind {
@@ -136,16 +136,16 @@ export type Step =
       values: StepExtractingSchema
     }
   | {
-      kind: StepKind.RECORDING
-      values: StepRecordingSchema
-    }
-  | {
       kind: StepKind.NAVIGATE
       values: StepNavigateSchema
     }
   | {
       kind: StepKind.OPENAI
       values: StepOpenAISchema
+    }
+  | {
+      kind: StepKind.RECORDING
+      values: StepRecordingSchema
     }
 
 export const stepSafeParse = (step: Step) => {
@@ -155,14 +155,14 @@ export const stepSafeParse = (step: Step) => {
     case StepKind.EXTRACTING: {
       return stepExtractingSchema.safeParse(step.values)
     }
-    case StepKind.RECORDING: {
-      return stepRecordingSchema.safeParse(step.values)
-    }
     case StepKind.NAVIGATE: {
       return stepNavigateSchema.safeParse(step.values)
     }
     case StepKind.OPENAI: {
       return stepOpenAISchema.safeParse(step.values)
+    }
+    case StepKind.RECORDING: {
+      return stepRecordingSchema.safeParse(step.values)
     }
     default: {
       const _exhaustivenessCheck: never = kind
@@ -179,15 +179,15 @@ export const stepParams = (step: Step): string[] => {
       const parsed = stepExtractingSchema.safeParse(step.values)
       return parsed.success ? parsed.data.params.map((p) => p.name) : []
     }
-    case StepKind.RECORDING: {
-      return []
-    }
     case StepKind.NAVIGATE: {
       return []
     }
     case StepKind.OPENAI: {
       const parsed = stepOpenAISchema.safeParse(step.values)
       return parsed.success ? parsed.data.params.map((p) => p.name) : []
+    }
+    case StepKind.RECORDING: {
+      return []
     }
     default: {
       const _exhaustivenessCheck: never = kind
