@@ -31,6 +31,22 @@ export const stepExtractingSchema = z.object({
 
 export type StepExtractingSchema = z.infer<typeof stepExtractingSchema>
 
+// Basic prompting. Ask the user for data that can be interpolated into later
+// steps.
+export const stepPromptSchema = z.object({
+  params: z
+    .array(
+      z.object({
+        name: z.string().min(1, {
+          message: "You must provide a valid name.",
+        }),
+      })
+    )
+    .nonempty(),
+})
+
+export type StepPromptSchema = z.infer<typeof stepPromptSchema>
+
 // Navigates to the specified domain. In general, the step is considered
 // complete as soon as the `DomContentLoaded` event fires. This means the
 // actual contents of the page may not have finished rendering yet; you'll
@@ -127,6 +143,7 @@ export enum StepKind {
   EXTRACTING = "Extracting",
   NAVIGATE = "Navigate",
   OPENAI = "OpenAI",
+  PROMPT = "Prompt",
   RECORDING = "Recording",
 }
 
@@ -142,6 +159,10 @@ export type Step =
   | {
       kind: StepKind.OPENAI
       values: StepOpenAISchema
+    }
+  | {
+      kind: StepKind.PROMPT
+      values: StepPromptSchema
     }
   | {
       kind: StepKind.RECORDING
@@ -160,6 +181,9 @@ export const stepSafeParse = (step: Step) => {
     }
     case StepKind.OPENAI: {
       return stepOpenAISchema.safeParse(step.values)
+    }
+    case StepKind.PROMPT: {
+      return stepPromptSchema.safeParse(step.values)
     }
     case StepKind.RECORDING: {
       return stepRecordingSchema.safeParse(step.values)
@@ -184,6 +208,10 @@ export const stepParams = (step: Step): string[] => {
     }
     case StepKind.OPENAI: {
       const parsed = stepOpenAISchema.safeParse(step.values)
+      return parsed.success ? parsed.data.params.map((p) => p.name) : []
+    }
+    case StepKind.PROMPT: {
+      const parsed = stepPromptSchema.safeParse(step.values)
       return parsed.success ? parsed.data.params.map((p) => p.name) : []
     }
     case StepKind.RECORDING: {

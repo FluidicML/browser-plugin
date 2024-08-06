@@ -48,7 +48,7 @@ const runNavigateTask = async (
 ): Promise<TaskResult> => {
   const interpolated = interpolate(values.url, params)
   await updateTab(tabId, { url: interpolated })
-  return { status: "SUCCESS" }
+  return { status: TaskStatus.SUCCEEDED }
 }
 
 const runOpenAITask = async (
@@ -57,7 +57,7 @@ const runOpenAITask = async (
   openAIKey: string
 ): Promise<TaskResult> => {
   if (!openAIKey) {
-    return { status: "FAILURE", message: "Invalid OpenAI API Key." }
+    return { status: TaskStatus.FAILED, message: "Invalid OpenAI API Key." }
   }
 
   const props: { [key: string]: { type: string; description: string } } = {}
@@ -100,7 +100,7 @@ const runOpenAITask = async (
     })
 
     return {
-      status: "SUCCESS",
+      status: TaskStatus.SUCCEEDED,
       params: [
         ...Object.entries(
           JSON.parse(
@@ -112,7 +112,7 @@ const runOpenAITask = async (
     }
   } catch (e) {
     console.error(e)
-    return { status: "FAILURE", message: "Invalid OpenAI response." }
+    return { status: TaskStatus.FAILED, message: "Invalid OpenAI response." }
   }
 }
 
@@ -173,8 +173,8 @@ const runRecordingTask = async (
     result = await replayRecordingTask(tabId, recording)
   }
 
-  if (result.status === "FAILURE" && recording.fallible) {
-    result.status = "SKIPPED"
+  if (result.status === TaskStatus.FAILED && recording.fallible) {
+    result.status = TaskStatus.SKIPPED
   }
 
   return result
@@ -205,6 +205,10 @@ const runTask = async (args: {
       result = await runOpenAITask(step.values, args.params, args.openAIKey)
       break
     }
+    case StepKind.PROMPT: {
+      result = { status: TaskStatus.PAUSED }
+      break
+    }
     case StepKind.RECORDING: {
       result = await runRecordingTask(args.tabId, args.taskIndex, step.values)
       break
@@ -233,7 +237,8 @@ const RunnerTab = () => {
     if (
       workflow === null ||
       tabId === null ||
-      sharedStore.runnerActions.isFinished()
+      sharedStore.runnerActions.isFinished() ||
+      sharedStore.runnerActions.getStatus() === StepStatus.PAUSED
     ) {
       return
     }
@@ -271,7 +276,7 @@ const RunnerTab = () => {
     <div className="flex flex-col gap-4 p-4">
       <Card>
         <CardTitle className="pt-2 flex items-center gap-2">
-          {sharedStore.runnerActions.getStatus() === "FAILURE" ? (
+          {sharedStore.runnerActions.getStatus() === StepStatus.FAILED ? (
             <CloseIcon className="w-5 h-5 rounded-full fill-red-700" />
           ) : sharedStore.runnerActions.isFinished() ? (
             <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
@@ -322,7 +327,7 @@ const RunnerTab = () => {
             title={title}
             description={desc}
             step={step}
-            result={sharedStore.runnerResults[index] ?? { results: [] }}
+            result={sharedStore.runnerResults[index] ?? null}
           />
         )
       })}

@@ -1,6 +1,8 @@
 import {
   type Workflow,
   StepResult,
+  StepStatus,
+  TaskStatus,
   getStepResultParams,
   getStepResultStatus,
 } from "@/utils/workflow"
@@ -18,7 +20,8 @@ export type RunnerSlice = {
     startWorkflow: (workflow: Workflow) => Promise<void>
     isFinished: () => boolean
     getParams: () => Map<string, string>
-    getStatus: () => "SUCCESS" | "FAILURE"
+    getStatus: () => StepStatus
+    popTaskResult: () => void
     pushTaskResult: (result: TaskResult) => void
   }
 }
@@ -64,9 +67,21 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
     getStatus: () => {
       const step = get().runnerResults[get().runnerStepIndex]
       if (!step) {
-        return "SUCCESS"
+        return StepStatus.SUCCEEDED
       }
       return getStepResultStatus(step)
+    },
+
+    popTaskResult: () => {
+      const active = get().runnerActive
+      if (!active) {
+        console.error("Pushing task result with no active workflow set.")
+        return
+      }
+
+      set((s) => {
+        s.runnerResults[s.runnerStepIndex]?.results?.pop()
+      })
     },
 
     pushTaskResult: (result: TaskResult) => {
@@ -101,6 +116,11 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
           taskIndex = 0
           break
         }
+        case StepKind.PROMPT: {
+          stepIndex += 1
+          taskIndex = 0
+          break
+        }
         case StepKind.RECORDING: {
           if (taskIndex >= step.values.recordings.length - 1) {
             stepIndex += 1
@@ -123,8 +143,10 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
             result,
           ],
         }
-        s.runnerStepIndex = stepIndex
-        s.runnerTaskIndex = taskIndex
+        if (result.status !== TaskStatus.PAUSED) {
+          s.runnerStepIndex = stepIndex
+          s.runnerTaskIndex = taskIndex
+        }
       })
     },
   },
