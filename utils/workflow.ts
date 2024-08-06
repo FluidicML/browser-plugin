@@ -1,7 +1,8 @@
 // Representation of the entire workflow end-to-end.
 //
-// Workflows are represented as a sequence of steps, each of which may be
-// further broken down into one or more tasks.
+// Workflows are represented as a sequence of steps, each of which is further
+// broken down into one or more tasks. From the workflow's perspective, a task
+// is the smallest atomic unit of work.
 export type Workflow = {
   uuid: string
   init: InitSchema
@@ -9,23 +10,21 @@ export type Workflow = {
 }
 
 export type TaskResult = {
-  // Representation of the given task result.
   status: "SUCCESS" | "FAILURE" | "SKIPPED" | "NEEDS_CONFIRMATION"
-  // A message returned from the content script.
-  message: string
-  // A list of key value pairs. Note we use a list instead of a `Map` because
-  // the latter isn't serializable. This would otherwise make communicating
-  // results through message passing impossible.
+  message?: string
+  // A list of key/value pairs. Use a list instead of a `Map` because the
+  // latter isn't serializable. This would otherwise make communicating results
+  // through message passing impossible.
   params?: [string, string][]
 }
 
-// Corresponds to a collection of tasks. A step is considered successful
-// provided each nested task did not fail.
+// Corresponds to a collection of tasks. A step is considered successful if its
+// tasks did not fail (notice this is different from each task succeeding).
 export class StepResult {
   private _tasks: TaskResult[]
 
-  constructor(options?: { tasks?: TaskResult[] }) {
-    this._tasks = options?.tasks ?? []
+  constructor(values: { tasks: TaskResult[] }) {
+    this._tasks = values.tasks
   }
 
   get status() {
