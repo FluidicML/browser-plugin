@@ -18,18 +18,18 @@ export type TaskResult = {
   params?: [string, string][]
 }
 
-// Corresponds to a collection of tasks. A step is considered successful if its
-// tasks did not fail (notice this is different from each task succeeding).
+// A collection of task results. A step is considered successful if none of its
+// tasks failed (notice this is different from each task succeeding).
 export class StepResult {
-  private _tasks: TaskResult[]
+  private _results: TaskResult[]
 
-  constructor(values: { tasks: TaskResult[] }) {
-    this._tasks = values.tasks
+  constructor(results?: TaskResult[]) {
+    this._results = results ?? []
   }
 
   get status() {
-    for (let i = this._tasks.length - 1; i >= 0; --i) {
-      if (this._tasks[i].status === "FAILURE") {
+    for (let i = this._results.length - 1; i >= 0; --i) {
+      if (this._results[i].status === "FAILURE") {
         return "FAILURE"
       }
     }
@@ -37,7 +37,7 @@ export class StepResult {
   }
 
   get params() {
-    return this._tasks.reduce((prev, curr) => {
+    return this._results.reduce((prev, curr) => {
       for (const [key, val] of curr.params ?? []) {
         prev.set(key, val)
       }
@@ -46,6 +46,6 @@ export class StepResult {
   }
 
   get tasks() {
-    return this._tasks.map((task) => ({ ...task }))
+    return this._results.map((task) => ({ ...task }))
   }
 }

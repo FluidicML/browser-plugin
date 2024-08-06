@@ -321,7 +321,7 @@ const RunnerTab = () => {
       browserTab: 0,
       stepIndex: 0,
       taskIndex: 0,
-      results: [new StepResult({ tasks: [] })],
+      results: [new StepResult()],
     }
     setContext(new Context(defaultValues))
     queryTabs({ active: true, currentWindow: true }).then((tabs) => {
@@ -347,13 +347,14 @@ const RunnerTab = () => {
         }
 
         const results = [...prev.results]
-        results[prev.stepIndex] = new StepResult({
-          tasks: [...(results[prev.stepIndex]?.tasks ?? []), result],
-        })
+        results[prev.stepIndex] = new StepResult([
+          ...(results[prev.stepIndex]?.tasks ?? []),
+          result,
+        ])
 
         const [stepIndex, taskIndex] = prev.increment()
         if (!results[stepIndex] && stepIndex < prev.workflow.actions.length) {
-          results[stepIndex] = new StepResult({ tasks: [] })
+          results[stepIndex] = new StepResult()
         }
 
         return new Context({
