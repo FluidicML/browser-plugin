@@ -1,10 +1,16 @@
-import { CardContent } from "@/components/ui/card"
-import { StepResult } from "@/utils/workflow"
+import React from "react"
 
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import LoadingIcon from "@/components/icons/Loading"
 import NullIcon from "@/components/icons/Null"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardTitle,
+} from "@/components/ui/card"
+import { StepResult } from "@/utils/workflow"
 
 type ActionExtractingProps = {
   values: ActionExtractingSchema
@@ -156,12 +162,55 @@ const ActionContent = ({ action, result }: ActionContentProps) => {
   }
 }
 
-const StepContent = (props: ActionContentProps) => {
+type StepResultCardProps = {
+  title: string
+  description: string
+  action: ActionForm
+  result: StepResult
+}
+
+const StepResultCard = ({
+  title,
+  description,
+  action,
+  result,
+}: StepResultCardProps) => {
+  const kind = action.kind
+
+  let taskLength
+  switch (kind) {
+    case ActionKind.EXTRACTING: {
+      taskLength = action.values.params.length
+      break
+    }
+    case ActionKind.RECORDING: {
+      taskLength = action.values.recordings.length
+      break
+    }
+    default: {
+      taskLength = 1
+      break
+    }
+  }
+
   return (
-    <CardContent>
-      <ActionContent {...props} />
-    </CardContent>
+    <Card>
+      <CardTitle className="flex items-center gap-2">
+        {result.status === "FAILURE" ? (
+          <CloseIcon className="w-5 h-5 fill-red-700" />
+        ) : result.tasks.length >= taskLength ? (
+          <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
+        ) : (
+          <LoadingIcon className="w-5 h-5 fill-emerald-600" />
+        )}
+        {title}
+      </CardTitle>
+      <CardDescription className="pb-2">{description}</CardDescription>
+      <CardContent>
+        <ActionContent action={action} result={result} />
+      </CardContent>
+    </Card>
   )
 }
 
-export default StepContent
+export default StepResultCard

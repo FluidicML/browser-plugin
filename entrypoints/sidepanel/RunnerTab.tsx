@@ -16,7 +16,7 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Event, sendTab } from "@/utils/messages"
 import { useSharedStore } from "./store"
 import { waitForTab, updateTab, queryTabs } from "@/utils/browser_tabs"
-import StepCard from "./runner_tab/StepCard"
+import StepResultCard from "./runner_tab/StepResultCard"
 
 // State shared across all steps/tasks. Treat instances of this class as
 // immutable.
@@ -420,7 +420,7 @@ const RunnerTab = () => {
         const action = context.workflow.actions[index]
         const desc = `${action.kind.slice(0, 1).toUpperCase() + action.kind.slice(1)}`
         return (
-          <StepCard
+          <StepResultCard
             key={`${context.workflow.uuid}-${index}`}
             title={title}
             description={desc}
