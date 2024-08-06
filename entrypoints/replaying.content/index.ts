@@ -1,4 +1,5 @@
 import type { ContentScriptContext } from "wxt/client"
+import { TaskStatus } from "@/utils/workflow"
 import { Event, type Response, addMessageListener } from "@/utils/messages"
 
 const TIMEOUT_MILLIS = 5_000
@@ -9,15 +10,15 @@ const replayExtractingClick = async (
   const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
-    return { status: "FAILED", message: "Could not find element." }
+    return { status: TaskStatus.FAILED, message: "Could not find element." }
   } else if (matches.length > 1) {
-    return { status: "FAILED", message: "Too many matched elements." }
+    return { status: TaskStatus.FAILED, message: "Too many matched elements." }
   }
 
   const target = matches[0]
 
   return {
-    status: "SUCCEEDED",
+    status: TaskStatus.SUCCEEDED,
     message: `Extracted {${payload.name}}.`,
     params: [[payload.name, target.innerText]],
   }
@@ -29,9 +30,9 @@ const replayRecordingClick = async (
   const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
-    return { status: "FAILED", message: "Could not find element." }
+    return { status: TaskStatus.FAILED, message: "Could not find element." }
   } else if (matches.length > 1) {
-    return { status: "FAILED", message: "Too many matched elements." }
+    return { status: TaskStatus.FAILED, message: "Too many matched elements." }
   }
 
   const target = matches[0]
@@ -41,7 +42,7 @@ const replayRecordingClick = async (
   )
   target.click()
 
-  return { status: "SUCCEEDED", message: "Clicked." }
+  return { status: TaskStatus.SUCCEEDED, message: "Clicked." }
 }
 
 const replayRecordingKeyup = async (
@@ -50,9 +51,9 @@ const replayRecordingKeyup = async (
   const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
 
   if (matches.length === 0) {
-    return { status: "FAILED", message: "Could not find element." }
+    return { status: TaskStatus.FAILED, message: "Could not find element." }
   } else if (matches.length > 1) {
-    return { status: "FAILED", message: "Too many matched elements." }
+    return { status: TaskStatus.FAILED, message: "Too many matched elements." }
   }
 
   const target = matches[0]
@@ -73,7 +74,7 @@ const replayRecordingKeyup = async (
     }
   }
 
-  return { status: "SUCCEEDED", message: "Keyup." }
+  return { status: TaskStatus.SUCCEEDED, message: "Keyup." }
 }
 
 export default defineContentScript({

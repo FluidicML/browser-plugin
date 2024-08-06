@@ -2,7 +2,7 @@ import React from "react"
 
 import LoadingIcon from "@/components/icons/Loading"
 import { type StepRecordingSchema } from "@/utils/schema"
-import { type StepContentProps, TaskStatus } from "./StepContent"
+import { type StepContentProps, TaskStatusIcon } from "./StepContent"
 
 const StepRecordingContent = ({
   values,
@@ -17,14 +17,14 @@ const StepRecordingContent = ({
     <>
       <div className="flex flex-wrap gap-2 pb-2">
         {...result.results.map((task, index) => (
-          <TaskStatus key={index} task={task} />
+          <TaskStatusIcon key={index} task={task} />
         ))}
-        {latest.status !== "FAILED" &&
+        {latest.status !== TaskStatus.FAILED &&
           result.results.length < values.recordings.length && (
             <LoadingIcon className="w-4 h-4 fill-emerald-600" />
           )}
       </div>
-      {latest.status === "FAILED" ? (
+      {latest.status === TaskStatus.FAILED ? (
         <span>{latest.message ?? "Aborted"}</span>
       ) : result.results.length >= values.recordings.length ? (
         <span>Finished recording.</span>

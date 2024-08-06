@@ -48,7 +48,7 @@ const runNavigateTask = async (
 ): Promise<TaskResult> => {
   const interpolated = interpolate(values.url, params)
   await updateTab(tabId, { url: interpolated })
-  return { status: "SUCCEEDED" }
+  return { status: TaskStatus.SUCCEEDED }
 }
 
 const runOpenAITask = async (
@@ -57,7 +57,7 @@ const runOpenAITask = async (
   openAIKey: string
 ): Promise<TaskResult> => {
   if (!openAIKey) {
-    return { status: "FAILED", message: "Invalid OpenAI API Key." }
+    return { status: TaskStatus.FAILED, message: "Invalid OpenAI API Key." }
   }
 
   const props: { [key: string]: { type: string; description: string } } = {}
@@ -100,7 +100,7 @@ const runOpenAITask = async (
     })
 
     return {
-      status: "SUCCEEDED",
+      status: TaskStatus.SUCCEEDED,
       params: [
         ...Object.entries(
           JSON.parse(
@@ -112,7 +112,7 @@ const runOpenAITask = async (
     }
   } catch (e) {
     console.error(e)
-    return { status: "FAILED", message: "Invalid OpenAI response." }
+    return { status: TaskStatus.FAILED, message: "Invalid OpenAI response." }
   }
 }
 
@@ -173,8 +173,8 @@ const runRecordingTask = async (
     result = await replayRecordingTask(tabId, recording)
   }
 
-  if (result.status === "FAILED" && recording.fallible) {
-    result.status = "SKIPPED"
+  if (result.status === TaskStatus.FAILED && recording.fallible) {
+    result.status = TaskStatus.SKIPPED
   }
 
   return result
@@ -206,7 +206,7 @@ const runTask = async (args: {
       break
     }
     case StepKind.PROMPT: {
-      result = { status: "PAUSED" }
+      result = { status: TaskStatus.PAUSED }
       break
     }
     case StepKind.RECORDING: {
@@ -238,7 +238,7 @@ const RunnerTab = () => {
       workflow === null ||
       tabId === null ||
       sharedStore.runnerActions.isFinished() ||
-      sharedStore.runnerActions.getStatus() === "PAUSED"
+      sharedStore.runnerActions.getStatus() === StepStatus.PAUSED
     ) {
       return
     }
@@ -276,7 +276,7 @@ const RunnerTab = () => {
     <div className="flex flex-col gap-4 p-4">
       <Card>
         <CardTitle className="pt-2 flex items-center gap-2">
-          {sharedStore.runnerActions.getStatus() === "FAILED" ? (
+          {sharedStore.runnerActions.getStatus() === StepStatus.FAILED ? (
             <CloseIcon className="w-5 h-5 rounded-full fill-red-700" />
           ) : sharedStore.runnerActions.isFinished() ? (
             <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />

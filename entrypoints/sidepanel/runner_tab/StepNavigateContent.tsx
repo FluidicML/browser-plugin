@@ -18,7 +18,7 @@ const StepNavigateContent = ({
     )
   }
 
-  if (latest.status !== "SUCCEEDED") {
+  if (latest.status !== TaskStatus.SUCCEEDED) {
     return <span>{latest.message ?? "Unknown error."}</span>
   }
 

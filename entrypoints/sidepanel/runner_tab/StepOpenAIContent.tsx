@@ -10,7 +10,7 @@ const StepOpenAIContent = ({ result }: StepContentProps<StepOpenAISchema>) => {
     return <span>Sending request to OpenAI...</span>
   }
 
-  if (latest.status === "FAILED") {
+  if (latest.status === TaskStatus.FAILED) {
     return <span>{latest.message ?? "Unknown error."}</span>
   }
 

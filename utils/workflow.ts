@@ -9,13 +9,26 @@ export type Workflow = {
   steps: Step[]
 }
 
+export enum TaskStatus {
+  SUCCEEDED = "succeeded",
+  FAILED = "failed",
+  PAUSED = "paused",
+  SKIPPED = "skipped",
+}
+
 export type TaskResult = {
-  status: "SUCCEEDED" | "FAILED" | "SKIPPED" | "PAUSED"
+  status: TaskStatus
   message?: string
   // A list of key/value pairs. Use a list instead of a `Map` because the
   // latter isn't serializable. This would otherwise make communicating results
   // through message passing impossible.
   params?: [string, string][]
+}
+
+export enum StepStatus {
+  SUCCEEDED = "succeeded",
+  FAILED = "failed",
+  PAUSED = "paused",
 }
 
 // A collection of task results. A step is considered successful if none of its
@@ -24,19 +37,17 @@ export type StepResult = {
   results: TaskResult[]
 }
 
-export const getStepResultStatus = (
-  result: StepResult
-): "SUCCEEDED" | "FAILED" | "PAUSED" => {
+export const getStepResultStatus = (result: StepResult): StepStatus => {
   for (let i = result.results.length - 1; i >= 0; --i) {
     const status = result.results[i].status
-    if (status === "PAUSED") {
-      return "PAUSED"
+    if (status === TaskStatus.PAUSED) {
+      return StepStatus.PAUSED
     }
-    if (status === "FAILED") {
-      return "FAILED"
+    if (status === TaskStatus.FAILED) {
+      return StepStatus.FAILED
     }
   }
-  return "SUCCEEDED"
+  return StepStatus.SUCCEEDED
 }
 
 export const getStepResultParams = (result: StepResult) => {

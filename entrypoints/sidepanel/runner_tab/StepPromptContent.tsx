@@ -86,7 +86,7 @@ const StepPromptContent = ({
   const onSubmit: SubmitHandler<StepPromptContentSchema> = (values) => {
     store.runnerActions.popTaskResult()
     store.runnerActions.pushTaskResult({
-      status: "SUCCEEDED",
+      status: TaskStatus.SUCCEEDED,
       params: values.params.map((p) => [p.name, p.value]),
     })
   }
@@ -95,11 +95,11 @@ const StepPromptContent = ({
     return <span>Loading...</span>
   }
 
-  if (latest.status === "FAILED") {
+  if (latest.status === TaskStatus.FAILED) {
     return <span>{latest.message ?? "Unknown error."}</span>
   }
 
-  if (latest.status === "PAUSED") {
+  if (latest.status === TaskStatus.PAUSED) {
     return (
       <Form {...form}>
         <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>

@@ -83,9 +83,9 @@ const StepResultCard = ({
       <CardTitle className="flex items-center gap-2">
         {result === null ||
         result.results.length < taskLength ||
-        status === "PAUSED" ? (
+        status === StepStatus.PAUSED ? (
           <LoadingIcon className="w-5 h-5 fill-emerald-600" />
-        ) : status === "FAILED" ? (
+        ) : status === StepStatus.FAILED ? (
           <CloseIcon className="w-5 h-5 fill-red-700" />
         ) : (
           <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
