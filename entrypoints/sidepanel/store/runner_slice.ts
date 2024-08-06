@@ -16,10 +16,9 @@ export type RunnerSlice = {
 
   runnerActions: {
     startWorkflow: (workflow: Workflow) => Promise<void>
-    isPaused: () => boolean
     isFinished: () => boolean
     getParams: () => Map<string, string>
-    getStatus: () => "SUCCEEDED" | "FAILED"
+    getStatus: () => "SUCCEEDED" | "FAILED" | "PAUSED"
     popTaskResult: () => void
     pushTaskResult: (result: TaskResult) => void
   }
@@ -43,18 +42,6 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
         runnerResults: [],
         runnerTabId: tabs[0].id ?? null,
       })
-    },
-
-    isPaused: () => {
-      const active = get().runnerActive
-      if (active === null || get().runnerTabId === null) {
-        return false
-      }
-      return (
-        get().runnerResults[get().runnerStepIndex]?.results[
-          get().runnerTaskIndex
-        ]?.status === "PAUSED"
-      )
     },
 
     isFinished: () => {

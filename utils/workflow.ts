@@ -1,7 +1,5 @@
 import { type Step } from "./schema"
 
-// Representation of the entire workflow end-to-end.
-//
 // Workflows are represented as a sequence of steps, each of which is further
 // broken down into one or more tasks. From the workflow's perspective, a task
 // is the smallest atomic unit of work.

@@ -237,8 +237,8 @@ const RunnerTab = () => {
     if (
       workflow === null ||
       tabId === null ||
-      sharedStore.runnerActions.isPaused() ||
-      sharedStore.runnerActions.isFinished()
+      sharedStore.runnerActions.isFinished() ||
+      sharedStore.runnerActions.getStatus() === "PAUSED"
     ) {
       return
     }
