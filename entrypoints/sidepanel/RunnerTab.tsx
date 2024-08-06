@@ -6,7 +6,7 @@ import type {
   ReplayRecordingKeyupMessage,
 } from "@/utils/messages"
 import { chatCompletion } from "@/utils/openai"
-import { StepResult } from "@/utils/workflow"
+import { StepResult, type TaskResult } from "@/utils/workflow"
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import FolderIcon from "@/components/icons/Folder"
@@ -34,31 +34,20 @@ const interpolate = (value: string, params: Map<string, string>): string => {
   return interpolated
 }
 
-const runExtractingStep = async (
+const runExtractingTask = async (
   context: Context,
   values: ActionExtractingSchema
-): Promise<StepResult> => {
-  const result = new StepResult()
-
-  for (const param of values.params) {
-    const task = await sendTab<ReplayExtractingClickMessage>(
-      context.browserTab,
-      {
-        event: Event.REPLAY_EXTRACTING_CLICK,
-        payload: { name: param.name, selector: param.selector },
-      }
-    )
-
-    result.pushTaskResult(task)
-    if (result.status === "FAILURE") {
-      return result
-    }
-  }
-
-  return result
+): Promise<TaskResult> => {
+  return await sendTab<ReplayExtractingClickMessage>(context.browserTab, {
+    event: Event.REPLAY_EXTRACTING_CLICK,
+    payload: {
+      name: values.params[context.index.task].name,
+      selector: values.params[context.index.task].selector,
+    },
+  })
 }
 
-const runRecordingTask = async (
+const replayRecordingTask = async (
   context: Context,
   recording: ActionRecordingSchema["recordings"][number]
 ): Promise<TaskResult> => {
@@ -89,70 +78,55 @@ const runRecordingTask = async (
   return result
 }
 
-const runRecordingStep = async (
+const runRecordingTask = async (
   context: Context,
   values: ActionRecordingSchema
-): Promise<StepResult> => {
-  const result = new StepResult()
+): Promise<TaskResult> => {
+  let task: TaskResult
+  const recording = values.recordings[context.index.task]
 
-  for (const recording of values.recordings) {
-    let task: TaskResult
-
-    try {
-      task = await runRecordingTask(context, recording)
-    } catch (e) {
-      // We may end up failing if the last action we invoked loaded a new page.
-      // In these cases, we just need to wait for the page to reload. Try again
-      // once that finishes.
-      //
-      // WXT's error handling isn't particularly useful. Though we could
-      // hardcode the type of error on the message, this is prone to silently
-      // breaking on any updates. Instead, just assume we can recover by
-      // retrying.
-      //
-      // TODO: This error handling needs to be expanded on once we're ready to
-      // take on multi-tab flows.
-      await waitForTab(context.browserTab)
-      task = await runRecordingTask(context, recording)
-    }
-
-    if (task.status === "FAILURE" && recording.fallible) {
-      task.status = "SKIPPED"
-    }
-
-    result.pushTaskResult(task)
-    if (result.status === "FAILURE") {
-      return result
-    }
+  try {
+    task = await replayRecordingTask(context, recording)
+  } catch (e) {
+    // We may end up failing if the last action we invoked loaded a new page.
+    // In these cases, we just need to wait for the page to reload. Try again
+    // once that finishes.
+    //
+    // WXT's error handling isn't particularly useful. Though we could
+    // hardcode the type of error on the message, this is prone to silently
+    // breaking on any updates. Instead, just assume we can recover by
+    // retrying.
+    //
+    // TODO: This error handling needs to be expanded on once we're ready to
+    // take on multi-tab flows.
+    await waitForTab(context.browserTab)
+    task = await replayRecordingTask(context, recording)
   }
 
-  return result
+  if (task.status === "FAILURE" && recording.fallible) {
+    task.status = "SKIPPED"
+  }
+
+  return task
 }
 
-const runNavigateStep = async (
+const runNavigateTask = async (
   context: Context,
+  params: Map<string, string>,
   values: ActionNavigateSchema
-): Promise<StepResult> => {
-  await updateTab(context.browserTab, {
-    url: interpolate(values.url, context.params),
-  })
-  return new StepResult()
+): Promise<TaskResult> => {
+  const interpolated = interpolate(values.url, params)
+  await updateTab(context.browserTab, { url: interpolated })
+  return { status: "SUCCESS", message: `Navigated to ${interpolated}.` }
 }
 
-const runOpenAIStep = async (
-  context: Context,
+const runOpenAITask = async (
+  params: Map<string, string>,
   values: ActionOpenAISchema,
   openaiApiKey: string
-): Promise<StepResult> => {
+): Promise<TaskResult> => {
   if (!openaiApiKey) {
-    return new StepResult({
-      tasks: [
-        {
-          status: "FAILURE",
-          message: "Invalid OpenAI API Key.",
-        },
-      ],
-    })
+    return { status: "FAILURE", message: "Invalid OpenAI API Key." }
   }
 
   const props: { [key: string]: { type: string; description: string } } = {}
@@ -167,12 +141,12 @@ const runOpenAIStep = async (
     const response = await chatCompletion({
       openaiApiKey,
       systemPrompt: `
-        ${interpolate(values.system, context.params)}
+        ${interpolate(values.system, params)}
 
         # FORMATTING
         Output responses in JSON.
       `,
-      userPrompt: interpolate(values.user, context.params),
+      userPrompt: interpolate(values.user, params),
       tools: [
         {
           type: "function",
@@ -194,67 +168,57 @@ const runOpenAIStep = async (
       response_format: { type: "json_object" },
     })
 
-    const tasks: TaskResult[] = []
-    for (const [key, val] of Object.entries(
-      JSON.parse(
-        response.data.choices?.[0]?.message?.tool_calls?.[0]?.function
-          ?.arguments
-      )
-    )) {
-      tasks.push({
-        status: "SUCCESS",
-        params: [[key, val as string]],
-        message: `Received value for {${key}}.`,
-      })
+    return {
+      status: "SUCCESS",
+      message: "Received response from OpenAI.",
+      params: [
+        ...Object.entries(
+          JSON.parse(
+            response.data.choices?.[0]?.message?.tool_calls?.[0]?.function
+              ?.arguments
+          )
+        ),
+      ] as [string, string][],
     }
-    return new StepResult({ tasks })
   } catch (e) {
     console.error(e)
-    return new StepResult({
-      tasks: [
-        {
-          status: "FAILURE",
-          message: "Invalid OpenAI response.",
-        },
-      ],
-    })
+    return { status: "FAILURE", message: "Invalid OpenAI response." }
   }
 }
 
-const runStep = async (
+const runTask = async (
   context: Context,
+  params: Map<string, string>,
   openaiApiKey: string
-): Promise<StepResult> => {
-  const action = context.workflow.actions[context.actionIndex]
+): Promise<TaskResult> => {
+  const action = context.workflow.actions[context.index.step]
   const kind = action.kind
 
+  let taskResult: TaskResult
   switch (kind) {
     case ActionKind.EXTRACTING: {
-      return await runExtractingStep(context, action.values)
+      taskResult = await runExtractingTask(context, action.values)
+      break
     }
     case ActionKind.RECORDING: {
-      return await runRecordingStep(context, action.values)
+      taskResult = await runRecordingTask(context, action.values)
+      break
     }
     case ActionKind.NAVIGATE: {
-      return await runNavigateStep(context, action.values)
+      taskResult = await runNavigateTask(context, params, action.values)
+      break
     }
     case ActionKind.OPENAI: {
-      return await runOpenAIStep(context, action.values, openaiApiKey)
+      taskResult = await runOpenAITask(params, action.values, openaiApiKey)
+      break
     }
     default: {
-      const _exhaustivenessCheck: never = kind
+      taskResult = kind // never
       break
     }
   }
 
-  return new StepResult({
-    tasks: [
-      {
-        status: "FAILURE",
-        message: `Unsupported ${kind} action.`,
-      },
-    ],
-  })
+  return taskResult
 }
 
 const RunnerTab = () => {
@@ -264,19 +228,14 @@ const RunnerTab = () => {
 
   const [context, setContext] = React.useState<Context | null>(null)
   const contextLatestStep = context?.results[context.results.length - 1]
-  const contextWorkflowFinished = context
+  const contextFinished = context
     ? context.index.step >= context.workflow.actions.length
     : false
-
   const contextParams = React.useMemo(() => {
     const params = new Map()
-    if (context?.results) {
-      for (const result of context.results) {
-        for (const [key, val] of result.params) {
-          params.set(key, val)
-        }
-      }
-    }
+    context?.results.forEach((result) =>
+      result.params.forEach(([key, val]) => params.set(key, val))
+    )
     return params
   }, [context?.results])
 
@@ -293,7 +252,6 @@ const RunnerTab = () => {
       browserTab: 0,
       index: { step: 0, task: 0 },
       results: [],
-      params: new Map(),
     }
     setContext(defaultValues)
     queryTabs({ active: true, currentWindow: true }).then((tabs) => {
@@ -301,25 +259,74 @@ const RunnerTab = () => {
     })
   }, [store.triggered, setContext])
 
-  // Process each step of the workflow. On completion, trigger an update to
-  // reinvoke this same effect.
+  // Process each step/task of the workflow. On completion, trigger an update
+  // to reinvoke this same effect.
   React.useEffect(() => {
     if (
       context === null ||
       context.browserTab === 0 ||
       contextLatestStep?.status === "FAILURE" ||
-      contextWorkflowFinished
+      contextFinished
     ) {
       return
     }
-    runStep(context, store.openaiApiKey).then((result) => {
-      setContext({
-        ...context,
-        actionIndex:
-          result.status === "SUCCESS"
-            ? context.actionIndex + 1
-            : context.actionIndex,
-        results: [...context.results, result],
+    runTask(context, contextParams, store.openaiApiKey).then((result) => {
+      setContext((prev) => {
+        if (!prev) {
+          throw new Error("Context not set during run.")
+        }
+
+        const results = [...prev.results]
+        results[prev.index.step] = new StepResult({
+          tasks: [...(results[prev.index.step]?.tasks ?? []), result],
+        })
+
+        // Decide if we should update our task index or update our step index.
+        let stepIndex = prev.index.step
+        let taskIndex = prev.index.task
+        const action = prev.workflow.actions[prev.index.step]
+        const kind = action.kind
+
+        switch (kind) {
+          case ActionKind.EXTRACTING: {
+            if (taskIndex >= action.values.params.length - 1) {
+              stepIndex += 1
+              taskIndex = 0
+            } else {
+              taskIndex += 1
+            }
+            break
+          }
+          case ActionKind.RECORDING: {
+            if (taskIndex >= action.values.recordings.length - 1) {
+              stepIndex += 1
+              taskIndex = 0
+            } else {
+              taskIndex += 1
+            }
+            break
+          }
+          case ActionKind.NAVIGATE: {
+            stepIndex += 1
+            taskIndex = 0
+            break
+          }
+          case ActionKind.OPENAI: {
+            stepIndex += 1
+            taskIndex = 0
+            break
+          }
+          default: {
+            stepIndex = kind // never
+            break
+          }
+        }
+
+        return {
+          ...prev,
+          index: { step: stepIndex, task: taskIndex },
+          results,
+        }
       })
     })
   }, [context, store.openaiApiKey])
@@ -339,7 +346,7 @@ const RunnerTab = () => {
         <CardTitle className="pt-2 flex items-center gap-2">
           {contextLatestStep?.status === "FAILURE" ? (
             <CloseIcon className="w-5 h-5 rounded-full fill-red-700" />
-          ) : contextWorkflowFinished ? (
+          ) : contextFinished ? (
             <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
           ) : (
             <LoadingIcon className="w-5 h-5 fill-emerald-600" />
@@ -349,12 +356,12 @@ const RunnerTab = () => {
             ({context.workflow.uuid.slice(0, 8)})
           </span>
         </CardTitle>
-        {context.params.size > 0 && (
+        {contextParams.size > 0 && (
           <CardContent className="overflow-x-auto scrollbar">
             <Separator className="my-4" />
             <table className="table-auto">
               <tbody>
-                {[...context.params.entries()].map(([key, val]) => (
+                {[...contextParams.entries()].map(([key, val]) => (
                   <tr key={key}>
                     <td className="text-right">
                       <pre className="font-bold pr-1">{key}:</pre>
@@ -372,11 +379,11 @@ const RunnerTab = () => {
 
       <Separator />
 
-      {context.workflow.steps.map((action, index) => {
-        const title = `Step ${index + 1} / ${context.workflow.steps.length}`
+      {context.workflow.actions.map((action, index) => {
+        const title = `Step ${index + 1} / ${context.workflow.actions.length}`
         const description = `${action.kind.slice(0, 1).toUpperCase() + action.kind.slice(1)}`
 
-        if (index > context.actionIndex) {
+        if (index > context.index.step) {
           return null
         }
 
