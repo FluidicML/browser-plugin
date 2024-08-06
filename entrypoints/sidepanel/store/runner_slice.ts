@@ -1,38 +1,52 @@
-import { type Workflow, StepResult } from "@/utils/workflow"
+import {
+  type Workflow,
+  StepResult,
+  getStepResultParams,
+  getStepResultStatus,
+} from "@/utils/workflow"
 import { type SharedStateCreator } from "./index"
+import { queryTabs } from "@/utils/browser_tabs"
 
 export type RunnerSlice = {
   runnerActive: Workflow | null
-  runnerTabId: number
-  runnerTaskIndex: number
+  runnerTabId: number | null
   runnerStepIndex: number
+  runnerTaskIndex: number
   runnerResults: StepResult[]
 
   runnerActions: {
-    startWorkflow: (workflow: Workflow) => void
+    startWorkflow: (workflow: Workflow) => Promise<void>
     isFinished: () => boolean
     getParams: () => Map<string, string>
-    getTaskResult: () => TaskResult | null
-    getStepResult: () => StepResult | null
+    getStatus: () => "SUCCESS" | "FAILURE"
+    pushTaskResult: (result: TaskResult) => void
   }
 }
 
 export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
   runnerActive: null,
-  runnerTabId: -1,
-  runnerTaskIndex: -1,
+  runnerTabId: null,
   runnerStepIndex: -1,
+  runnerTaskIndex: -1,
   runnerResults: [],
 
   runnerActions: {
-    startWorkflow: (workflow) => {
-      set({ sharedActiveTab: "runner", runnerActive: workflow })
+    startWorkflow: async (workflow) => {
+      const tabs = await queryTabs({ active: true, currentWindow: true })
+      set({
+        sharedActiveTab: "runner",
+        runnerActive: workflow,
+        runnerStepIndex: 0,
+        runnerTaskIndex: 0,
+        runnerResults: [{ results: [] }],
+        runnerTabId: tabs[0].id ?? null,
+      })
     },
 
     isFinished: () => {
       const active = get().runnerActive
-      if (!active) {
-        return false
+      if (active === null || get().runnerTabId === null) {
+        return true
       }
       return get().runnerStepIndex >= active.steps.length
     },
@@ -40,23 +54,87 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
     getParams: () => {
       const params = new Map()
       get().runnerResults.forEach((result) => {
-        for (const [key, val] of result.params.entries()) {
+        for (const [key, val] of getStepResultParams(result).entries()) {
           params.set(key, val)
         }
       })
       return params
     },
 
-    getTaskResult: () => {
-      return (
-        get().runnerResults[get().runnerStepIndex]?.tasks[
-          get().runnerTaskIndex
-        ] ?? null
-      )
+    getStatus: () => {
+      const step = get().runnerResults[get().runnerStepIndex]
+      if (!step) {
+        console.error("Getting runner status with no active workflow set.")
+        return "SUCCESS"
+      }
+      return getStepResultStatus(step)
     },
 
-    getStepResult: () => {
-      return get().runnerResults[get().runnerStepIndex] ?? null
+    pushTaskResult: (result: TaskResult) => {
+      const active = get().runnerActive
+      if (!active) {
+        console.error("Pushing task result with no active workflow set.")
+        return
+      }
+
+      let stepIndex = get().runnerStepIndex
+      let taskIndex = get().runnerTaskIndex
+
+      const step = active.steps[stepIndex]
+      const kind = step.kind
+      switch (kind) {
+        case StepKind.EXTRACTING: {
+          if (taskIndex >= step.values.params.length - 1) {
+            stepIndex += 1
+            taskIndex = 0
+          } else {
+            taskIndex += 1
+          }
+          break
+        }
+        case StepKind.NAVIGATE: {
+          stepIndex += 1
+          taskIndex = 0
+          break
+        }
+        case StepKind.OPENAI: {
+          stepIndex += 1
+          taskIndex = 0
+          break
+        }
+        case StepKind.RECORDING: {
+          if (taskIndex >= step.values.recordings.length - 1) {
+            stepIndex += 1
+            taskIndex = 0
+          } else {
+            taskIndex += 1
+          }
+          break
+        }
+        default: {
+          stepIndex = kind // never
+          break
+        }
+      }
+
+      set((s) => {
+        s.runnerResults[s.runnerStepIndex] = {
+          results: [
+            ...(s.runnerResults[s.runnerStepIndex]?.results ?? []),
+            result,
+          ],
+        }
+
+        s.runnerStepIndex = stepIndex
+        s.runnerTaskIndex = taskIndex
+
+        if (
+          !s.runnerResults[stepIndex] &&
+          stepIndex < active.steps.length - 1
+        ) {
+          s.runnerResults.push({ results: [] })
+        }
+      })
     },
   },
 })

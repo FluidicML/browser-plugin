@@ -31,7 +31,7 @@ const SettingsTab = () => {
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       if (values.openaiApiKey !== undefined) {
-        store.settingsActions.setOpenaiApiKey(values.openaiApiKey)
+        store.settingsActions.setOpenAIKey(values.openaiApiKey)
       }
     })
     return () => subscription.unsubscribe()

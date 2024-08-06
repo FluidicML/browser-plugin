@@ -1,12 +1,12 @@
 import axios from "axios"
 
 export const chatCompletion = async ({
-  openaiApiKey,
+  openAIKey,
   systemPrompt,
   userPrompt,
   ...rest
 }: {
-  openaiApiKey: string
+  openAIKey: string
   systemPrompt: string
   userPrompt: string
 } & { [key: string]: any }) => {
@@ -29,7 +29,7 @@ export const chatCompletion = async ({
     {
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${openaiApiKey}`,
+        Authorization: `Bearer ${openAIKey}`,
       },
     }
   )
