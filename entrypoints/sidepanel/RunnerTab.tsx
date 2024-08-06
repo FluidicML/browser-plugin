@@ -205,6 +205,10 @@ const runTask = async (args: {
       result = await runOpenAITask(step.values, args.params, args.openAIKey)
       break
     }
+    case StepKind.PROMPT: {
+      result = { status: "PAUSED" }
+      break
+    }
     case StepKind.RECORDING: {
       result = await runRecordingTask(args.tabId, args.taskIndex, step.values)
       break
@@ -233,6 +237,7 @@ const RunnerTab = () => {
     if (
       workflow === null ||
       tabId === null ||
+      sharedStore.runnerActions.isPaused() ||
       sharedStore.runnerActions.isFinished()
     ) {
       return
@@ -322,7 +327,7 @@ const RunnerTab = () => {
             title={title}
             description={desc}
             step={step}
-            result={sharedStore.runnerResults[index] ?? { results: [] }}
+            result={sharedStore.runnerResults[index] ?? null}
           />
         )
       })}

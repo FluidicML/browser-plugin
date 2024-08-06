@@ -12,7 +12,7 @@ export type Workflow = {
 }
 
 export type TaskResult = {
-  status: "SUCCEEDED" | "FAILED" | "SKIPPED"
+  status: "SUCCEEDED" | "FAILED" | "SKIPPED" | "PAUSED"
   message?: string
   // A list of key/value pairs. Use a list instead of a `Map` because the
   // latter isn't serializable. This would otherwise make communicating results
@@ -28,9 +28,13 @@ export type StepResult = {
 
 export const getStepResultStatus = (
   result: StepResult
-): "SUCCEEDED" | "FAILED" => {
+): "SUCCEEDED" | "FAILED" | "PAUSED" => {
   for (let i = result.results.length - 1; i >= 0; --i) {
-    if (result.results[i].status === "FAILED") {
+    const status = result.results[i].status
+    if (status === "PAUSED") {
+      return "PAUSED"
+    }
+    if (status === "FAILED") {
       return "FAILED"
     }
   }

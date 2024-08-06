@@ -16,9 +16,11 @@ export type RunnerSlice = {
 
   runnerActions: {
     startWorkflow: (workflow: Workflow) => Promise<void>
+    isPaused: () => boolean
     isFinished: () => boolean
     getParams: () => Map<string, string>
     getStatus: () => "SUCCEEDED" | "FAILED"
+    popTaskResult: () => void
     pushTaskResult: (result: TaskResult) => void
   }
 }
@@ -41,6 +43,18 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
         runnerResults: [],
         runnerTabId: tabs[0].id ?? null,
       })
+    },
+
+    isPaused: () => {
+      const active = get().runnerActive
+      if (active === null || get().runnerTabId === null) {
+        return false
+      }
+      return (
+        get().runnerResults[get().runnerStepIndex]?.results[
+          get().runnerTaskIndex
+        ]?.status === "PAUSED"
+      )
     },
 
     isFinished: () => {
@@ -67,6 +81,18 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
         return "SUCCEEDED"
       }
       return getStepResultStatus(step)
+    },
+
+    popTaskResult: () => {
+      const active = get().runnerActive
+      if (!active) {
+        console.error("Pushing task result with no active workflow set.")
+        return
+      }
+
+      set((s) => {
+        s.runnerResults[s.runnerStepIndex]?.results?.pop()
+      })
     },
 
     pushTaskResult: (result: TaskResult) => {
@@ -101,6 +127,11 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
           taskIndex = 0
           break
         }
+        case StepKind.PROMPT: {
+          stepIndex += 1
+          taskIndex = 0
+          break
+        }
         case StepKind.RECORDING: {
           if (taskIndex >= step.values.recordings.length - 1) {
             stepIndex += 1
@@ -123,8 +154,10 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
             result,
           ],
         }
-        s.runnerStepIndex = stepIndex
-        s.runnerTaskIndex = taskIndex
+        if (result.status !== "PAUSED") {
+          s.runnerStepIndex = stepIndex
+          s.runnerTaskIndex = taskIndex
+        }
       })
     },
   },

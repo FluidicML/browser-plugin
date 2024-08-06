@@ -16,9 +16,10 @@ import { type Step, StepKind } from "@/utils/schema"
 import BracesIcon from "@/components/icons/Braces"
 import TrashIcon from "@/components/icons/Trash"
 import StepExtractingForm from "./StepExtractingForm"
-import StepRecordingForm from "./StepRecordingForm"
 import StepNavigateForm from "./StepNavigateForm"
 import StepOpenAIForm from "./StepOpenAIForm"
+import StepPromptForm from "./StepPromptForm"
+import StepRecordingForm from "./StepRecordingForm"
 
 type ParameterSheetProps = {
   params: Set<string>
@@ -106,6 +107,18 @@ const StepTabPanel = React.forwardRef<
           <StepOpenAIForm
             defaultValues={
               defaultValues?.kind === StepKind.OPENAI
+                ? defaultValues.values
+                : null
+            }
+            onChange={onChange}
+          />
+        )
+      }
+      case StepKind.PROMPT: {
+        return (
+          <StepPromptForm
+            defaultValues={
+              defaultValues?.kind === StepKind.PROMPT
                 ? defaultValues.values
                 : null
             }
