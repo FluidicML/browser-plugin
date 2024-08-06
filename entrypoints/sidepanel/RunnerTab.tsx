@@ -68,9 +68,11 @@ class Context {
   get params() {
     if (this._params === null) {
       const params = new Map()
-      this.results.forEach((result) =>
-        result.params.forEach(([key, val]) => params.set(key, val))
-      )
+      this.results.forEach((result) => {
+        for (const [key, val] of result.params.entries()) {
+          params.set(key, val)
+        }
+      })
       this._params = params
     }
     return this._params
