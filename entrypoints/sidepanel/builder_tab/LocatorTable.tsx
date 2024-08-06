@@ -12,10 +12,10 @@ type LocatorTableProps = {
 
 const LocatorTable = ({ locator }: LocatorTableProps) => {
   return (
-    <table className="table-auto border-t muted min-w-full">
+    <table className="table-auto muted min-w-full">
       <tbody>
         {[...locatorToMap(locator).entries()].map(([key, val]) => (
-          <tr key={key} className="border-b muted">
+          <tr key={key} className="[&:not(:last-child)]:border-b muted">
             <td className="text-right align-top">
               <pre className="font-bold py-1 pr-1">{key}:</pre>
             </td>
