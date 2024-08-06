@@ -24,7 +24,7 @@ const StepExtracting = ({ values, result }: StepExtractingProps) => {
     <div>
       <div className="flex flex-wrap gap-2 pb-2">
         {...result.results.map((task) =>
-          task.status === "SUCCESS" ? (
+          task.status === "SUCCEEDED" ? (
             <CheckmarkIcon className="w-4 h-4 rounded-full fill-emerald-600" />
           ) : task.status === "SKIPPED" ? (
             <NullIcon className="w-4 h-4 rounded-full fill-yellow-700" />
@@ -32,12 +32,12 @@ const StepExtracting = ({ values, result }: StepExtractingProps) => {
             <CloseIcon className="w-4 h-4 fill-red-700" />
           )
         )}
-        {latest?.status !== "FAILURE" &&
+        {latest?.status !== "FAILED" &&
           result.results.length < values.params.length && (
             <LoadingIcon className="w-4 h-4 fill-emerald-600" />
           )}
       </div>
-      {latest?.status === "FAILURE" ? (
+      {latest?.status === "FAILED" ? (
         <span>{latest.message ?? "Aborted"}</span>
       ) : result.results.length >= values.params.length ? (
         <span>Finished extraction.</span>
@@ -66,7 +66,7 @@ const StepRecording = ({ values, result }: StepRecordingProps) => {
     <div>
       <div className="flex flex-wrap gap-2 pb-2">
         {...result.results.map((task) =>
-          task.status === "SUCCESS" ? (
+          task.status === "SUCCEEDED" ? (
             <CheckmarkIcon className="w-4 h-4 rounded-full fill-emerald-600" />
           ) : task.status === "SKIPPED" ? (
             <NullIcon className="w-4 h-4 rounded-full fill-yellow-700" />
@@ -74,12 +74,12 @@ const StepRecording = ({ values, result }: StepRecordingProps) => {
             <CloseIcon className="w-4 h-4 fill-red-700" />
           )
         )}
-        {latest?.status !== "FAILURE" &&
+        {latest?.status !== "FAILED" &&
           result.results.length < values.recordings.length && (
             <LoadingIcon className="w-4 h-4 fill-emerald-600" />
           )}
       </div>
-      {latest?.status === "FAILURE" ? (
+      {latest?.status === "FAILED" ? (
         <span>{latest.message ?? "Aborted"}</span>
       ) : result.results.length >= values.recordings.length ? (
         <span>Finished recording.</span>
@@ -128,7 +128,7 @@ const StepOpenAI = ({ result }: StepOpenAIProps) => {
   if (result.results.length === 0) {
     return <span>Sending request to OpenAI...</span>
   }
-  if (result.results[0]?.status === "FAILURE") {
+  if (result.results[0]?.status === "FAILED") {
     return <span>{result.results[0].message ?? "Unknown error."}</span>
   }
   return <span>{result.results[0].message ?? "Sent request to OpenAI."}</span>
@@ -196,7 +196,7 @@ const StepResultCard = ({
   return (
     <Card>
       <CardTitle className="flex items-center gap-2">
-        {getStepResultStatus(result) === "FAILURE" ? (
+        {getStepResultStatus(result) === "FAILED" ? (
           <CloseIcon className="w-5 h-5 fill-red-700" />
         ) : result.results.length >= taskLength ? (
           <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />

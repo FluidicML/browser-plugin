@@ -18,7 +18,7 @@ export type RunnerSlice = {
     startWorkflow: (workflow: Workflow) => Promise<void>
     isFinished: () => boolean
     getParams: () => Map<string, string>
-    getStatus: () => "SUCCESS" | "FAILURE"
+    getStatus: () => "SUCCEEDED" | "FAILED"
     pushTaskResult: (result: TaskResult) => void
   }
 }
@@ -64,7 +64,7 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
     getStatus: () => {
       const step = get().runnerResults[get().runnerStepIndex]
       if (!step) {
-        return "SUCCESS"
+        return "SUCCEEDED"
       }
       return getStepResultStatus(step)
     },

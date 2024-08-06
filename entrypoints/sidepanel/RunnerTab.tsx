@@ -48,7 +48,7 @@ const runNavigateTask = async (
 ): Promise<TaskResult> => {
   const interpolated = interpolate(values.url, params)
   await updateTab(tabId, { url: interpolated })
-  return { status: "SUCCESS" }
+  return { status: "SUCCEEDED" }
 }
 
 const runOpenAITask = async (
@@ -57,7 +57,7 @@ const runOpenAITask = async (
   openAIKey: string
 ): Promise<TaskResult> => {
   if (!openAIKey) {
-    return { status: "FAILURE", message: "Invalid OpenAI API Key." }
+    return { status: "FAILED", message: "Invalid OpenAI API Key." }
   }
 
   const props: { [key: string]: { type: string; description: string } } = {}
@@ -100,7 +100,7 @@ const runOpenAITask = async (
     })
 
     return {
-      status: "SUCCESS",
+      status: "SUCCEEDED",
       params: [
         ...Object.entries(
           JSON.parse(
@@ -112,7 +112,7 @@ const runOpenAITask = async (
     }
   } catch (e) {
     console.error(e)
-    return { status: "FAILURE", message: "Invalid OpenAI response." }
+    return { status: "FAILED", message: "Invalid OpenAI response." }
   }
 }
 
@@ -173,7 +173,7 @@ const runRecordingTask = async (
     result = await replayRecordingTask(tabId, recording)
   }
 
-  if (result.status === "FAILURE" && recording.fallible) {
+  if (result.status === "FAILED" && recording.fallible) {
     result.status = "SKIPPED"
   }
 
@@ -271,7 +271,7 @@ const RunnerTab = () => {
     <div className="flex flex-col gap-4 p-4">
       <Card>
         <CardTitle className="pt-2 flex items-center gap-2">
-          {sharedStore.runnerActions.getStatus() === "FAILURE" ? (
+          {sharedStore.runnerActions.getStatus() === "FAILED" ? (
             <CloseIcon className="w-5 h-5 rounded-full fill-red-700" />
           ) : sharedStore.runnerActions.isFinished() ? (
             <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
