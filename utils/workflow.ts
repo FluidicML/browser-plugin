@@ -22,39 +22,31 @@ export type TaskResult = {
 // Corresponds to a collection of tasks. A step is considered successful
 // provided each nested task did not fail.
 export class StepResult {
-  private _status: "SUCCESS" | "FAILURE"
-  private _params: Map<string, string>
   private _tasks: TaskResult[]
 
-  constructor(options?: {
-    params?: Map<string, string>
-    tasks?: TaskResult[]
-  }) {
-    this._status = "SUCCESS"
-    this._params = new Map([...(options?.params ?? [])])
-    this._tasks = []
-    for (const task of options?.tasks ?? []) {
-      this.pushTaskResult(task)
-    }
+  constructor(options?: { tasks?: TaskResult[] }) {
+    this._tasks = options?.tasks ?? []
   }
 
   get status() {
-    return this._status
+    for (let i = this._tasks.length - 1; i >= 0; --i) {
+      if (this._tasks[i].status === "FAILURE") {
+        return "FAILURE"
+      }
+    }
+    return "SUCCESS"
   }
 
   get params() {
-    return this._params
+    return this._tasks.reduce((prev, curr) => {
+      for (const [key, val] of curr.params ?? []) {
+        prev.set(key, val)
+      }
+      return prev
+    }, new Map())
   }
 
   get tasks() {
     return this._tasks.map((task) => ({ ...task }))
-  }
-
-  pushTaskResult(task: TaskResult) {
-    this._tasks.push(task)
-    this._params = new Map([...this._params, ...(task.params ?? [])])
-    if (task.status === "FAILURE") {
-      this._status = "FAILURE"
-    }
   }
 }

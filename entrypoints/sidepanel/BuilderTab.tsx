@@ -1,7 +1,7 @@
 import React from "react"
 import { cn } from "@/utils/shadcn"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useSharedStore } from "./store"
 import { v4 as uuidv4 } from "uuid"
 

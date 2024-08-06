@@ -48,10 +48,12 @@ const ActionOpenAI = ({ result }: ActionOpenAIProps) => {
 
 type ActionContentProps = {
   action: ActionForm
-  result: StepResult | null
+  result: StepResult
+  finished: boolean
 }
 
 const ActionContent = ({ action, result }: ActionContentProps) => {
+  // TODO: Add success or failure or pending status. Setup grid for each task.
   if (result?.tasks && result.tasks.length > 0) {
     return (
       <ol className="pl-4 list-decimal">

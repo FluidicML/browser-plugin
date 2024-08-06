@@ -21,9 +21,8 @@ import StepCard from "./runner_tab/StepCard"
 type Context = {
   workflow: Workflow
   browserTab: number
-  actionIndex: number
+  index: { step: number; task: number }
   results: StepResult[]
-  params: Map<string, string>
 }
 
 const interpolate = (value: string, params: Map<string, string>): string => {
@@ -264,10 +263,22 @@ const RunnerTab = () => {
   // TODO: Should handle when the active tab is shutdown.
 
   const [context, setContext] = React.useState<Context | null>(null)
-  const latestStep = context?.results[context.results.length - 1]
-  const finished = context
-    ? context.actionIndex >= context.workflow.actions.length
+  const contextLatestStep = context?.results[context.results.length - 1]
+  const contextWorkflowFinished = context
+    ? context.index.step >= context.workflow.actions.length
     : false
+
+  const contextParams = React.useMemo(() => {
+    const params = new Map()
+    if (context?.results) {
+      for (const result of context.results) {
+        for (const [key, val] of result.params) {
+          params.set(key, val)
+        }
+      }
+    }
+    return params
+  }, [context?.results])
 
   // Changes to our triggered workflow indicate either starting a workflow or
   // potentially deleting an active one.
@@ -280,13 +291,13 @@ const RunnerTab = () => {
     const defaultValues: Context = {
       workflow,
       browserTab: 0,
-      actionIndex: 0,
+      index: { step: 0, task: 0 },
       results: [],
       params: new Map(),
     }
     setContext(defaultValues)
     queryTabs({ active: true, currentWindow: true }).then((tabs) => {
-      setContext({ ...defaultValues, browserTab: tabs[0].id!, actionIndex: 0 })
+      setContext({ ...defaultValues, browserTab: tabs[0].id! })
     })
   }, [store.triggered, setContext])
 
@@ -296,8 +307,8 @@ const RunnerTab = () => {
     if (
       context === null ||
       context.browserTab === 0 ||
-      latestStep?.status === "FAILURE" ||
-      finished
+      contextLatestStep?.status === "FAILURE" ||
+      contextWorkflowFinished
     ) {
       return
     }
@@ -309,7 +320,6 @@ const RunnerTab = () => {
             ? context.actionIndex + 1
             : context.actionIndex,
         results: [...context.results, result],
-        params: new Map([...context.params, ...(result.params ?? [])]),
       })
     })
   }, [context, store.openaiApiKey])
@@ -327,9 +337,9 @@ const RunnerTab = () => {
     <div className="flex flex-col gap-4 p-4">
       <Card>
         <CardTitle className="pt-2 flex items-center gap-2">
-          {latestStep?.status === "FAILURE" ? (
+          {contextLatestStep?.status === "FAILURE" ? (
             <CloseIcon className="w-5 h-5 rounded-full fill-red-700" />
-          ) : finished ? (
+          ) : contextWorkflowFinished ? (
             <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
           ) : (
             <LoadingIcon className="w-5 h-5 fill-emerald-600" />
@@ -362,8 +372,8 @@ const RunnerTab = () => {
 
       <Separator />
 
-      {context.workflow.actions.map((action, index) => {
-        const title = `Step ${index + 1} / ${context.workflow.actions.length}`
+      {context.workflow.steps.map((action, index) => {
+        const title = `Step ${index + 1} / ${context.workflow.steps.length}`
         const description = `${action.kind.slice(0, 1).toUpperCase() + action.kind.slice(1)}`
 
         if (index > context.actionIndex) {
