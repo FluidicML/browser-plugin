@@ -12,7 +12,7 @@ type LocatorTableProps = {
 
 const LocatorTable = ({ locator }: LocatorTableProps) => {
   return (
-    <table className="table-auto border-t muted">
+    <table className="table-auto border-t muted min-w-full">
       <tbody>
         {[...locatorToMap(locator).entries()].map(([key, val]) => (
           <tr key={key} className="border-b muted">

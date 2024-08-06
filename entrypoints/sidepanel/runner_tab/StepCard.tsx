@@ -4,13 +4,14 @@ import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import LoadingIcon from "@/components/icons/Loading"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
+import { StepResult } from "@/utils/workflow"
 import StepContent from "./StepContent"
 
 type StepCardProps = {
   title: string
   description: string
   action: ActionForm
-  result: StepResult | null
+  result: StepResult
 }
 
 const StepCard = ({ title, description, action, result }: StepCardProps) => {

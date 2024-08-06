@@ -1,7 +1,8 @@
 // Representation of the entire workflow end-to-end.
 //
-// Workflows are represented as a sequence of steps, each of which may be
-// further broken down into one or more tasks.
+// Workflows are represented as a sequence of steps, each of which is further
+// broken down into one or more tasks. From the workflow's perspective, a task
+// is the smallest atomic unit of work.
 export type Workflow = {
   uuid: string
   init: InitSchema
@@ -9,56 +10,42 @@ export type Workflow = {
 }
 
 export type TaskResult = {
-  // Representation of the given task result.
   status: "SUCCESS" | "FAILURE" | "SKIPPED" | "NEEDS_CONFIRMATION"
-  // A message returned from the content script.
   message?: string
-  // A list of key value pairs. Note we use a list instead of a `Map` because
-  // the latter isn't serializable. This would otherwise make communicating
-  // results through message passing impossible.
+  // A list of key/value pairs. Use a list instead of a `Map` because the
+  // latter isn't serializable. This would otherwise make communicating results
+  // through message passing impossible.
   params?: [string, string][]
 }
 
-// Corresponds to a collection of tasks. A step is considered successful
-// provided each nested task did not fail.
+// Corresponds to a collection of tasks. A step is considered successful if its
+// tasks did not fail (notice this is different from each task succeeding).
 export class StepResult {
   private _tasks: TaskResult[]
-  private _messages: string[]
-  private _params: Map<string, string>
-  private _status: "SUCCESS" | "FAILURE"
 
-  constructor(options?: {
-    status?: "SUCCESS" | "FAILURE"
-    messages?: string[]
-    params?: Map<string, string>
-  }) {
-    this._tasks = []
-    this._messages = [...(options?.messages ?? [])]
-    this._params = new Map([...(options?.params ?? [])])
-    this._status = options?.status ?? "SUCCESS"
-  }
-
-  get messages() {
-    return this._messages
+  constructor(values: { tasks: TaskResult[] }) {
+    this._tasks = values.tasks
   }
 
   get status() {
-    return this._status
+    for (let i = this._tasks.length - 1; i >= 0; --i) {
+      if (this._tasks[i].status === "FAILURE") {
+        return "FAILURE"
+      }
+    }
+    return "SUCCESS"
   }
 
   get params() {
-    return this._params
+    return this._tasks.reduce((prev, curr) => {
+      for (const [key, val] of curr.params ?? []) {
+        prev.set(key, val)
+      }
+      return prev
+    }, new Map())
   }
 
-  pushTaskResult(task: TaskResult) {
-    this._tasks.push(task)
-    if (this._status === "SUCCESS" && task.status === "FAILURE") {
-      this._status = "FAILURE"
-    }
-    this._messages = [
-      ...this._messages,
-      ...(task.message ? [task.message] : []),
-    ]
-    this._params = new Map([...this._params, ...(task.params ?? [])])
+  get tasks() {
+    return this._tasks.map((task) => ({ ...task }))
   }
 }
