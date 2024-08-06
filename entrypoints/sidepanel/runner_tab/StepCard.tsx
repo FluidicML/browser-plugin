@@ -11,7 +11,7 @@ type StepCardProps = {
   title: string
   description: string
   action: ActionForm
-  result: StepResult | null
+  result: StepResult
 }
 
 const StepCard = ({ title, description, action, result }: StepCardProps) => {

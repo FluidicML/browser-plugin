@@ -198,7 +198,7 @@ const runNavigateTask = async (
 ): Promise<TaskResult> => {
   const interpolated = interpolate(values.url, context.params)
   await updateTab(context.tabId, { url: interpolated })
-  return { status: "SUCCESS", message: `Navigated to ${interpolated}.` }
+  return { status: "SUCCESS" }
 }
 
 const runOpenAITask = async (
@@ -319,7 +319,7 @@ const RunnerTab = () => {
       browserTab: 0,
       stepIndex: 0,
       taskIndex: 0,
-      results: [],
+      results: [new StepResult({ tasks: [] })],
     }
     setContext(new Context(defaultValues))
     queryTabs({ active: true, currentWindow: true }).then((tabs) => {
@@ -350,6 +350,9 @@ const RunnerTab = () => {
         })
 
         const [stepIndex, taskIndex] = prev.increment()
+        if (!results[stepIndex] && stepIndex < prev.workflow.actions.length) {
+          results[stepIndex] = new StepResult({ tasks: [] })
+        }
 
         return new Context({
           workflow: prev.workflow,
@@ -410,21 +413,17 @@ const RunnerTab = () => {
 
       <Separator />
 
-      {context.workflow.actions.map((action, index) => {
+      {context.results.map((result, index) => {
         const title = `Step ${index + 1} / ${context.workflow.actions.length}`
-        const description = `${action.kind.slice(0, 1).toUpperCase() + action.kind.slice(1)}`
-
-        if (index > context.stepIndex) {
-          return null
-        }
-
+        const action = context.workflow.actions[index]
+        const desc = `${action.kind.slice(0, 1).toUpperCase() + action.kind.slice(1)}`
         return (
           <StepCard
             key={`${context.workflow.uuid}-${index}`}
             title={title}
-            description={description}
+            description={desc}
             action={action}
-            result={context.results[index] ?? null}
+            result={result}
           />
         )
       })}
