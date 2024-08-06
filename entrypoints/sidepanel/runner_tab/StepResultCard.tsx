@@ -10,7 +10,7 @@ import {
   CardDescription,
   CardTitle,
 } from "@/components/ui/card"
-import { StepResult } from "@/utils/workflow"
+import { type StepResult, getStepResultStatus } from "@/utils/workflow"
 
 type StepExtractingProps = {
   values: StepExtractingSchema
@@ -18,12 +18,12 @@ type StepExtractingProps = {
 }
 
 const StepExtracting = ({ values, result }: StepExtractingProps) => {
-  const latest = result.tasks[result.tasks.length - 1]
+  const latest = result.results[result.results.length - 1]
 
   return (
     <div>
       <div className="flex flex-wrap gap-2 pb-2">
-        {...result.tasks.map((task) =>
+        {...result.results.map((task) =>
           task.status === "SUCCESS" ? (
             <CheckmarkIcon className="w-4 h-4 rounded-full fill-emerald-600" />
           ) : task.status === "SKIPPED" ? (
@@ -33,19 +33,19 @@ const StepExtracting = ({ values, result }: StepExtractingProps) => {
           )
         )}
         {latest?.status !== "FAILURE" &&
-          result.tasks.length < values.params.length && (
+          result.results.length < values.params.length && (
             <LoadingIcon className="w-4 h-4 fill-emerald-600" />
           )}
       </div>
       {latest?.status === "FAILURE" ? (
         <span>{latest.message ?? "Aborted"}</span>
-      ) : result.tasks.length >= values.params.length ? (
+      ) : result.results.length >= values.params.length ? (
         <span>Finished extraction.</span>
       ) : (
         <span>
           Extracting{" "}
           <pre className="inline">
-            {values.params[result.tasks.length].name}
+            {values.params[result.results.length].name}
           </pre>
           ...
         </span>
@@ -60,12 +60,12 @@ type StepRecordingProps = {
 }
 
 const StepRecording = ({ values, result }: StepRecordingProps) => {
-  const latest = result.tasks[result.tasks.length - 1]
+  const latest = result.results[result.results.length - 1]
 
   return (
     <div>
       <div className="flex flex-wrap gap-2 pb-2">
-        {...result.tasks.map((task) =>
+        {...result.results.map((task) =>
           task.status === "SUCCESS" ? (
             <CheckmarkIcon className="w-4 h-4 rounded-full fill-emerald-600" />
           ) : task.status === "SKIPPED" ? (
@@ -75,19 +75,19 @@ const StepRecording = ({ values, result }: StepRecordingProps) => {
           )
         )}
         {latest?.status !== "FAILURE" &&
-          result.tasks.length < values.recordings.length && (
+          result.results.length < values.recordings.length && (
             <LoadingIcon className="w-4 h-4 fill-emerald-600" />
           )}
       </div>
       {latest?.status === "FAILURE" ? (
         <span>{latest.message ?? "Aborted"}</span>
-      ) : result.tasks.length >= values.recordings.length ? (
+      ) : result.results.length >= values.recordings.length ? (
         <span>Finished recording.</span>
       ) : (
         <span>
           Recording{" "}
           <pre className="inline">
-            {values.recordings[result.tasks.length].action}
+            {values.recordings[result.results.length].action}
           </pre>
           ...
         </span>
@@ -104,7 +104,7 @@ type StepNavigateProps = {
 const StepNavigate = ({ url, result }: StepNavigateProps) => {
   const Link = () => <span className="underline">{url}</span>
 
-  if (result.tasks.length === 0) {
+  if (result.results.length === 0) {
     return (
       <span>
         Navigating to <Link />
@@ -125,13 +125,13 @@ type StepOpenAIProps = {
 }
 
 const StepOpenAI = ({ result }: StepOpenAIProps) => {
-  if (result.tasks.length === 0) {
+  if (result.results.length === 0) {
     return <span>Sending request to OpenAI...</span>
   }
-  if (result.tasks[0]?.status === "FAILURE") {
-    return <span>{result.tasks[0].message ?? "Unknown error."}</span>
+  if (result.results[0]?.status === "FAILURE") {
+    return <span>{result.results[0].message ?? "Unknown error."}</span>
   }
-  return <span>{result.tasks[0].message ?? "Sent request to OpenAI."}</span>
+  return <span>{result.results[0].message ?? "Sent request to OpenAI."}</span>
 }
 
 type StepCardContentProps = {
@@ -196,9 +196,9 @@ const StepResultCard = ({
   return (
     <Card>
       <CardTitle className="flex items-center gap-2">
-        {result.status === "FAILURE" ? (
+        {getStepResultStatus(result) === "FAILURE" ? (
           <CloseIcon className="w-5 h-5 fill-red-700" />
-        ) : result.tasks.length >= taskLength ? (
+        ) : result.results.length >= taskLength ? (
           <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
         ) : (
           <LoadingIcon className="w-5 h-5 fill-emerald-600" />

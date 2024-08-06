@@ -158,9 +158,9 @@ const StepRecordingForm = ({
   React.useEffect(() => {
     return () => {
       broadcastTabs({ event: Event.RECORDING_STOP, payload: null })
-      store.actions.unlock(id)
+      store.sharedActions.unlock(id)
     }
-  }, [store.actions])
+  }, [store.sharedActions])
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
@@ -229,7 +229,7 @@ const StepRecordingForm = ({
                 event: Event.RECORDING_STOP,
                 payload: null,
               }).then(() => {
-                store.actions.unlock(id)
+                store.sharedActions.unlock(id)
                 setIsRecording(false)
               })
             } else {
@@ -238,7 +238,7 @@ const StepRecordingForm = ({
                 payload: null,
               }).then(() => {
                 setIsRecording(true)
-                store.actions.lock(id)
+                store.sharedActions.lock(id)
               })
             }
           }}

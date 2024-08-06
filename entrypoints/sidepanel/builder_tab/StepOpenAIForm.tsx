@@ -81,7 +81,7 @@ const StepOpenAIForm = ({ defaultValues, onChange }: StepOpenAIFormProps) => {
   })
 
   React.useEffect(() => {
-    if (!store.openaiApiKey) {
+    if (!store.settingsOpenAIKey) {
       onChange(null)
       return
     }
@@ -99,9 +99,9 @@ const StepOpenAIForm = ({ defaultValues, onChange }: StepOpenAIFormProps) => {
     })
 
     return () => subscription.unsubscribe()
-  }, [store.openaiApiKey, form.watch])
+  }, [store.settingsOpenAIKey, form.watch])
 
-  if (store.openaiApiKey === "") {
+  if (store.settingsOpenAIKey === "") {
     return (
       <p>
         To create an <span className="font-bold">OpenAI</span> step, you must

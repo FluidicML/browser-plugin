@@ -31,21 +31,21 @@ const WorkflowCard = (workflow: Workflow) => {
           <Button
             size="xs"
             className="group hover:bg-muted-foreground/90"
-            onClick={() => store.actions.editWorkflow(workflow)}
+            onClick={() => store.libraryActions.editWorkflow(workflow)}
           >
             <PencilIcon className="w-5 h-5 fill-white dark:fill-black group-hover:fill-white" />
           </Button>
           <Button
             size="xs"
             className="group hover:bg-destructive/90"
-            onClick={() => store.actions.removeWorkflow(workflow)}
+            onClick={() => store.libraryActions.removeWorkflow(workflow)}
           >
             <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
           </Button>
           <Button
             size="xs"
             className="group hover:bg-emerald-600/90"
-            onClick={() => store.actions.triggerWorkflow(workflow)}
+            onClick={() => store.runnerActions.startWorkflow(workflow)}
           >
             <PlayCircleIcon className="w-5 h-5 fill-white dark:fill-black group-hover:fill-white" />
           </Button>
@@ -58,7 +58,7 @@ const WorkflowCard = (workflow: Workflow) => {
 const LibraryTab = () => {
   const store = useSharedStore()
 
-  if (store.library.length === 0) {
+  if (store.librarySaved.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 p-4">
         <BooksIcon className="w-12 h-12 stroke-black dark:stroke-white" />
@@ -69,7 +69,7 @@ const LibraryTab = () => {
 
   return (
     <div className="flex flex-col p-4 gap-4">
-      {store.library.map((w) => (
+      {store.librarySaved.map((w) => (
         <WorkflowCard key={w.uuid} {...w} />
       ))}
     </div>
