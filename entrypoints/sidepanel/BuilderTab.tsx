@@ -29,20 +29,20 @@ const BuilderTab = () => {
   const [stepTabs, setStepTabs] = React.useState<StepTab[]>([])
 
   React.useEffect(() => {
-    if (store.editing === null) {
+    if (store.libraryEditing === null) {
       return
     }
-    setUUID(store.editing.uuid)
-    setInitTab(store.editing.init)
+    setUUID(store.libraryEditing.uuid)
+    setInitTab(store.libraryEditing.init)
     setStepTabs(
-      store.editing.steps.map((step, index) => ({
+      store.libraryEditing.steps.map((step, index) => ({
         key: uuidv4(),
         label: `Step ${index + 1}`,
         step,
       }))
     )
-    store.actions.editWorkflow(null)
-  }, [store.editing])
+    store.libraryActions.editWorkflow(null)
+  }, [store.libraryEditing])
 
   const [tabActive, setTabActive] = React.useState("-1")
   // Retrieves the index of the active tab. For uniformity, the "init" tab is
@@ -99,7 +99,7 @@ const BuilderTab = () => {
     if (!initTab) {
       throw new Error("Attempted to save invalid `InitSchema`.")
     }
-    store.actions.saveWorkflow({
+    store.libraryActions.saveWorkflow({
       uuid: uuid,
       init: initTab,
       steps: stepTabs.map((t) => t.step).filter((f): f is Step => Boolean(f)),
@@ -109,7 +109,7 @@ const BuilderTab = () => {
     setInitTab(null)
     setStepTabs([])
   }, [
-    store.actions,
+    store.libraryActions,
     uuid,
     initTab,
     stepTabs,
@@ -129,7 +129,7 @@ const BuilderTab = () => {
       <TabsList className="shrink-0 flex overflow-x-auto overflow-y-hidden scrollbar justify-start mt-2 mx-4">
         <TabsTrigger
           value="-1"
-          disabled={store.lockedBy.size > 0}
+          disabled={store.sharedLockedBy.size > 0}
           className={cn(
             tabValid(-1)
               ? ""
@@ -142,7 +142,7 @@ const BuilderTab = () => {
           <TabsTrigger
             key={tab.key}
             value={`${index}`}
-            disabled={store.lockedBy.size > 0}
+            disabled={store.sharedLockedBy.size > 0}
             className={cn(
               tabValid(index)
                 ? ""
@@ -197,7 +197,7 @@ const BuilderTab = () => {
             setTabActive(`${tabActiveIndex + 1}`)
           }}
           disabled={
-            store.lockedBy.size > 0 ||
+            store.sharedLockedBy.size > 0 ||
             (tabActiveLast && !tabValid(tabActiveIndex))
           }
         >
@@ -206,7 +206,9 @@ const BuilderTab = () => {
         <Button
           variant="secondary"
           className="ml-auto"
-          disabled={store.lockedBy.size > 0 || !tabValid(stepTabs.length - 1)}
+          disabled={
+            store.sharedLockedBy.size > 0 || !tabValid(stepTabs.length - 1)
+          }
           onClick={saveWorkflow}
         >
           Save Workflow

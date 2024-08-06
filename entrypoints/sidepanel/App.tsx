@@ -17,8 +17,10 @@ function App() {
   return (
     <Tabs
       className="flex flex-col h-screen"
-      value={store.activeTab}
-      onValueChange={(value) => store.actions.setActiveTab(value as TabValue)}
+      value={store.sharedActiveTab}
+      onValueChange={(value) =>
+        store.sharedActions.setActiveTab(value as TabValue)
+      }
     >
       <TabsList className="grid grid-cols-4">
         <TabsTrigger value="builder">Builder</TabsTrigger>
@@ -30,7 +32,7 @@ function App() {
         className="overflow-y-auto scrollbar h-full"
         value="builder"
         forceMount
-        hidden={store.activeTab !== "builder"}
+        hidden={store.sharedActiveTab !== "builder"}
       >
         <BuilderTab />
       </TabsContent>
@@ -38,7 +40,7 @@ function App() {
         className="overflow-y-auto scrollbar"
         value="library"
         forceMount
-        hidden={store.activeTab !== "library"}
+        hidden={store.sharedActiveTab !== "library"}
       >
         <LibraryTab />
       </TabsContent>
@@ -46,7 +48,7 @@ function App() {
         className="overflow-y-auto scrollbar"
         value="runner"
         forceMount
-        hidden={store.activeTab !== "runner"}
+        hidden={store.sharedActiveTab !== "runner"}
       >
         <RunnerTab />
       </TabsContent>
@@ -54,7 +56,7 @@ function App() {
         className="overflow-y-auto scrollbar"
         value="settings"
         forceMount
-        hidden={store.activeTab !== "settings"}
+        hidden={store.sharedActiveTab !== "settings"}
       >
         <SettingsTab />
       </TabsContent>

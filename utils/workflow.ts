@@ -12,7 +12,7 @@ export type Workflow = {
 }
 
 export type TaskResult = {
-  status: "SUCCESS" | "FAILURE" | "SKIPPED" | "NEEDS_CONFIRMATION"
+  status: "SUCCESS" | "FAILURE" | "SKIPPED"
   message?: string
   // A list of key/value pairs. Use a list instead of a `Map` because the
   // latter isn't serializable. This would otherwise make communicating results

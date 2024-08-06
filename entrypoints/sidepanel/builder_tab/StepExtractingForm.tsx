@@ -104,9 +104,9 @@ const StepExtractingForm = ({
   React.useEffect(() => {
     return () => {
       broadcastTabs({ event: Event.EXTRACTING_STOP, payload: null })
-      store.actions.unlock(id)
+      store.sharedActions.unlock(id)
     }
-  }, [store.actions])
+  }, [store.sharedActions])
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
@@ -151,7 +151,7 @@ const StepExtractingForm = ({
                 event: Event.EXTRACTING_STOP,
                 payload: null,
               }).then(() => {
-                store.actions.unlock(id)
+                store.sharedActions.unlock(id)
                 setIsExtracting(false)
               })
             } else {
@@ -160,7 +160,7 @@ const StepExtractingForm = ({
                 payload: null,
               }).then(() => {
                 setIsExtracting(true)
-                store.actions.lock(id)
+                store.sharedActions.lock(id)
               })
             }
           }}

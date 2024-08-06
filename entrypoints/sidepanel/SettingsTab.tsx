@@ -24,14 +24,14 @@ const SettingsTab = () => {
 
   const form = useForm<SettingsFormData>({
     defaultValues: {
-      openaiApiKey: store.openaiApiKey ?? undefined,
+      openaiApiKey: store.settingsOpenAIKey ?? undefined,
     },
   })
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       if (values.openaiApiKey !== undefined) {
-        store.actions.setOpenaiApiKey(values.openaiApiKey)
+        store.settingsActions.setOpenaiApiKey(values.openaiApiKey)
       }
     })
     return () => subscription.unsubscribe()

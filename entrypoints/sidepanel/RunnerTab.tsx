@@ -1,4 +1,5 @@
 import React from "react"
+import { useStore } from "zustand"
 
 import type {
   ReplayExtractingClickMessage,
@@ -15,99 +16,100 @@ import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Event, sendTab } from "@/utils/messages"
 import { useSharedStore } from "./store"
+import { createRunnerStore, type RunnerStore } from "./runner_tab/store"
 import { waitForTab, updateTab, queryTabs } from "@/utils/browser_tabs"
 import StepResultCard from "./runner_tab/StepResultCard"
 
 // State shared across all steps/tasks. Treat instances of this class as
 // immutable.
-class Context {
-  private readonly _browserTab: number
-  private readonly _stepIndex: number
-  private readonly _taskIndex: number
-
-  readonly workflow: Workflow
-  readonly results: StepResult[]
-
-  private _params: Map<string, string> | null
-
-  constructor(values: {
-    browserTab: number
-    stepIndex: number
-    taskIndex: number
-    workflow: Workflow
-    results: StepResult[]
-  }) {
-    this._browserTab = values.browserTab
-    this._stepIndex = values.stepIndex
-    this._taskIndex = values.taskIndex
-    this.workflow = values.workflow
-    this.results = values.results
-    this._params = null
-  }
-
-  get tabId() {
-    return this._browserTab
-  }
-
-  get stepIndex() {
-    return this._stepIndex
-  }
-
-  get taskIndex() {
-    return this._taskIndex
-  }
-
-  get lastStep() {
-    return this.results[this.results.length - 1]
-  }
-
-  get isFinished() {
-    return this.stepIndex >= this.workflow.steps.length
-  }
-
-  get params() {
-    if (this._params === null) {
-      const params = new Map()
-      this.results.forEach((result) => {
-        for (const [key, val] of result.params.entries()) {
-          params.set(key, val)
-        }
-      })
-      this._params = params
-    }
-    return this._params
-  }
-
-  increment(): [number, number] {
-    const step = this.workflow.steps[this.stepIndex]
-    const kind = step.kind
-
-    switch (kind) {
-      case StepKind.EXTRACTING: {
-        if (this.taskIndex >= step.values.params.length - 1) {
-          return [this._stepIndex + 1, 0]
-        }
-        return [this._stepIndex, this._taskIndex + 1]
-      }
-      case StepKind.NAVIGATE: {
-        return [this._stepIndex + 1, 0]
-      }
-      case StepKind.OPENAI: {
-        return [this._stepIndex + 1, 0]
-      }
-      case StepKind.RECORDING: {
-        if (this.taskIndex >= step.values.recordings.length - 1) {
-          return [this._stepIndex + 1, 0]
-        }
-        return [this._stepIndex, this._taskIndex + 1]
-      }
-      default: {
-        const _exhaustivenessCheck = kind // never
-        return [0, 0]
-      }
-    }
-  }
-}
+// class Context {
+//   private readonly _browserTab: number
+//   private readonly _stepIndex: number
+//   private readonly _taskIndex: number
+//
+//   readonly workflow: Workflow
+//   readonly results: StepResult[]
+//
+//   private _params: Map<string, string> | null
+//
+//   constructor(values: {
+//     browserTab: number
+//     stepIndex: number
+//     taskIndex: number
+//     workflow: Workflow
+//     results: StepResult[]
+//   }) {
+//     this._browserTab = values.browserTab
+//     this._stepIndex = values.stepIndex
+//     this._taskIndex = values.taskIndex
+//     this.workflow = values.workflow
+//     this.results = values.results
+//     this._params = null
+//   }
+//
+//   get tabId() {
+//     return this._browserTab
+//   }
+//
+//   get stepIndex() {
+//     return this._stepIndex
+//   }
+//
+//   get taskIndex() {
+//     return this._taskIndex
+//   }
+//
+//   get lastStep() {
+//     return this.results[this.results.length - 1]
+//   }
+//
+//   get isFinished() {
+//     return this.stepIndex >= this.workflow.steps.length
+//   }
+//
+//   get params() {
+//     if (this._params === null) {
+//       const params = new Map()
+//       this.results.forEach((result) => {
+//         for (const [key, val] of result.params.entries()) {
+//           params.set(key, val)
+//         }
+//       })
+//       this._params = params
+//     }
+//     return this._params
+//   }
+//
+//   increment(): [number, number] {
+//     const step = this.workflow.steps[this.stepIndex]
+//     const kind = step.kind
+//
+//     switch (kind) {
+//       case StepKind.EXTRACTING: {
+//         if (this.taskIndex >= step.values.params.length - 1) {
+//           return [this._stepIndex + 1, 0]
+//         }
+//         return [this._stepIndex, this._taskIndex + 1]
+//       }
+//       case StepKind.NAVIGATE: {
+//         return [this._stepIndex + 1, 0]
+//       }
+//       case StepKind.OPENAI: {
+//         return [this._stepIndex + 1, 0]
+//       }
+//       case StepKind.RECORDING: {
+//         if (this.taskIndex >= step.values.recordings.length - 1) {
+//           return [this._stepIndex + 1, 0]
+//         }
+//         return [this._stepIndex, this._taskIndex + 1]
+//       }
+//       default: {
+//         const _exhaustivenessCheck = kind // never
+//         return [0, 0]
+//       }
+//     }
+//   }
+// }
 
 const interpolate = (value: string, params: Map<string, string>): string => {
   let interpolated = value
@@ -302,32 +304,30 @@ const runTask = async (
   return result
 }
 
-// TODO: Should handle when the active tab is shutdown.
+const RunnerStoreContext = React.createContext<RunnerStore | null>(null)
 
 const RunnerTab = () => {
-  const store = useSharedStore()
-  const [context, setContext] = React.useState<Context | null>(null)
+  const sharedStore = useSharedStore()
+  const [runnerStore, setRunnerStore] = React.useState<RunnerStore | null>(null)
 
   // Changes to our triggered workflow indicate either starting a workflow or
   // potentially deleting an active one.
   React.useEffect(() => {
-    const workflow = store.triggered
+    const workflow = sharedStore.triggered
     if (workflow === null) {
-      setContext(null)
+      setRunnerStore(null)
       return
     }
-    const defaultValues = {
-      workflow,
-      browserTab: 0,
-      stepIndex: 0,
-      taskIndex: 0,
-      results: [new StepResult()],
-    }
-    setContext(new Context(defaultValues))
+    // TODO: Should handle when the active tab is shutdown.
     queryTabs({ active: true, currentWindow: true }).then((tabs) => {
-      setContext(new Context({ ...defaultValues, browserTab: tabs[0].id! }))
+      setRunnerStore(
+        createRunnerStore({
+          workflow,
+          browserTabId: tabs[0].id!,
+        })
+      )
     })
-  }, [store.triggered, setContext])
+  }, [sharedStore.triggered, setRunnerStore])
 
   // Process each step/task of the workflow. On completion, trigger an update
   // to reinvoke this same effect.
@@ -340,7 +340,7 @@ const RunnerTab = () => {
     ) {
       return
     }
-    runTask(context, store.openaiApiKey).then((result) => {
+    runTask(context, sharedStore.openaiApiKey).then((result) => {
       setContext((prev) => {
         if (!prev) {
           throw new Error("Context not set during run.")
@@ -366,7 +366,7 @@ const RunnerTab = () => {
         })
       })
     })
-  }, [context, store.openaiApiKey])
+  }, [context, sharedStore.openaiApiKey])
 
   if (context === null) {
     return (
@@ -378,59 +378,61 @@ const RunnerTab = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Card>
-        <CardTitle className="pt-2 flex items-center gap-2">
-          {context.lastStep?.status === "FAILURE" ? (
-            <CloseIcon className="w-5 h-5 rounded-full fill-red-700" />
-          ) : context.isFinished ? (
-            <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
-          ) : (
-            <LoadingIcon className="w-5 h-5 fill-emerald-600" />
+    <RunnerStoreContext.Provider value={runnerStore}>
+      <div className="flex flex-col gap-4 p-4">
+        <Card>
+          <CardTitle className="pt-2 flex items-center gap-2">
+            {context.lastStep?.status === "FAILURE" ? (
+              <CloseIcon className="w-5 h-5 rounded-full fill-red-700" />
+            ) : context.isFinished ? (
+              <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
+            ) : (
+              <LoadingIcon className="w-5 h-5 fill-emerald-600" />
+            )}
+            {context.workflow.init.name}{" "}
+            <span className="text-xs text-muted-foreground ml-auto">
+              ({context.workflow.uuid.slice(0, 8)})
+            </span>
+          </CardTitle>
+          {context.params.size > 0 && (
+            <CardContent className="overflow-x-auto scrollbar">
+              <Separator className="my-4" />
+              <table className="table-auto">
+                <tbody>
+                  {[...context.params.entries()].map(([key, val]) => (
+                    <tr key={key}>
+                      <td className="text-right">
+                        <pre className="font-bold pr-1">{key}:</pre>
+                      </td>
+                      <td>
+                        <pre>{val}</pre>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
           )}
-          {context.workflow.init.name}{" "}
-          <span className="text-xs text-muted-foreground ml-auto">
-            ({context.workflow.uuid.slice(0, 8)})
-          </span>
-        </CardTitle>
-        {context.params.size > 0 && (
-          <CardContent className="overflow-x-auto scrollbar">
-            <Separator className="my-4" />
-            <table className="table-auto">
-              <tbody>
-                {[...context.params.entries()].map(([key, val]) => (
-                  <tr key={key}>
-                    <td className="text-right">
-                      <pre className="font-bold pr-1">{key}:</pre>
-                    </td>
-                    <td>
-                      <pre>{val}</pre>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        )}
-      </Card>
+        </Card>
 
-      <Separator />
+        <Separator />
 
-      {context.results.map((result, index) => {
-        const title = `Step ${index + 1} / ${context.workflow.steps.length}`
-        const step = context.workflow.steps[index]
-        const desc = `${step.kind.slice(0, 1).toUpperCase() + step.kind.slice(1)}`
-        return (
-          <StepResultCard
-            key={`${context.workflow.uuid}-${index}`}
-            title={title}
-            description={desc}
-            step={step}
-            result={result}
-          />
-        )
-      })}
-    </div>
+        {context.results.map((result, index) => {
+          const title = `Step ${index + 1} / ${context.workflow.steps.length}`
+          const step = context.workflow.steps[index]
+          const desc = `${step.kind.slice(0, 1).toUpperCase() + step.kind.slice(1)}`
+          return (
+            <StepResultCard
+              key={`${context.workflow.uuid}-${index}`}
+              title={title}
+              description={desc}
+              step={step}
+              result={result}
+            />
+          )
+        })}
+      </div>
+    </RunnerStoreContext.Provider>
   )
 }
 RunnerTab.displayName = "RunnerTab"
