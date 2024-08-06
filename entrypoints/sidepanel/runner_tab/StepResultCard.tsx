@@ -12,12 +12,12 @@ import {
 } from "@/components/ui/card"
 import { StepResult } from "@/utils/workflow"
 
-type ActionExtractingProps = {
-  values: ActionExtractingSchema
+type StepExtractingProps = {
+  values: StepExtractingSchema
   result: StepResult
 }
 
-const ActionExtracting = ({ values, result }: ActionExtractingProps) => {
+const StepExtracting = ({ values, result }: StepExtractingProps) => {
   const latest = result.tasks[result.tasks.length - 1]
 
   return (
@@ -54,12 +54,12 @@ const ActionExtracting = ({ values, result }: ActionExtractingProps) => {
   )
 }
 
-type ActionRecordingProps = {
-  values: ActionRecordingSchema
+type StepRecordingProps = {
+  values: StepRecordingSchema
   result: StepResult
 }
 
-const ActionRecording = ({ values, result }: ActionRecordingProps) => {
+const StepRecording = ({ values, result }: StepRecordingProps) => {
   const latest = result.tasks[result.tasks.length - 1]
 
   return (
@@ -96,12 +96,12 @@ const ActionRecording = ({ values, result }: ActionRecordingProps) => {
   )
 }
 
-type ActionNavigateProps = {
+type StepNavigateProps = {
   url: string
   result: StepResult
 }
 
-const ActionNavigate = ({ url, result }: ActionNavigateProps) => {
+const StepNavigate = ({ url, result }: StepNavigateProps) => {
   const Link = () => <span className="underline">{url}</span>
 
   if (result.tasks.length === 0) {
@@ -120,11 +120,11 @@ const ActionNavigate = ({ url, result }: ActionNavigateProps) => {
   )
 }
 
-type ActionOpenAIProps = {
+type StepOpenAIProps = {
   result: StepResult
 }
 
-const ActionOpenAI = ({ result }: ActionOpenAIProps) => {
+const StepOpenAI = ({ result }: StepOpenAIProps) => {
   if (result.tasks.length === 0) {
     return <span>Sending request to OpenAI...</span>
   }
@@ -134,26 +134,26 @@ const ActionOpenAI = ({ result }: ActionOpenAIProps) => {
   return <span>{result.tasks[0].message ?? "Sent request to OpenAI."}</span>
 }
 
-type ActionContentProps = {
-  action: ActionForm
+type StepCardContentProps = {
+  step: Step
   result: StepResult
 }
 
-const ActionContent = ({ action, result }: ActionContentProps) => {
-  const kind = action.kind
+const StepCardContent = ({ step, result }: StepCardContentProps) => {
+  const kind = step.kind
 
   switch (kind) {
-    case ActionKind.EXTRACTING: {
-      return <ActionExtracting values={action.values} result={result} />
+    case StepKind.EXTRACTING: {
+      return <StepExtracting values={step.values} result={result} />
     }
-    case ActionKind.RECORDING: {
-      return <ActionRecording values={action.values} result={result} />
+    case StepKind.RECORDING: {
+      return <StepRecording values={step.values} result={result} />
     }
-    case ActionKind.NAVIGATE: {
-      return <ActionNavigate url={action.values.url} result={result} />
+    case StepKind.NAVIGATE: {
+      return <StepNavigate url={step.values.url} result={result} />
     }
-    case ActionKind.OPENAI: {
-      return <ActionOpenAI result={result} />
+    case StepKind.OPENAI: {
+      return <StepOpenAI result={result} />
     }
     default: {
       const _exhaustivenessCheck: never = kind
@@ -165,26 +165,26 @@ const ActionContent = ({ action, result }: ActionContentProps) => {
 type StepResultCardProps = {
   title: string
   description: string
-  action: ActionForm
+  step: Step
   result: StepResult
 }
 
 const StepResultCard = ({
   title,
   description,
-  action,
+  step,
   result,
 }: StepResultCardProps) => {
-  const kind = action.kind
+  const kind = step.kind
 
   let taskLength
   switch (kind) {
-    case ActionKind.EXTRACTING: {
-      taskLength = action.values.params.length
+    case StepKind.EXTRACTING: {
+      taskLength = step.values.params.length
       break
     }
-    case ActionKind.RECORDING: {
-      taskLength = action.values.recordings.length
+    case StepKind.RECORDING: {
+      taskLength = step.values.recordings.length
       break
     }
     default: {
@@ -207,7 +207,7 @@ const StepResultCard = ({
       </CardTitle>
       <CardDescription className="pb-2">{description}</CardDescription>
       <CardContent>
-        <ActionContent action={action} result={result} />
+        <StepCardContent step={step} result={result} />
       </CardContent>
     </Card>
   )

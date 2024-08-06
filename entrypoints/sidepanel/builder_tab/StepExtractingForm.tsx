@@ -3,9 +3,9 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Control, useFieldArray, useForm } from "react-hook-form"
 
 import {
-  type ActionExtractingSchema,
-  type ActionForm,
-  actionExtractingSchema,
+  type StepExtractingSchema,
+  type Step,
+  stepExtractingSchema,
 } from "@/utils/schema"
 import {
   Event,
@@ -29,19 +29,19 @@ import { Button } from "@/components/ui/button"
 import { useSharedStore } from "../store"
 import LocatorTable from "./LocatorTable"
 
-type ParameterCardProps = {
-  control: Control<ActionExtractingSchema>
+type ActionCardProps = {
+  control: Control<StepExtractingSchema>
   index: number
   selector: Selector
   onRemove: () => void
 }
 
-const ParameterCard = ({
+const ActionCard = ({
   control,
   index,
   selector,
   onRemove,
-}: ParameterCardProps) => {
+}: ActionCardProps) => {
   return (
     <Card>
       <CardContent className="flex flex-col relative">
@@ -79,21 +79,21 @@ const ParameterCard = ({
   )
 }
 
-type ActionExtractingFormProps = {
-  defaultValues: ActionExtractingSchema | null
-  onChange: (values: ActionForm | null) => void
+type StepExtractingFormProps = {
+  defaultValues: StepExtractingSchema | null
+  onChange: (values: Step | null) => void
 }
 
-const ActionExtractingForm = ({
+const StepExtractingForm = ({
   defaultValues,
   onChange,
-}: ActionExtractingFormProps) => {
+}: StepExtractingFormProps) => {
   const id = React.useId()
   const store = useSharedStore()
   const [isExtracting, setIsExtracting] = React.useState(false)
 
-  const form = useForm<ActionExtractingSchema>({
-    resolver: zodResolver(actionExtractingSchema),
+  const form = useForm<StepExtractingSchema>({
+    resolver: zodResolver(stepExtractingSchema),
     defaultValues: defaultValues ?? { params: [] },
   })
   const params = useFieldArray({
@@ -110,10 +110,10 @@ const ActionExtractingForm = ({
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
-      const parsed = actionExtractingSchema.safeParse(values)
+      const parsed = stepExtractingSchema.safeParse(values)
       onChange(
         parsed.success
-          ? { kind: ActionKind.EXTRACTING, values: parsed.data }
+          ? { kind: StepKind.EXTRACTING, values: parsed.data }
           : null
       )
     })
@@ -181,7 +181,7 @@ const ActionExtractingForm = ({
           <div className="flex flex-col gap-4">
             <p>Name each extraction for insertion into subsequent steps.</p>
             {params.fields.map((param, index) => (
-              <ParameterCard
+              <ActionCard
                 key={param.id}
                 control={form.control}
                 index={index}
@@ -195,6 +195,6 @@ const ActionExtractingForm = ({
     </Form>
   )
 }
-ActionExtractingForm.displayName = "ActionExtractingForm"
+StepExtractingForm.displayName = "StepExtractingForm"
 
-export default ActionExtractingForm
+export default StepExtractingForm

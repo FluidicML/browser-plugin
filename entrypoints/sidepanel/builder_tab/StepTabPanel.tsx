@@ -12,13 +12,13 @@ import { TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { ComboBox } from "@/components/ui/combobox"
 import { Separator } from "@/components/ui/separator"
-import { type ActionForm, ActionKind } from "@/utils/schema"
+import { type Step, StepKind } from "@/utils/schema"
 import BracesIcon from "@/components/icons/Braces"
 import TrashIcon from "@/components/icons/Trash"
-import ActionExtractingForm from "./ActionExtractingForm"
-import ActionRecordingForm from "./ActionRecordingForm"
-import ActionNavigateForm from "./ActionNavigateForm"
-import ActionOpenAIForm from "./ActionOpenAIForm"
+import StepExtractingForm from "./StepExtractingForm"
+import StepRecordingForm from "./StepRecordingForm"
+import StepNavigateForm from "./StepNavigateForm"
+import StepOpenAIForm from "./StepOpenAIForm"
 
 type ParameterSheetProps = {
   params: Set<string>
@@ -50,22 +50,22 @@ const ParameterSheet = ({ params }: ParameterSheetProps) => {
   )
 }
 
-type ActionTabPanelProps = Omit<
+type StepTabPanelProps = Omit<
   React.ComponentPropsWithoutRef<typeof TabsContent>,
   "onChange"
 > & {
-  defaultValues: ActionForm | null
+  defaultValues: Step | null
   params: Set<string>
-  onChange: (values: ActionForm | null) => void
+  onChange: (values: Step | null) => void
   onRemove: () => void
 }
 
-const ActionTabPanel = React.forwardRef<
+const StepTabPanel = React.forwardRef<
   React.ElementRef<typeof TabsContent>,
-  ActionTabPanelProps
+  StepTabPanelProps
 >(({ defaultValues, params, onChange, onRemove, ...props }, ref) => {
-  const [activeKind, setActiveKind] = React.useState<ActionKind>(
-    defaultValues?.kind ?? ActionKind.NAVIGATE
+  const [activeKind, setActiveKind] = React.useState<StepKind>(
+    defaultValues?.kind ?? StepKind.NAVIGATE
   )
 
   const scrollRef = React.useRef<HTMLElement | null>(null)
@@ -75,13 +75,13 @@ const ActionTabPanel = React.forwardRef<
     }
   }
 
-  const actionTabForm = React.useMemo(() => {
+  const stepTabForm = React.useMemo(() => {
     switch (activeKind) {
-      case ActionKind.EXTRACTING: {
+      case StepKind.EXTRACTING: {
         return (
-          <ActionExtractingForm
+          <StepExtractingForm
             defaultValues={
-              defaultValues?.kind === ActionKind.EXTRACTING
+              defaultValues?.kind === StepKind.EXTRACTING
                 ? defaultValues.values
                 : null
             }
@@ -89,11 +89,11 @@ const ActionTabPanel = React.forwardRef<
           />
         )
       }
-      case ActionKind.RECORDING: {
+      case StepKind.RECORDING: {
         return (
-          <ActionRecordingForm
+          <StepRecordingForm
             defaultValues={
-              defaultValues?.kind === ActionKind.RECORDING
+              defaultValues?.kind === StepKind.RECORDING
                 ? defaultValues.values
                 : null
             }
@@ -102,11 +102,11 @@ const ActionTabPanel = React.forwardRef<
           />
         )
       }
-      case ActionKind.NAVIGATE: {
+      case StepKind.NAVIGATE: {
         return (
-          <ActionNavigateForm
+          <StepNavigateForm
             defaultValues={
-              defaultValues?.kind === ActionKind.NAVIGATE
+              defaultValues?.kind === StepKind.NAVIGATE
                 ? defaultValues.values
                 : null
             }
@@ -114,11 +114,11 @@ const ActionTabPanel = React.forwardRef<
           />
         )
       }
-      case ActionKind.OPENAI: {
+      case StepKind.OPENAI: {
         return (
-          <ActionOpenAIForm
+          <StepOpenAIForm
             defaultValues={
-              defaultValues?.kind === ActionKind.OPENAI
+              defaultValues?.kind === StepKind.OPENAI
                 ? defaultValues.values
                 : null
             }
@@ -147,16 +147,16 @@ const ActionTabPanel = React.forwardRef<
     >
       <div className="flex gap-2">
         {params.size > 0 &&
-        [ActionKind.NAVIGATE, ActionKind.OPENAI].includes(activeKind) ? (
+        [StepKind.NAVIGATE, StepKind.OPENAI].includes(activeKind) ? (
           <ParameterSheet params={params} />
         ) : null}
         <ComboBox
           value={activeKind}
-          options={Object.values(ActionKind).map((value) => ({
+          options={Object.values(StepKind).map((value) => ({
             label: value,
             value,
           }))}
-          onSelect={(value) => setActiveKind(value as ActionKind)}
+          onSelect={(value) => setActiveKind(value as StepKind)}
         />
         <Button
           size="icon"
@@ -167,10 +167,10 @@ const ActionTabPanel = React.forwardRef<
         </Button>
       </div>
       <Separator className="my-4" />
-      {actionTabForm}
+      {stepTabForm}
     </TabsContent>
   )
 })
-ActionTabPanel.displayName = "ActionTabPanel"
+StepTabPanel.displayName = "StepTabPanel"
 
-export default ActionTabPanel
+export default StepTabPanel

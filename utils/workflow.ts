@@ -1,3 +1,5 @@
+import { type Step } from "./schema"
+
 // Representation of the entire workflow end-to-end.
 //
 // Workflows are represented as a sequence of steps, each of which is further
@@ -6,7 +8,7 @@
 export type Workflow = {
   uuid: string
   init: InitSchema
-  actions: ActionForm[]
+  steps: Step[]
 }
 
 export type TaskResult = {

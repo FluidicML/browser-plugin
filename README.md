@@ -14,15 +14,12 @@
 on the fly. Capture different actions automatically for later replay or create
 fine-tuned steps in an intuitive, no-code way.
 
-## Usage
+## Building
 
 Because this project is still early on, we have not released it on the various
-extension platforms. Load the extension manually instead.
-
-### Building
-
-We use [pnpm](https://pnpm.io/) to build the project and manage dependencies.
-Install and run the following:
+extension platforms. Load the extension manually instead. Use
+[pnpm](https://pnpm.io/) to build the project and manage dependencies. Install
+and run the following:
 
 ```bash
 $ pnpm install
@@ -33,17 +30,17 @@ This will produce a `dist/chrome-mv3` directory containing the unpacked
 extension. Navigate to `Chrome > Manage Extensions > Load unpacked` and select
 this directory. Consider pinning the newly installed extension.
 
-### Actions
+## Usage
 
 The side panel contains four top-level tabs. We touch on each in turn.
 
-#### Builder
+### Builder
 
 ![Screenshot from 2024-08-02 18-49-18](https://github.com/user-attachments/assets/4206bb0d-3ad0-4011-b9d3-f1912168f5ee)
 
-This is the primary workhorse of the application. Here you can provide a sequence
-of actions that can be replayed automatically later on. As of now, we have the
-following actions available:
+This is the primary workhorse of the application. Here you can provide a
+sequence of steps that can be replayed automatically later on. As of now, we
+have the following steps available:
 
 ---
 
@@ -51,10 +48,10 @@ following actions available:
 
 ![Screenshot from 2024-08-02 18-45-48](https://github.com/user-attachments/assets/f1f149c7-077e-4d29-bbc1-e5d562b46fc8)
 
-Triggering this action converts your cursor to a crosshair and shows outlines
-around elements you hover over. On each click, the plugin will record which element
-you targeted. Name each capture you perform in this way for interpolating into
-subsequent steps.
+Triggering this step converts your cursor to a crosshair and shows outlines
+around elements you hover over. On each click, the plugin will record which
+element you targeted. Name each capture you perform in this way for
+interpolating into subsequent steps.
 
 ---
 
@@ -77,10 +74,10 @@ if you have a `PROFILE` interpolation available to you.
 
 ![Screenshot from 2024-08-02 18-46-53](https://github.com/user-attachments/assets/c3394c3a-ae2c-4539-8aea-46295a71172d)
 
-Allows sending a custom chat completion request to [OpenAI](https://openai.com/).
-The response is always formatted as a JSON object, though you are free to specify
-what the keys of the object are. These key/value pairs will be available for
-interpolating into subsequent steps.
+Allows sending a custom chat completion request to
+[OpenAI](https://openai.com/). The response is always formatted as a JSON
+object, though you are free to specify what the keys of the object are. These
+key/value pairs will be available for interpolating into subsequent steps.
 
 Furthermore, you can use any interpolated values already available in both the
 system and user prompt.
@@ -91,38 +88,40 @@ system and user prompt.
 
 ![Screenshot from 2024-08-02 18-47-21](https://github.com/user-attachments/assets/26116954-d78f-454a-bbfb-aaa64e68aacd)
 
-Allows interacting with the webpage as normal, but captures clicks and key presses
-automatically.
+Allows interacting with the webpage as normal, but captures clicks and key
+presses automatically.
 
 ---
 
-#### Library
+### Library
 
 ![Screenshot from 2024-08-02 18-48-13](https://github.com/user-attachments/assets/af06935d-5ea9-4de5-8406-4b55e100350d)
 
-A repository of all previously saved workflows. From here you can edit, delete, or
-execute (i.e. *run*) the workflow.
+A repository of all previously saved workflows. From here you can edit, delete,
+or execute (i.e. *run*) the workflow.
 
-#### Runner
+### Runner
 
 ![Screenshot from 2024-08-02 18-48-52](https://github.com/user-attachments/assets/f9cc2e3a-0102-4cdb-b514-e4259ff1a59b)
 
-After running a workflow from your library, this tab will populate with details on
-each step as they execute. It will also surface any errors encountered during.
+After running a workflow from your library, this tab will populate with details
+on each step as they execute. It will also surface any errors encountered
+during.
 
-#### Settings
+### Settings
 
 ![Screenshot from 2024-08-02 18-49-51](https://github.com/user-attachments/assets/d405f663-e8d3-4288-9f1d-a8964dc4b057)
 
-One particular action available in the builder tab is the `OpenAI` action. This
+One particular step available in the builder tab is the `OpenAI` step. This
 sends a custom chat completion request to [OpenAI](https://openai.com/), but
 requires an API key. You can configure the API key from here.
 
 ## Development
 
 We use the [WXT](https://wxt.dev/) framework to give room for cross-platform
-functionality, though efforts are currently focused on Chrome and Chromium-based
-browsers. As such, organization of files mirror WXT's recommendations:
+functionality, though efforts are currently focused on Chrome and
+Chromium-based browsers. As such, organization of files mirror WXT's
+recommendations:
 
 * `assets`
   * A collection of [Tailwind](https://tailwindcss.com/) layers.

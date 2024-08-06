@@ -7,18 +7,18 @@ import { v4 as uuidv4 } from "uuid"
 
 import {
   type InitSchema,
-  ActionForm,
+  Step,
   initSchema,
-  actionFormSafeParse,
-  actionFormParams,
+  stepSafeParse,
+  stepParams,
 } from "@/utils/schema"
 import InitTabPanel from "./builder_tab/InitTabPanel"
-import ActionTabPanel from "./builder_tab/ActionTabPanel"
+import StepTabPanel from "./builder_tab/StepTabPanel"
 
-type ActionTab = {
+type StepTab = {
   key: string
   label: string
-  form: ActionForm | null
+  step: Step | null
 }
 
 const BuilderTab = () => {
@@ -26,7 +26,7 @@ const BuilderTab = () => {
 
   const [uuid, setUUID] = React.useState(uuidv4())
   const [initTab, setInitTab] = React.useState<InitSchema | null>(null)
-  const [actionTabs, setActionTabs] = React.useState<ActionTab[]>([])
+  const [stepTabs, setStepTabs] = React.useState<StepTab[]>([])
 
   React.useEffect(() => {
     if (store.editing === null) {
@@ -34,11 +34,11 @@ const BuilderTab = () => {
     }
     setUUID(store.editing.uuid)
     setInitTab(store.editing.init)
-    setActionTabs(
-      store.editing.actions.map((form, index) => ({
+    setStepTabs(
+      store.editing.steps.map((step, index) => ({
         key: uuidv4(),
         label: `Step ${index + 1}`,
-        form,
+        step,
       }))
     )
     store.actions.editWorkflow(null)
@@ -49,7 +49,7 @@ const BuilderTab = () => {
   // treated as if it has index `-1` in the `actionTabs` array.
   const tabActiveIndex = parseInt(tabActive)
   // Checks if the active tab is also the last tab in the workflow.
-  const tabActiveLast = tabActiveIndex === actionTabs.length - 1
+  const tabActiveLast = tabActiveIndex === stepTabs.length - 1
 
   const tabParams = React.useCallback(
     (index: number) => {
@@ -57,15 +57,15 @@ const BuilderTab = () => {
         return new Set<string>()
       }
       const params = new Set<string>()
-      for (let i = 0; i < Math.min(index, actionTabs.length); ++i) {
-        const form = actionTabs[i].form
+      for (let i = 0; i < Math.min(index, stepTabs.length); ++i) {
+        const form = stepTabs[i].step
         if (form) {
-          actionFormParams(form).forEach((p) => params.add(p))
+          stepParams(form).forEach((p) => params.add(p))
         }
       }
       return params
     },
-    [actionTabs]
+    [stepTabs]
   )
 
   const tabValid = React.useCallback(
@@ -73,26 +73,26 @@ const BuilderTab = () => {
       if (index < 0) {
         return initTab !== null && initSchema.safeParse(initTab).success
       }
-      for (let i = 0; i < Math.min(index + 1, actionTabs.length); ++i) {
-        const form = actionTabs[i].form
-        if (form === null || actionFormSafeParse(form)?.success !== true) {
+      for (let i = 0; i < Math.min(index + 1, stepTabs.length); ++i) {
+        const form = stepTabs[i].step
+        if (form === null || stepSafeParse(form)?.success !== true) {
           return false
         }
       }
       return true
     },
-    [initTab, actionTabs]
+    [initTab, stepTabs]
   )
 
   const tabUpdateForm = React.useCallback(
-    (form: ActionForm | null, index: number) => {
-      setActionTabs((tabs) => {
+    (form: Step | null, index: number) => {
+      setStepTabs((tabs) => {
         const shallowCopy = [...tabs]
-        shallowCopy[index].form = form
+        shallowCopy[index].step = form
         return shallowCopy
       })
     },
-    [setActionTabs]
+    [setStepTabs]
   )
 
   const saveWorkflow = React.useCallback(() => {
@@ -102,23 +102,21 @@ const BuilderTab = () => {
     store.actions.saveWorkflow({
       uuid: uuid,
       init: initTab,
-      actions: actionTabs
-        .map((t) => t.form)
-        .filter((f): f is ActionForm => Boolean(f)),
+      steps: stepTabs.map((t) => t.step).filter((f): f is Step => Boolean(f)),
     })
     setUUID(uuidv4())
     setTabActive("-1")
     setInitTab(null)
-    setActionTabs([])
+    setStepTabs([])
   }, [
     store.actions,
     uuid,
     initTab,
-    actionTabs,
+    stepTabs,
     setUUID,
     setTabActive,
     setInitTab,
-    setActionTabs,
+    setStepTabs,
   ])
 
   return (
@@ -140,7 +138,7 @@ const BuilderTab = () => {
         >
           Start
         </TabsTrigger>
-        {actionTabs.map((tab, index) => (
+        {stepTabs.map((tab, index) => (
           <TabsTrigger
             key={tab.key}
             value={`${index}`}
@@ -162,17 +160,17 @@ const BuilderTab = () => {
         defaultValues={initTab}
         onChange={setInitTab}
       />
-      {actionTabs.map((tab, index) => (
-        <ActionTabPanel
+      {stepTabs.map((tab, index) => (
+        <StepTabPanel
           key={tab.key}
           className="grow px-4 overflow-y-auto scrollbar"
           value={`${index}`}
-          defaultValues={tab.form}
+          defaultValues={tab.step}
           params={tabParams(index)}
           onChange={(form) => tabUpdateForm(form, index)}
           onRemove={() => {
             setTabActive(`${index - (tabActiveLast ? 1 : 0)}`)
-            setActionTabs((tabs) => {
+            setStepTabs((tabs) => {
               const spliced = [...tabs].toSpliced(index, 1)
               for (let i = index; i < spliced.length; ++i) {
                 spliced[i].label = `Step ${i + 1}`
@@ -187,12 +185,12 @@ const BuilderTab = () => {
         <Button
           onClick={() => {
             if (tabActiveLast) {
-              setActionTabs((tabs) => [
+              setStepTabs((tabs) => [
                 ...tabs,
                 {
                   key: uuidv4(),
-                  label: `Step ${actionTabs.length + 1}`,
-                  form: null,
+                  label: `Step ${stepTabs.length + 1}`,
+                  step: null,
                 },
               ])
             }
@@ -208,7 +206,7 @@ const BuilderTab = () => {
         <Button
           variant="secondary"
           className="ml-auto"
-          disabled={store.lockedBy.size > 0 || !tabValid(actionTabs.length - 1)}
+          disabled={store.lockedBy.size > 0 || !tabValid(stepTabs.length - 1)}
           onClick={saveWorkflow}
         >
           Save Workflow

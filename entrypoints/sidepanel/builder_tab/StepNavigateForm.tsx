@@ -3,10 +3,10 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
 import {
-  type ActionNavigateSchema,
-  type ActionForm,
-  ActionKind,
-  actionNavigateSchema,
+  type StepNavigateSchema,
+  type Step,
+  StepKind,
+  stepNavigateSchema,
 } from "@/utils/schema"
 import {
   Form,
@@ -18,27 +18,25 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-type ActionNavigateFormProps = {
-  defaultValues: ActionNavigateSchema | null
-  onChange: (values: ActionForm | null) => void
+type StepNavigateFormProps = {
+  defaultValues: StepNavigateSchema | null
+  onChange: (values: Step | null) => void
 }
 
-const ActionNavigateForm = ({
+const StepNavigateForm = ({
   defaultValues,
   onChange,
-}: ActionNavigateFormProps) => {
-  const form = useForm<ActionNavigateSchema>({
-    resolver: zodResolver(actionNavigateSchema),
+}: StepNavigateFormProps) => {
+  const form = useForm<StepNavigateSchema>({
+    resolver: zodResolver(stepNavigateSchema),
     defaultValues: defaultValues ?? { url: "" },
   })
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
-      const parsed = actionNavigateSchema.safeParse(values)
+      const parsed = stepNavigateSchema.safeParse(values)
       onChange(
-        parsed.success
-          ? { kind: ActionKind.NAVIGATE, values: parsed.data }
-          : null
+        parsed.success ? { kind: StepKind.NAVIGATE, values: parsed.data } : null
       )
     })
     return () => subscription.unsubscribe()
@@ -69,6 +67,6 @@ const ActionNavigateForm = ({
     </Form>
   )
 }
-ActionNavigateForm.displayName = "ActionNavigateForm"
+StepNavigateForm.displayName = "StepNavigateForm"
 
-export default ActionNavigateForm
+export default StepNavigateForm

@@ -11,7 +11,7 @@ import { useSharedStore } from "./store"
 import type { Workflow } from "@/utils/workflow"
 
 const WorkflowCard = (workflow: Workflow) => {
-  const { uuid, init, actions } = workflow
+  const { uuid, init, steps: actions } = workflow
   const store = useSharedStore()
 
   return (

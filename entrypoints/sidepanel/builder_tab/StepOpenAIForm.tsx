@@ -4,10 +4,10 @@ import { Control, useFieldArray, useForm } from "react-hook-form"
 
 import PlusIcon from "@/components/icons/Plus"
 import {
-  type ActionOpenAISchema,
-  type ActionForm,
-  ActionKind,
-  actionOpenAISchema,
+  type StepOpenAISchema,
+  type Step,
+  StepKind,
+  stepOpenAISchema,
 } from "@/utils/schema"
 import {
   Form,
@@ -23,7 +23,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useSharedStore } from "../store"
 
 type ParameterFieldProps = {
-  control: Control<ActionOpenAISchema>
+  control: Control<StepOpenAISchema>
   index: number
 }
 
@@ -59,19 +59,16 @@ const ParameterField = ({ control, index }: ParameterFieldProps) => {
   )
 }
 
-type ActionOpenAIFormProps = {
-  defaultValues: ActionOpenAISchema | null
-  onChange: (values: ActionForm | null) => void
+type StepOpenAIFormProps = {
+  defaultValues: StepOpenAISchema | null
+  onChange: (values: Step | null) => void
 }
 
-const ActionOpenAIForm = ({
-  defaultValues,
-  onChange,
-}: ActionOpenAIFormProps) => {
+const StepOpenAIForm = ({ defaultValues, onChange }: StepOpenAIFormProps) => {
   const store = useSharedStore()
 
-  const form = useForm<ActionOpenAISchema>({
-    resolver: zodResolver(actionOpenAISchema),
+  const form = useForm<StepOpenAISchema>({
+    resolver: zodResolver(stepOpenAISchema),
     defaultValues: defaultValues ?? {
       system: "",
       user: "",
@@ -89,15 +86,15 @@ const ActionOpenAIForm = ({
       return
     }
 
-    const parsed = actionOpenAISchema.safeParse(form.getValues())
+    const parsed = stepOpenAISchema.safeParse(form.getValues())
     onChange(
-      parsed.success ? { kind: ActionKind.OPENAI, values: parsed.data } : null
+      parsed.success ? { kind: StepKind.OPENAI, values: parsed.data } : null
     )
 
     const subscription = form.watch((values) => {
-      const parsed = actionOpenAISchema.safeParse(values)
+      const parsed = stepOpenAISchema.safeParse(values)
       onChange(
-        parsed.success ? { kind: ActionKind.OPENAI, values: parsed.data } : null
+        parsed.success ? { kind: StepKind.OPENAI, values: parsed.data } : null
       )
     })
 
@@ -107,7 +104,7 @@ const ActionOpenAIForm = ({
   if (store.openaiApiKey === "") {
     return (
       <p>
-        To create an <span className="font-bold">OpenAI</span> action, you must
+        To create an <span className="font-bold">OpenAI</span> step, you must
         set an API key. Do so in the <span className="font-bold">Settings</span>{" "}
         tab.
       </p>
@@ -176,6 +173,6 @@ const ActionOpenAIForm = ({
     </Form>
   )
 }
-ActionOpenAIForm.displayName = "ActionOpenAIForm"
+StepOpenAIForm.displayName = "StepOpenAIForm"
 
-export default ActionOpenAIForm
+export default StepOpenAIForm

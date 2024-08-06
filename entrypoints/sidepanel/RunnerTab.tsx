@@ -62,7 +62,7 @@ class Context {
   }
 
   get isFinished() {
-    return this.stepIndex >= this.workflow.actions.length
+    return this.stepIndex >= this.workflow.steps.length
   }
 
   get params() {
@@ -79,26 +79,26 @@ class Context {
   }
 
   increment(): [number, number] {
-    const action = this.workflow.actions[this.stepIndex]
-    const kind = action.kind
+    const step = this.workflow.steps[this.stepIndex]
+    const kind = step.kind
 
     switch (kind) {
-      case ActionKind.EXTRACTING: {
-        if (this.taskIndex >= action.values.params.length - 1) {
+      case StepKind.EXTRACTING: {
+        if (this.taskIndex >= step.values.params.length - 1) {
           return [this._stepIndex + 1, 0]
         }
         return [this._stepIndex, this._taskIndex + 1]
       }
-      case ActionKind.RECORDING: {
-        if (this.taskIndex >= action.values.recordings.length - 1) {
+      case StepKind.RECORDING: {
+        if (this.taskIndex >= step.values.recordings.length - 1) {
           return [this._stepIndex + 1, 0]
         }
         return [this._stepIndex, this._taskIndex + 1]
       }
-      case ActionKind.NAVIGATE: {
+      case StepKind.NAVIGATE: {
         return [this._stepIndex + 1, 0]
       }
-      case ActionKind.OPENAI: {
+      case StepKind.OPENAI: {
         return [this._stepIndex + 1, 0]
       }
       default: {
@@ -120,7 +120,7 @@ const interpolate = (value: string, params: Map<string, string>): string => {
 
 const runExtractingTask = async (
   context: Context,
-  values: ActionExtractingSchema
+  values: StepExtractingSchema
 ): Promise<TaskResult> => {
   return await sendTab<ReplayExtractingClickMessage>(context.tabId, {
     event: Event.REPLAY_EXTRACTING_CLICK,
@@ -133,7 +133,7 @@ const runExtractingTask = async (
 
 const replayRecordingTask = async (
   context: Context,
-  recording: ActionRecordingSchema["recordings"][number]
+  recording: StepRecordingSchema["recordings"][number]
 ): Promise<TaskResult> => {
   const action = recording.action
 
@@ -164,7 +164,7 @@ const replayRecordingTask = async (
 
 const runRecordingTask = async (
   context: Context,
-  values: ActionRecordingSchema
+  values: StepRecordingSchema
 ): Promise<TaskResult> => {
   const recording = values.recordings[context.taskIndex]
 
@@ -196,7 +196,7 @@ const runRecordingTask = async (
 
 const runNavigateTask = async (
   context: Context,
-  values: ActionNavigateSchema
+  values: StepNavigateSchema
 ): Promise<TaskResult> => {
   const interpolated = interpolate(values.url, context.params)
   await updateTab(context.tabId, { url: interpolated })
@@ -205,7 +205,7 @@ const runNavigateTask = async (
 
 const runOpenAITask = async (
   context: Context,
-  values: ActionOpenAISchema,
+  values: StepOpenAISchema,
   openaiApiKey: string
 ): Promise<TaskResult> => {
   if (!openaiApiKey) {
@@ -272,25 +272,25 @@ const runTask = async (
   context: Context,
   openaiApiKey: string
 ): Promise<TaskResult> => {
-  const action = context.workflow.actions[context.stepIndex]
-  const kind = action.kind
+  const step = context.workflow.steps[context.stepIndex]
+  const kind = step.kind
 
   let result: TaskResult
   switch (kind) {
-    case ActionKind.EXTRACTING: {
-      result = await runExtractingTask(context, action.values)
+    case StepKind.EXTRACTING: {
+      result = await runExtractingTask(context, step.values)
       break
     }
-    case ActionKind.RECORDING: {
-      result = await runRecordingTask(context, action.values)
+    case StepKind.RECORDING: {
+      result = await runRecordingTask(context, step.values)
       break
     }
-    case ActionKind.NAVIGATE: {
-      result = await runNavigateTask(context, action.values)
+    case StepKind.NAVIGATE: {
+      result = await runNavigateTask(context, step.values)
       break
     }
-    case ActionKind.OPENAI: {
-      result = await runOpenAITask(context, action.values, openaiApiKey)
+    case StepKind.OPENAI: {
+      result = await runOpenAITask(context, step.values, openaiApiKey)
       break
     }
     default: {
@@ -353,7 +353,7 @@ const RunnerTab = () => {
         ])
 
         const [stepIndex, taskIndex] = prev.increment()
-        if (!results[stepIndex] && stepIndex < prev.workflow.actions.length) {
+        if (!results[stepIndex] && stepIndex < prev.workflow.steps.length) {
           results[stepIndex] = new StepResult()
         }
 
@@ -417,15 +417,15 @@ const RunnerTab = () => {
       <Separator />
 
       {context.results.map((result, index) => {
-        const title = `Step ${index + 1} / ${context.workflow.actions.length}`
-        const action = context.workflow.actions[index]
-        const desc = `${action.kind.slice(0, 1).toUpperCase() + action.kind.slice(1)}`
+        const title = `Step ${index + 1} / ${context.workflow.steps.length}`
+        const step = context.workflow.steps[index]
+        const desc = `${step.kind.slice(0, 1).toUpperCase() + step.kind.slice(1)}`
         return (
           <StepResultCard
             key={`${context.workflow.uuid}-${index}`}
             title={title}
             description={desc}
-            action={action}
+            step={step}
             result={result}
           />
         )

@@ -3,10 +3,10 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Control, useFieldArray, useForm } from "react-hook-form"
 
 import {
-  type ActionRecordingSchema,
-  type ActionForm,
-  ActionKind,
-  actionRecordingSchema,
+  type StepRecordingSchema,
+  type Step,
+  StepKind,
+  stepRecordingSchema,
 } from "@/utils/schema"
 import {
   Event,
@@ -37,9 +37,9 @@ import { useSharedStore } from "../store"
 import LocatorTable from "./LocatorTable"
 
 type ActionCardProps = {
-  control: Control<ActionRecordingSchema>
+  control: Control<StepRecordingSchema>
   index: number
-  recording: ActionRecordingSchema["recordings"][number]
+  recording: StepRecordingSchema["recordings"][number]
   onRemove: () => void
 }
 
@@ -127,23 +127,23 @@ const ActionCard = ({
   )
 }
 
-type ActionRecordingFormProps = {
-  defaultValues: ActionRecordingSchema | null
-  onChange: (values: ActionForm | null) => void
+type StepRecordingFormProps = {
+  defaultValues: StepRecordingSchema | null
+  onChange: (values: Step | null) => void
   triggerScroll: () => void
 }
 
-const ActionRecordingForm = ({
+const StepRecordingForm = ({
   defaultValues,
   onChange,
   triggerScroll,
-}: ActionRecordingFormProps) => {
+}: StepRecordingFormProps) => {
   const id = React.useId()
   const store = useSharedStore()
   const [isRecording, setIsRecording] = React.useState(false)
 
-  const form = useForm<ActionRecordingSchema>({
-    resolver: zodResolver(actionRecordingSchema),
+  const form = useForm<StepRecordingSchema>({
+    resolver: zodResolver(stepRecordingSchema),
     defaultValues: defaultValues ?? {},
   })
   const recordings = useFieldArray({
@@ -170,10 +170,10 @@ const ActionRecordingForm = ({
         }
         recordingsCount.current = values.recordings.length
       }
-      const parsed = actionRecordingSchema.safeParse(values)
+      const parsed = stepRecordingSchema.safeParse(values)
       onChange(
         parsed.success
-          ? { kind: ActionKind.RECORDING, values: parsed.data }
+          ? { kind: StepKind.RECORDING, values: parsed.data }
           : null
       )
     })
@@ -270,6 +270,6 @@ const ActionRecordingForm = ({
     </Form>
   )
 }
-ActionRecordingForm.displayName = "ActionRecordingForm"
+StepRecordingForm.displayName = "StepRecordingForm"
 
-export default ActionRecordingForm
+export default StepRecordingForm
