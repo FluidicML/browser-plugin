@@ -16,6 +16,7 @@ import { type Step, StepKind } from "@/utils/schema"
 import BracesIcon from "@/components/icons/Braces"
 import TrashIcon from "@/components/icons/Trash"
 import StepExtractingForm from "./StepExtractingForm"
+import StepInjectingForm from "./StepInjectingForm"
 import StepNavigateForm from "./StepNavigateForm"
 import StepOpenAIForm from "./StepOpenAIForm"
 import StepPromptForm from "./StepPromptForm"
@@ -83,6 +84,18 @@ const StepTabPanel = React.forwardRef<
           <StepExtractingForm
             defaultValues={
               defaultValues?.kind === StepKind.EXTRACTING
+                ? defaultValues.values
+                : null
+            }
+            onChange={onChange}
+          />
+        )
+      }
+      case StepKind.INJECTING: {
+        return (
+          <StepInjectingForm
+            defaultValues={
+              defaultValues?.kind === StepKind.INJECTING
                 ? defaultValues.values
                 : null
             }

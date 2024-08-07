@@ -4,6 +4,9 @@ export enum Event {
   EXTRACTING_CLICK = "EXTRACTING_CLICK",
   EXTRACTING_START = "EXTRACTING_START",
   EXTRACTING_STOP = "EXTRACTING_STOP",
+  INJECTING_CLICK = "INJECTING_CLICK",
+  INJECTING_START = "INJECTING_START",
+  INJECTING_STOP = "INJECTING_STOP",
   RECORDING_CLICK = "RECORDING_CLICK",
   RECORDING_KEYUP = "RECORDING_KEYUP",
   RECORDING_QUERY = "RECORDING_QUERY",
@@ -25,6 +28,9 @@ export type ExtractingClickMessage = BaseMessage<
 >
 export type ExtractingStartMessage = BaseMessage<Event.EXTRACTING_START>
 export type ExtractingStopMessage = BaseMessage<Event.EXTRACTING_STOP>
+export type InjectingClickMessage = BaseMessage<Event.INJECTING_CLICK, Selector>
+export type InjectingStartMessage = BaseMessage<Event.INJECTING_START>
+export type InjectingStopMessage = BaseMessage<Event.INJECTING_STOP>
 export type RecordingClickMessage = BaseMessage<
   Event.RECORDING_CLICK,
   { action: "click"; selector: Selector }
@@ -53,6 +59,9 @@ export type Message =
   | ExtractingClickMessage
   | ExtractingStartMessage
   | ExtractingStopMessage
+  | InjectingClickMessage
+  | InjectingStartMessage
+  | InjectingStopMessage
   | RecordingClickMessage
   | RecordingKeyupMessage
   | RecordingQueryMessage
