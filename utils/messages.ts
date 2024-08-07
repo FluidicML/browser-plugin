@@ -13,6 +13,7 @@ export enum Event {
   RECORDING_START = "RECORDING_START",
   RECORDING_STOP = "RECORDING_STOP",
   REPLAY_EXTRACTING_CLICK = "REPLAY_EXTRACTING_CLICK",
+  REPLAY_INJECTING = "REPLAY_INJECTING",
   REPLAY_RECORDING_CLICK = "REPLAY_RECORDING_CLICK",
   REPLAY_RECORDING_KEYUP = "REPLAY_RECORDING_KEYUP",
 }
@@ -52,6 +53,10 @@ export type ReplayExtractingClickMessage = BaseMessage<
   Event.REPLAY_EXTRACTING_CLICK,
   { name: string; selector: Selector }
 >
+export type ReplayInjectingMessage = BaseMessage<
+  Event.REPLAY_INJECTING,
+  { name: string; selector: Selector; value: string }
+>
 export type ReplayRecordingClickMessage = BaseMessage<
   Event.REPLAY_RECORDING_CLICK,
   { selector: Selector }
@@ -74,6 +79,7 @@ export type Message =
   | RecordingStartMessage
   | RecordingStopMessage
   | ReplayExtractingClickMessage
+  | ReplayInjectingMessage
   | ReplayRecordingClickMessage
   | ReplayRecordingKeyupMessage
 
@@ -83,6 +89,7 @@ export type Response<M extends Message> =
   ? boolean
   : M extends
       | ReplayExtractingClickMessage
+      | ReplayInjectingMessage
       | ReplayRecordingClickMessage
       | ReplayRecordingKeyupMessage
   ? TaskResult

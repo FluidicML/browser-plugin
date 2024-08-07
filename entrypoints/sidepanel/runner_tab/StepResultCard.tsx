@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card"
 import { type StepResult, getStepResultStatus } from "@/utils/workflow"
 import StepExtractingContent from "./StepExtractingContent"
+import StepInjectingContent from "./StepInjectingContent"
 import StepNavigateContent from "./StepNavigateContent"
 import StepOpenAIContent from "./StepOpenAIContent"
 import StepPromptContent from "./StepPromptContent"
@@ -27,6 +28,9 @@ const StepCardContent = ({ step, result }: StepCardContentProps) => {
   switch (kind) {
     case StepKind.EXTRACTING: {
       return <StepExtractingContent values={step.values} result={result} />
+    }
+    case StepKind.INJECTING: {
+      return <StepInjectingContent values={step.values} result={result} />
     }
     case StepKind.NAVIGATE: {
       return <StepNavigateContent values={step.values} result={result} />
