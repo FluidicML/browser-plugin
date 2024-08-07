@@ -288,18 +288,19 @@ const RunnerTab = () => {
             ({sharedStore.runnerActive.uuid.slice(0, 8)})
           </span>
         </CardTitle>
+
         {runnerParams.size > 0 && (
           <CardContent className="overflow-x-auto scrollbar">
             <Separator className="my-4" />
-            <table className="table-auto">
+            <table className="table-auto muted min-w-full">
               <tbody>
                 {[...runnerParams.entries()].map(([key, val]) => (
-                  <tr key={key}>
-                    <td className="text-right">
-                      <pre className="font-bold pr-1">{key}:</pre>
+                  <tr key={key} className="[&:not(:last-child)]:border-b muted">
+                    <td className="align-top">
+                      <pre className="font-bold py-1 pr-1">{key}:</pre>
                     </td>
-                    <td>
-                      <pre>{val}</pre>
+                    <td className="align-top">
+                      <pre className="py-1">{val}</pre>
                     </td>
                   </tr>
                 ))}

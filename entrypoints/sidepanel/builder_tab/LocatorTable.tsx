@@ -16,7 +16,7 @@ const LocatorTable = ({ locator }: LocatorTableProps) => {
       <tbody>
         {[...locatorToMap(locator).entries()].map(([key, val]) => (
           <tr key={key} className="[&:not(:last-child)]:border-b muted">
-            <td className="text-right align-top">
+            <td className="align-top">
               <pre className="font-bold py-1 pr-1">{key}:</pre>
             </td>
             <td className="align-top">
