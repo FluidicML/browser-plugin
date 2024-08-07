@@ -37,8 +37,19 @@ const replayInjecting = async (
 
   const target = matches[0]
 
-  if ("value" in target) {
+  if (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement
+  ) {
     target.value = payload.value
+    return {
+      status: TaskStatus.SUCCEEDED,
+      message: `Injected {${payload.name}}.`,
+    }
+  }
+
+  if (target.isContentEditable) {
+    target.innerText = payload.value
     return {
       status: TaskStatus.SUCCEEDED,
       message: `Injected {${payload.name}}.`,
