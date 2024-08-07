@@ -32,8 +32,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import { Card, CardContent } from "@/components/ui/card"
 import { useSharedStore } from "../store"
+import SelectorTable from "./SelectorTable"
 
 type TargetCardProps = {
   form: UseFormReturn<StepInjectingSchema>
@@ -54,6 +56,9 @@ const TargetCard = ({
   isActive,
   disabled,
 }: TargetCardProps) => {
+  const name = form.watch(`targets.${index}.name`)
+  const selector = form.watch(`targets.${index}.selector`)
+
   return (
     <Card>
       <CardContent className="flex flex-col relative">
@@ -84,7 +89,7 @@ const TargetCard = ({
               </FormItem>
             )}
           />
-          {form.watch(`targets.${index}.name`) && (
+          {name && (
             <Button
               type="button"
               size="icon"
@@ -107,6 +112,16 @@ const TargetCard = ({
             <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
           </Button>
         </div>
+        {name && (
+          <>
+            <Separator className="my-4" />
+            {selector ? (
+              <SelectorTable selector={selector} />
+            ) : (
+              <span>Press record and choose an element.</span>
+            )}
+          </>
+        )}
       </CardContent>
     </Card>
   )
@@ -164,7 +179,7 @@ const StepInjectingForm = ({
       switch (message.event) {
         case Event.INJECTING_CLICK: {
           targets.update(message.payload.index, {
-            name: targets.fields[message.payload.index].name,
+            name: message.payload.param,
             selector: message.payload.selector,
           })
           break
@@ -198,7 +213,28 @@ const StepInjectingForm = ({
               form={form}
               index={index}
               params={params}
-              onClick={() => setActiveIndex((i) => (i === null ? index : null))}
+              onClick={() => {
+                if (activeIndex === null) {
+                  broadcastTabs({
+                    event: Event.INJECTING_START,
+                    payload: {
+                      param: form.watch(`targets.${index}.name`),
+                      index,
+                    },
+                  }).then(() => {
+                    store.sharedActions.lock(id)
+                    setActiveIndex(index)
+                  })
+                } else {
+                  broadcastTabs({
+                    event: Event.INJECTING_STOP,
+                    payload: null,
+                  }).then(() => {
+                    store.sharedActions.unlock(id)
+                    setActiveIndex(null)
+                  })
+                }
+              }}
               onRemove={() => {
                 targets.remove(index)
                 if (activeIndex === index) {

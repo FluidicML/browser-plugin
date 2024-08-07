@@ -59,6 +59,8 @@ export default defineContentScript({
       }, 300)
     }
 
+    let active: { param: string; index: number } | null = null
+
     const clickListener = async (ev: MouseEvent) => {
       forceStyle("pointer-events", "none")
       try {
@@ -67,16 +69,23 @@ export default defineContentScript({
           console.warn("FLUIDIC", "Clicked on non-HTMLElement.")
           return
         }
+        if (active === null) {
+          throw new Error("No parameter specified.")
+        }
         sendExt({
           event: Event.INJECTING_CLICK,
-          payload: getSelector(target),
+          payload: {
+            ...active,
+            selector: getSelector(target),
+          },
         })
       } finally {
         forceStyle("pointer-events", "auto")
       }
     }
 
-    const injectingStart = () => {
+    const injectingStart = (payload: { param: string; index: number }) => {
+      active = payload
       document.addEventListener("mousemove", moveListener, true)
       document.addEventListener("scroll", scrollListener, true)
       document.addEventListener("click", clickListener, true)
@@ -88,12 +97,13 @@ export default defineContentScript({
       document.removeEventListener("click", clickListener, true)
       document.removeEventListener("scroll", scrollListener, true)
       document.removeEventListener("mousemove", moveListener, true)
+      active = null
     }
 
     addMessageListener((message) => {
       switch (message.event) {
         case Event.INJECTING_START: {
-          injectingStart()
+          injectingStart(message.payload)
           break
         }
         case Event.INJECTING_STOP: {
