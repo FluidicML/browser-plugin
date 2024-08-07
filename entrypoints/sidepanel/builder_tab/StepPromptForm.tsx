@@ -72,7 +72,7 @@ const StepPromptForm = ({ defaultValues, onChange }: StepPromptFormProps) => {
 
   return (
     <Form {...form}>
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <p>
           Specify any number of key/value pairs. These will be prompted at
           runtime and available in all subsequent steps.
@@ -86,6 +86,7 @@ const StepPromptForm = ({ defaultValues, onChange }: StepPromptFormProps) => {
             />
           ))}
           <Button
+            type="button"
             className="w-full flex gap-2"
             onClick={() => params.append({ name: "" })}
           >

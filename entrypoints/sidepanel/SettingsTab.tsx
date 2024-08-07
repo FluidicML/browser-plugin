@@ -39,7 +39,7 @@ const SettingsTab = () => {
 
   return (
     <Form {...form}>
-      <form className="space-y-4 p-4">
+      <form className="space-y-4 p-4" onSubmit={(e) => e.preventDefault()}>
         <FormField
           control={form.control}
           name="openaiApiKey"

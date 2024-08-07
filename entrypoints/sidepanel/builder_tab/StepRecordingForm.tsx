@@ -111,6 +111,7 @@ const ActionCard = ({
         </div>
       </CardContent>
       <Button
+        type="button"
         size="xicon"
         className="absolute top-2 right-2 group hover:bg-destructive/90"
         onClick={onRemove}
@@ -209,7 +210,7 @@ const StepRecordingForm = ({
 
   return (
     <Form {...form}>
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <p>
           Click "Start" and then interact with the browser like you normally do.
           We track each click, type, etc. automatically.

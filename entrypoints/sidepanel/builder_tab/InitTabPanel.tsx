@@ -42,7 +42,7 @@ const InitTabPanel = React.forwardRef<
   return (
     <TabsContent ref={ref} {...props}>
       <Form {...form}>
-        <form className="space-y-8">
+        <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
           <p>
             Build a new workflow. All steps run relative to whichever page you
             have open at time of running. For consistency, consider making the

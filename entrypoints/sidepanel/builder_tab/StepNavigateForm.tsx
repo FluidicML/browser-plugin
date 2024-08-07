@@ -44,7 +44,7 @@ const StepNavigateForm = ({
 
   return (
     <Form {...form}>
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <p>
           Navigate directly to the specified URL. Prefer{" "}
           <span className="font-bold">Recording</span> if you can navigate by

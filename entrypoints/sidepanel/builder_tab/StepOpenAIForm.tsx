@@ -113,7 +113,7 @@ const StepOpenAIForm = ({ defaultValues, onChange }: StepOpenAIFormProps) => {
 
   return (
     <Form {...form}>
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <p>Send a chat completion request to OpenAI.</p>
         <FormField
           control={form.control}
@@ -162,6 +162,7 @@ const StepOpenAIForm = ({ defaultValues, onChange }: StepOpenAIFormProps) => {
             />
           ))}
           <Button
+            type="button"
             className="w-full flex gap-2"
             onClick={() => params.append({ name: "", description: "" })}
           >

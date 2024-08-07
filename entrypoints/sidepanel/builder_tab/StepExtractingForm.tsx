@@ -61,6 +61,7 @@ const ActionCard = ({
           )}
         />
         <Button
+          type="button"
           size="xicon"
           className="absolute right-1 top-1 group hover:bg-destructive/90"
           onClick={onRemove}
@@ -90,6 +91,7 @@ const StepExtractingForm = ({
     resolver: zodResolver(stepExtractingSchema),
     defaultValues: defaultValues ?? { params: [] },
   })
+
   const params = useFieldArray({
     control: form.control,
     name: "params",
@@ -131,7 +133,7 @@ const StepExtractingForm = ({
 
   return (
     <Form {...form}>
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <p>
           Click "Start" and then click on elements whose text you want to
           extract.

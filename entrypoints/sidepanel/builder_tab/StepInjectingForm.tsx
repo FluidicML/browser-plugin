@@ -200,7 +200,7 @@ const StepInjectingForm = ({
 
   return (
     <Form {...form}>
-      <form className="space-y-4">
+      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
         <p>
           Choose which parameters you want to inject into the page. For each,
           click "Start" and then the element on the page you want to inject
