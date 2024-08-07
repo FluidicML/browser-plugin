@@ -27,7 +27,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useSharedStore } from "../store"
-import LocatorTable from "./LocatorTable"
+import SelectorTable from "./SelectorTable"
 
 type ActionCardProps = {
   control: Control<StepExtractingSchema>
@@ -67,13 +67,7 @@ const ActionCard = ({
         >
           <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
         </Button>
-        <div className="overflow-x-auto scrollbar-hidden">
-          {typeof selector === "string" ? (
-            <pre>{selector}</pre>
-          ) : (
-            <LocatorTable locator={selector} />
-          )}
-        </div>
+        <SelectorTable selector={selector} />
       </CardContent>
     </Card>
   )

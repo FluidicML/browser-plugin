@@ -24,6 +24,44 @@ const replayExtractingClick = async (
   }
 }
 
+const replayInjecting = async (
+  payload: ReplayInjectingMessage["payload"]
+): Promise<Response<ReplayInjectingMessage>> => {
+  const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
+
+  if (matches.length === 0) {
+    return { status: TaskStatus.FAILED, message: "Could not find element." }
+  } else if (matches.length > 1) {
+    return { status: TaskStatus.FAILED, message: "Too many matched elements." }
+  }
+
+  const target = matches[0]
+
+  if (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement
+  ) {
+    target.value = payload.value
+    return {
+      status: TaskStatus.SUCCEEDED,
+      message: `Injected {${payload.name}}.`,
+    }
+  }
+
+  if (target.isContentEditable) {
+    target.innerText = payload.value
+    return {
+      status: TaskStatus.SUCCEEDED,
+      message: `Injected {${payload.name}}.`,
+    }
+  }
+
+  return {
+    status: TaskStatus.FAILED,
+    message: "Could not insert into element.",
+  }
+}
+
 const replayRecordingClick = async (
   payload: ReplayRecordingClickMessage["payload"]
 ): Promise<Response<ReplayRecordingClickMessage>> => {
@@ -85,6 +123,9 @@ export default defineContentScript({
       switch (message.event) {
         case Event.REPLAY_EXTRACTING_CLICK: {
           return replayExtractingClick(message.payload)
+        }
+        case Event.REPLAY_INJECTING: {
+          return replayInjecting(message.payload)
         }
         case Event.REPLAY_RECORDING_CLICK: {
           return replayRecordingClick(message.payload)

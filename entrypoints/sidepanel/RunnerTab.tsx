@@ -2,6 +2,7 @@ import React from "react"
 
 import type {
   ReplayExtractingClickMessage,
+  ReplayInjectingMessage,
   ReplayRecordingClickMessage,
   ReplayRecordingKeyupMessage,
 } from "@/utils/messages"
@@ -37,6 +38,22 @@ const runExtractingTask = async (
     payload: {
       name: values.params[taskIndex].name,
       selector: values.params[taskIndex].selector,
+    },
+  })
+}
+
+const runInjectingTask = async (
+  tabId: number,
+  values: StepInjectingSchema,
+  params: Map<string, string>,
+  taskIndex: number
+): Promise<TaskResult> => {
+  return await sendTab<ReplayInjectingMessage>(tabId, {
+    event: Event.REPLAY_INJECTING,
+    payload: {
+      name: values.targets[taskIndex].name,
+      selector: values.targets[taskIndex].selector,
+      value: params.get(values.targets[taskIndex].name) ?? "",
     },
   })
 }
@@ -195,6 +212,15 @@ const runTask = async (args: {
   switch (kind) {
     case StepKind.EXTRACTING: {
       result = await runExtractingTask(args.tabId, step.values, args.taskIndex)
+      break
+    }
+    case StepKind.INJECTING: {
+      result = await runInjectingTask(
+        args.tabId,
+        step.values,
+        args.params,
+        args.taskIndex
+      )
       break
     }
     case StepKind.NAVIGATE: {

@@ -4,12 +4,16 @@ export enum Event {
   EXTRACTING_CLICK = "EXTRACTING_CLICK",
   EXTRACTING_START = "EXTRACTING_START",
   EXTRACTING_STOP = "EXTRACTING_STOP",
+  INJECTING_CLICK = "INJECTING_CLICK",
+  INJECTING_START = "INJECTING_START",
+  INJECTING_STOP = "INJECTING_STOP",
   RECORDING_CLICK = "RECORDING_CLICK",
   RECORDING_KEYUP = "RECORDING_KEYUP",
   RECORDING_QUERY = "RECORDING_QUERY",
   RECORDING_START = "RECORDING_START",
   RECORDING_STOP = "RECORDING_STOP",
   REPLAY_EXTRACTING_CLICK = "REPLAY_EXTRACTING_CLICK",
+  REPLAY_INJECTING = "REPLAY_INJECTING",
   REPLAY_RECORDING_CLICK = "REPLAY_RECORDING_CLICK",
   REPLAY_RECORDING_KEYUP = "REPLAY_RECORDING_KEYUP",
 }
@@ -25,6 +29,15 @@ export type ExtractingClickMessage = BaseMessage<
 >
 export type ExtractingStartMessage = BaseMessage<Event.EXTRACTING_START>
 export type ExtractingStopMessage = BaseMessage<Event.EXTRACTING_STOP>
+export type InjectingClickMessage = BaseMessage<
+  Event.INJECTING_CLICK,
+  { param: string; index: number; selector: Selector }
+>
+export type InjectingStartMessage = BaseMessage<
+  Event.INJECTING_START,
+  { param: string; index: number }
+>
+export type InjectingStopMessage = BaseMessage<Event.INJECTING_STOP>
 export type RecordingClickMessage = BaseMessage<
   Event.RECORDING_CLICK,
   { action: "click"; selector: Selector }
@@ -40,6 +53,10 @@ export type ReplayExtractingClickMessage = BaseMessage<
   Event.REPLAY_EXTRACTING_CLICK,
   { name: string; selector: Selector }
 >
+export type ReplayInjectingMessage = BaseMessage<
+  Event.REPLAY_INJECTING,
+  { name: string; selector: Selector; value: string }
+>
 export type ReplayRecordingClickMessage = BaseMessage<
   Event.REPLAY_RECORDING_CLICK,
   { selector: Selector }
@@ -53,12 +70,16 @@ export type Message =
   | ExtractingClickMessage
   | ExtractingStartMessage
   | ExtractingStopMessage
+  | InjectingClickMessage
+  | InjectingStartMessage
+  | InjectingStopMessage
   | RecordingClickMessage
   | RecordingKeyupMessage
   | RecordingQueryMessage
   | RecordingStartMessage
   | RecordingStopMessage
   | ReplayExtractingClickMessage
+  | ReplayInjectingMessage
   | ReplayRecordingClickMessage
   | ReplayRecordingKeyupMessage
 
@@ -68,6 +89,7 @@ export type Response<M extends Message> =
   ? boolean
   : M extends
       | ReplayExtractingClickMessage
+      | ReplayInjectingMessage
       | ReplayRecordingClickMessage
       | ReplayRecordingKeyupMessage
   ? TaskResult

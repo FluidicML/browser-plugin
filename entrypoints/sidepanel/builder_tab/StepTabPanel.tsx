@@ -16,6 +16,7 @@ import { type Step, StepKind } from "@/utils/schema"
 import BracesIcon from "@/components/icons/Braces"
 import TrashIcon from "@/components/icons/Trash"
 import StepExtractingForm from "./StepExtractingForm"
+import StepInjectingForm from "./StepInjectingForm"
 import StepNavigateForm from "./StepNavigateForm"
 import StepOpenAIForm from "./StepOpenAIForm"
 import StepPromptForm from "./StepPromptForm"
@@ -90,6 +91,19 @@ const StepTabPanel = React.forwardRef<
           />
         )
       }
+      case StepKind.INJECTING: {
+        return (
+          <StepInjectingForm
+            defaultValues={
+              defaultValues?.kind === StepKind.INJECTING
+                ? defaultValues.values
+                : null
+            }
+            onChange={onChange}
+            params={params}
+          />
+        )
+      }
       case StepKind.NAVIGATE: {
         return (
           <StepNavigateForm
@@ -160,7 +174,9 @@ const StepTabPanel = React.forwardRef<
     >
       <div className="flex gap-2">
         {params.size > 0 &&
-        [StepKind.NAVIGATE, StepKind.OPENAI].includes(activeKind) ? (
+        [StepKind.INJECTING, StepKind.NAVIGATE, StepKind.OPENAI].includes(
+          activeKind
+        ) ? (
           <ParameterSheet params={params} />
         ) : null}
         <ComboBox

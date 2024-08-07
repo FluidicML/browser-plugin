@@ -31,6 +31,23 @@ export const stepExtractingSchema = z.object({
 
 export type StepExtractingSchema = z.infer<typeof stepExtractingSchema>
 
+// An injection feature. Allow pushing interpolations back into parts of the
+// webpage.
+export const stepInjectingSchema = z.object({
+  targets: z
+    .array(
+      z.object({
+        name: z.string().min(1, {
+          message: "You must provide a valid name.",
+        }),
+        selector: selectorSchema,
+      })
+    )
+    .nonempty(),
+})
+
+export type StepInjectingSchema = z.infer<typeof stepInjectingSchema>
+
 // Basic prompting. Ask the user for data that can be interpolated into later
 // steps.
 export const stepPromptSchema = z.object({
@@ -141,6 +158,7 @@ export type StepRecordingSchema = z.infer<typeof stepRecordingSchema>
 // any type of steps, though it must always start with an `init`.
 export enum StepKind {
   EXTRACTING = "Extracting",
+  INJECTING = "Injecting",
   NAVIGATE = "Navigate",
   OPENAI = "OpenAI",
   PROMPT = "Prompt",
@@ -151,6 +169,10 @@ export type Step =
   | {
       kind: StepKind.EXTRACTING
       values: StepExtractingSchema
+    }
+  | {
+      kind: StepKind.INJECTING
+      values: StepInjectingSchema
     }
   | {
       kind: StepKind.NAVIGATE
@@ -175,6 +197,9 @@ export const stepSafeParse = (step: Step) => {
   switch (kind) {
     case StepKind.EXTRACTING: {
       return stepExtractingSchema.safeParse(step.values)
+    }
+    case StepKind.INJECTING: {
+      return stepInjectingSchema.safeParse(step.values)
     }
     case StepKind.NAVIGATE: {
       return stepNavigateSchema.safeParse(step.values)
@@ -202,6 +227,9 @@ export const stepParams = (step: Step): string[] => {
     case StepKind.EXTRACTING: {
       const parsed = stepExtractingSchema.safeParse(step.values)
       return parsed.success ? parsed.data.params.map((p) => p.name) : []
+    }
+    case StepKind.INJECTING: {
+      return []
     }
     case StepKind.NAVIGATE: {
       return []

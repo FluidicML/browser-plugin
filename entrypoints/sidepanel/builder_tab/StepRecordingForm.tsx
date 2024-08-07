@@ -34,7 +34,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useSharedStore } from "../store"
-import LocatorTable from "./LocatorTable"
+import SelectorTable from "./SelectorTable"
 
 type ActionCardProps = {
   control: Control<StepRecordingSchema>
@@ -73,13 +73,7 @@ const ActionCard = ({
       <CardTitle>{title}</CardTitle>
       <CardDescription>{Subtitle()}</CardDescription>
       <CardContent className="pt-2">
-        <div className="overflow-x-auto scrollbar-hidden">
-          {typeof recording.selector === "string" ? (
-            <pre>{recording.selector}</pre>
-          ) : (
-            <LocatorTable locator={recording.selector} />
-          )}
-        </div>
+        <SelectorTable selector={recording.selector} />
         <Separator className="my-3" />
         <div className="flex">
           <div className="basis-1/2 flex gap-1 items-center">

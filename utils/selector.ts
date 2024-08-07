@@ -25,7 +25,11 @@ export const locatorSchema = z.object({
 export type Locator = z.infer<typeof locatorSchema>
 
 // Representation of either a locator or CSS selector string.
-export const selectorSchema = locatorSchema.or(z.string())
+export const selectorSchema = locatorSchema.or(
+  z.string().min(1, {
+    message: "You must provide a valid CSS selector.",
+  })
+)
 
 export type Selector = z.infer<typeof selectorSchema>
 

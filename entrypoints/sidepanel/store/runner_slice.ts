@@ -106,6 +106,15 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
           }
           break
         }
+        case StepKind.INJECTING: {
+          if (taskIndex >= step.values.targets.length - 1) {
+            stepIndex += 1
+            taskIndex = 0
+          } else {
+            taskIndex += 1
+          }
+          break
+        }
         case StepKind.NAVIGATE: {
           stepIndex += 1
           taskIndex = 0
