@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Control, useFieldArray, useForm } from "react-hook-form"
 
 import PlusIcon from "@/components/icons/Plus"
+import TrashIcon from "@/components/icons/Trash"
 import {
   type StepPromptSchema,
   type Step,
@@ -23,16 +24,17 @@ import { Input } from "@/components/ui/input"
 type ParameterFieldProps = {
   control: Control<StepPromptSchema>
   index: number
+  onRemove: () => void
 }
 
-const ParameterField = ({ control, index }: ParameterFieldProps) => {
+const ParameterField = ({ control, index, onRemove }: ParameterFieldProps) => {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex items-end gap-2">
       <FormField
         control={control}
         name={`params.${index}.name`}
         render={({ field }) => (
-          <FormItem>
+          <FormItem className="grow">
             <FormLabel>Field {index + 1}</FormLabel>
             <FormControl>
               <Input placeholder="Name" {...field} />
@@ -41,6 +43,14 @@ const ParameterField = ({ control, index }: ParameterFieldProps) => {
           </FormItem>
         )}
       />
+      <Button
+        type="button"
+        size="icon"
+        className="group hover:bg-destructive/90"
+        onClick={onRemove}
+      >
+        <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
+      </Button>
     </div>
   )
 }
@@ -83,6 +93,7 @@ const StepPromptForm = ({ defaultValues, onChange }: StepPromptFormProps) => {
               key={field.id}
               control={form.control}
               index={index}
+              onRemove={() => params.remove(index)}
             />
           ))}
           <Button
