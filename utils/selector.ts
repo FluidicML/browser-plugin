@@ -14,7 +14,6 @@ export const locatorSchema = z.object({
   altText: z.string().optional(),
   placeholder: z.string().optional(),
   testId: z.string().optional(),
-  text: z.string().optional(),
 })
 
 export type Locator = z.infer<typeof locatorSchema>
@@ -106,16 +105,6 @@ class QueryBuilder {
     return this
   }
 
-  withText(text?: string): QueryBuilder {
-    if (text === undefined) {
-      return this
-    }
-
-    this.matches = this.matches.filter((m) => m.innerText === text)
-
-    return this
-  }
-
   query(): HTMLElement[] {
     return this.matches
   }
@@ -135,7 +124,6 @@ const findSelector = (selector: Selector): HTMLElement[] => {
     .withPlaceholder(selector.placeholder)
     .withAltText(selector.altText)
     .withTestId(selector.testId)
-    .withText(selector.text)
     .query()
 }
 
@@ -202,10 +190,6 @@ const getPlaceholder = (el: HTMLElement) => {
 
 const getTestId = (el: HTMLElement) => {
   return el.getAttribute("data-testid") ?? undefined
-}
-
-const getText = (el: HTMLElement) => {
-  return el.innerText || undefined
 }
 
 // TODO: With the advent of utility and generated classes, the class list isn't
@@ -287,7 +271,6 @@ export const getSelector = (el: HTMLElement): Selector => {
     ["altText", getAltText],
     ["placeholder", getPlaceholder],
     ["testId", getTestId],
-    ["text", getText],
   ]
 
   for (const [key, func] of fields) {
