@@ -6,6 +6,11 @@ import { z } from "zod"
 
 import { subrolesOf, getRole } from "./roles"
 
+// List of HTML tags whose inner text it makes sense to match. Avoid making
+// this list too general - we want to find the balance between specific but not
+// overly so. For example, `<p>` tags should never be included in this array.
+const TEXT_MATCH_TAGS = ["button"]
+
 export const locatorSchema = z.object({
   tag: z.string(),
   role: z.string().optional(),
@@ -14,6 +19,7 @@ export const locatorSchema = z.object({
   altText: z.string().optional(),
   placeholder: z.string().optional(),
   testId: z.string().optional(),
+  text: z.string().optional(),
 })
 
 export type Locator = z.infer<typeof locatorSchema>
@@ -105,6 +111,20 @@ class QueryBuilder {
     return this
   }
 
+  withText(text?: string): QueryBuilder {
+    if (text === undefined) {
+      return this
+    }
+
+    this.matches = this.matches.filter(
+      (m) =>
+        TEXT_MATCH_TAGS.includes(m.tagName.toLowerCase()) &&
+        m.innerText === text
+    )
+
+    return this
+  }
+
   query(): HTMLElement[] {
     return this.matches
   }
@@ -124,6 +144,7 @@ const findSelector = (selector: Selector): HTMLElement[] => {
     .withPlaceholder(selector.placeholder)
     .withAltText(selector.altText)
     .withTestId(selector.testId)
+    .withText(selector.text)
     .query()
 }
 
@@ -190,6 +211,12 @@ const getPlaceholder = (el: HTMLElement) => {
 
 const getTestId = (el: HTMLElement) => {
   return el.getAttribute("data-testid") ?? undefined
+}
+
+const getText = (el: HTMLElement) => {
+  if (TEXT_MATCH_TAGS.includes(el.tagName.toLowerCase())) {
+    return el.innerText || undefined
+  }
 }
 
 // TODO: With the advent of utility and generated classes, the class list isn't
@@ -271,6 +298,7 @@ export const getSelector = (el: HTMLElement): Selector => {
     ["altText", getAltText],
     ["placeholder", getPlaceholder],
     ["testId", getTestId],
+    ["text", getText],
   ]
 
   for (const [key, func] of fields) {
