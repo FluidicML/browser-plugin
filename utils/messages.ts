@@ -28,7 +28,10 @@ export type ExtractingClickMessage = BaseMessage<
 >
 export type ExtractingStartMessage = BaseMessage<Event.EXTRACTING_START>
 export type ExtractingStopMessage = BaseMessage<Event.EXTRACTING_STOP>
-export type InjectingClickMessage = BaseMessage<Event.INJECTING_CLICK, Selector>
+export type InjectingClickMessage = BaseMessage<
+  Event.INJECTING_CLICK,
+  { index: number; selector: Selector }
+>
 export type InjectingStartMessage = BaseMessage<Event.INJECTING_START>
 export type InjectingStopMessage = BaseMessage<Event.INJECTING_STOP>
 export type RecordingClickMessage = BaseMessage<

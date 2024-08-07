@@ -34,7 +34,7 @@ export type StepExtractingSchema = z.infer<typeof stepExtractingSchema>
 // An injection feature. Allow pushing interpolations back into parts of the
 // webpage.
 export const stepInjectingSchema = z.object({
-  params: z
+  targets: z
     .array(
       z.object({
         name: z.string().min(1, {

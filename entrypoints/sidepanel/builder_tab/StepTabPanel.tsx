@@ -100,6 +100,7 @@ const StepTabPanel = React.forwardRef<
                 : null
             }
             onChange={onChange}
+            params={params}
           />
         )
       }
@@ -173,7 +174,9 @@ const StepTabPanel = React.forwardRef<
     >
       <div className="flex gap-2">
         {params.size > 0 &&
-        [StepKind.NAVIGATE, StepKind.OPENAI].includes(activeKind) ? (
+        [StepKind.INJECTING, StepKind.NAVIGATE, StepKind.OPENAI].includes(
+          activeKind
+        ) ? (
           <ParameterSheet params={params} />
         ) : null}
         <ComboBox
