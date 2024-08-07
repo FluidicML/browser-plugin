@@ -14,7 +14,7 @@ export default defineContentScript({
 
   main(_context: ContentScriptContext) {
     const outline = document.createElement("div")
-    outline.id = "fluidic-extracting-outline"
+    outline.id = "fluidic-injecting-outline"
     document.body.appendChild(outline)
 
     const forceStyle = (key: string, value: string | null) => {
