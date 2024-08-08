@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "wxt",
     "build": "wxt build",
+    "build:client-api": "tsc --noEmit --project tsconfig.build.json",
     "zip": "wxt zip",
     "compile": "tsc --noEmit",
     "icb": "pnpm i && pnpm run compile && pnpm run build",

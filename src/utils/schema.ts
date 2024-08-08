@@ -249,3 +249,35 @@ export const stepParams = (step: Step): string[] => {
     }
   }
 }
+
+export const createWorkflowSchema = z
+  .object({
+    init: initSchema,
+    steps: z.array(
+      z.union([
+        z.object({
+          kind: z.literal(StepKind.EXTRACTING),
+          values: stepExtractingSchema,
+        }),
+        z.object({
+          kind: z.literal(StepKind.NAVIGATE),
+          values: stepNavigateSchema,
+        }),
+        z.object({
+          kind: z.literal(StepKind.OPENAI),
+          values: stepOpenAISchema,
+        }),
+        z.object({
+          kind: z.literal(StepKind.PROMPT),
+          values: stepPromptSchema,
+        }),
+        z.object({
+          kind: z.literal(StepKind.RECORDING),
+          values: stepRecordingSchema,
+        }),
+      ])
+    ),
+  })
+  .required()
+
+export type CreateWorkflowDto = z.infer<typeof createWorkflowSchema>
