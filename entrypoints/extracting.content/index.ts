@@ -47,7 +47,11 @@ export default defineContentScript({
         forceStyle("width", `${bounds.width + 2 * OUTLINE_PADDING}px`)
         forceStyle("height", `${bounds.height + 2 * OUTLINE_PADDING}px`)
 
-        if (target.innerText) {
+        if (
+          target.innerText ||
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement
+        ) {
           outline.classList.remove(OUTLINE_CLASS)
         }
       } finally {

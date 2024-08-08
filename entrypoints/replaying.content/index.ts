@@ -16,17 +16,29 @@ const replayExtractingClick = async (
   }
 
   const target = matches[0]
-  if (!(target instanceof HTMLElement)) {
+
+  if (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement
+  ) {
     return {
-      status: TaskStatus.FAILED,
-      message: "Could not extract ferom element.",
+      status: TaskStatus.SUCCEEDED,
+      message: `Extracted {${payload.name}}.`,
+      params: [[payload.name, target.value]],
+    }
+  }
+
+  if (target instanceof HTMLElement && target.innerText) {
+    return {
+      status: TaskStatus.SUCCEEDED,
+      message: `Extracted {${payload.name}}.`,
+      params: [[payload.name, target.innerText]],
     }
   }
 
   return {
-    status: TaskStatus.SUCCEEDED,
-    message: `Extracted {${payload.name}}.`,
-    params: [[payload.name, target.innerText]],
+    status: TaskStatus.FAILED,
+    message: "Could not extract from element.",
   }
 }
 
