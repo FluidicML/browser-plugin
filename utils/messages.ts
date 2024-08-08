@@ -79,7 +79,7 @@ export type RecordingClickMessage = BaseMessage<
 >
 export type RecordingKeyupMessage = BaseMessage<
   Event.RECORDING_KEYUP,
-  { action: "keyup"; selector: Selector; value: string; replace: boolean }
+  { action: "keyup"; selector: Selector; value: string; append: boolean }
 >
 export type RecordingQueryMessage = BaseMessage<Event.RECORDING_QUERY>
 export type RecordingStartMessage = BaseMessage<Event.RECORDING_START>

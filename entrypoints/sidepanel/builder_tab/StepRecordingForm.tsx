@@ -222,9 +222,14 @@ const StepRecordingForm = ({
           if (message.payload === null) {
             return
           }
-          const last = recordings.fields[recordings.fields.length - 1]
-          if (message.payload.replace && last.action === "keyup") {
-            recordings.update(recordings.fields.length - 1, message.payload)
+          const index = recordings.fields.length - 1
+          const last = recordings.fields[index]
+          const value = form.watch(`recordings.${index}.value`)
+          if (message.payload.append && last.action === "keyup") {
+            recordings.update(recordings.fields.length - 1, {
+              ...message.payload,
+              value: value + message.payload.value,
+            })
           } else {
             recordings.append(message.payload)
           }

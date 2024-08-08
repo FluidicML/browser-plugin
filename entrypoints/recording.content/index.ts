@@ -99,7 +99,7 @@ export default defineContentScript({
           action: "keyup",
           selector: getSelector(target),
           value: ev.key,
-          replace: lastKeyupTarget === target,
+          append: lastKeyupTarget === target,
         },
       })
 
