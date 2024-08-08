@@ -9,3 +9,7 @@
   -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0) !important;
   -webkit-mask-composite: xor !important;
 }
+
+#fluidic-extracting-outline.not-allowed {
+  cursor: not-allowed !important;
+}

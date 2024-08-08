@@ -6,15 +6,18 @@ import "./styles.css"
 
 import type { ContentScriptContext } from "wxt/client"
 import { Event, addMessageListener } from "@/utils/messages"
+import { isFluidicElement } from "@/utils/dom"
 
 const OUTLINE_PADDING = 15
+const OUTLINE_ID = "fluidic-injecting-outline"
+const OUTLINE_CLASS = "not-allowed"
 
 export default defineContentScript({
   matches: ["*://*/*"],
 
   main(_context: ContentScriptContext) {
     const outline = document.createElement("div")
-    outline.id = "fluidic-injecting-outline"
+    outline.id = OUTLINE_ID
     document.body.appendChild(outline)
 
     const forceStyle = (key: string, value: string | null) => {
@@ -30,14 +33,26 @@ export default defineContentScript({
     // accurately.
     const moveListener = (ev: MouseEvent) => {
       forceStyle("pointer-events", "none")
+      outline.classList.add(OUTLINE_CLASS)
+
       try {
         const target = document.elementFromPoint(ev.clientX, ev.clientY)
-        if (target instanceof HTMLElement) {
-          const bounds = target.getBoundingClientRect()
-          forceStyle("top", `${bounds.top - OUTLINE_PADDING}px`)
-          forceStyle("left", `${bounds.left - OUTLINE_PADDING}px`)
-          forceStyle("width", `${bounds.width + 2 * OUTLINE_PADDING}px`)
-          forceStyle("height", `${bounds.height + 2 * OUTLINE_PADDING}px`)
+        if (!isFluidicElement(target)) {
+          return
+        }
+
+        const bounds = target.getBoundingClientRect()
+        forceStyle("top", `${bounds.top - OUTLINE_PADDING}px`)
+        forceStyle("left", `${bounds.left - OUTLINE_PADDING}px`)
+        forceStyle("width", `${bounds.width + 2 * OUTLINE_PADDING}px`)
+        forceStyle("height", `${bounds.height + 2 * OUTLINE_PADDING}px`)
+
+        if (
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target.isContentEditable
+        ) {
+          outline.classList.remove(OUTLINE_CLASS)
         }
       } finally {
         forceStyle("pointer-events", "auto")
@@ -62,16 +77,23 @@ export default defineContentScript({
     let active: { param: string; index: number } | null = null
 
     const clickListener = async (ev: MouseEvent) => {
+      if (outline.classList.contains(OUTLINE_CLASS)) {
+        return
+      }
+
       forceStyle("pointer-events", "none")
       try {
-        const target = document.elementFromPoint(ev.clientX, ev.clientY)
-        if (!(target instanceof HTMLElement)) {
-          console.warn("FLUIDIC", "Clicked on non-HTMLElement.")
+        if (active === null) {
+          console.error("FLUIDIC", "No active parameter.")
           return
         }
-        if (active === null) {
-          throw new Error("No parameter specified.")
+
+        const target = document.elementFromPoint(ev.clientX, ev.clientY)
+        if (!isFluidicElement(target)) {
+          console.warn("FLUIDIC", "Clicked non-HTML element.")
+          return
         }
+
         sendExt({
           event: Event.INJECTING_CLICK,
           payload: {

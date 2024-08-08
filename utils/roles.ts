@@ -1,3 +1,5 @@
+import type { FluidicElement } from "./dom"
+
 // An enumeration of ARIA roles. We ignore the notion of required states and
 // properties throughout.
 const ROLES: {
@@ -581,7 +583,7 @@ const ROLES: {
   },
 }
 
-export const getRole = (el: HTMLElement): string | undefined => {
+export const getRole = (el: FluidicElement): string | undefined => {
   const roleAttr = el.getAttribute("role")
   if (roleAttr) {
     return roleAttr

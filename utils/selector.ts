@@ -4,6 +4,7 @@
 
 import { z } from "zod"
 
+import { type FluidicElement, isFluidicElement } from "./dom"
 import { subrolesOf, getRole } from "./roles"
 
 // List of HTML tags whose inner text it makes sense to match. Avoid making
@@ -34,7 +35,7 @@ export const selectorSchema = locatorSchema.or(
 export type Selector = z.infer<typeof selectorSchema>
 
 class QueryBuilder {
-  private matches: HTMLElement[]
+  private matches: FluidicElement[]
 
   constructor(tag: string) {
     this.matches = Array.from(document.querySelectorAll(tag))
@@ -122,6 +123,7 @@ class QueryBuilder {
 
     this.matches = this.matches.filter(
       (m) =>
+        m instanceof HTMLElement &&
         TEXT_MATCH_TAGS.includes(m.tagName.toLowerCase()) &&
         m.innerText === text
     )
@@ -129,16 +131,16 @@ class QueryBuilder {
     return this
   }
 
-  query(): HTMLElement[] {
+  query(): FluidicElement[] {
     return this.matches
   }
 }
 
-const findSelector = (selector: Selector): HTMLElement[] => {
+const findSelector = (selector: Selector): FluidicElement[] => {
   // It's assumed the CSS selector is unique.
   if (typeof selector === "string") {
     const found = document.querySelector(selector)
-    return found instanceof HTMLElement ? [found] : []
+    return isFluidicElement(found) ? [found] : []
   }
 
   return new QueryBuilder(selector.tag)
@@ -155,7 +157,7 @@ const findSelector = (selector: Selector): HTMLElement[] => {
 export const waitForSelector = async (
   selector: Selector,
   timeoutMillis: number
-): Promise<HTMLElement[]> => {
+): Promise<FluidicElement[]> => {
   return new Promise((resolve) => {
     const matches = findSelector(selector)
     if (matches.length > 0) {
@@ -189,15 +191,15 @@ export const waitForSelector = async (
   })
 }
 
-const getTag = (el: HTMLElement) => {
+const getTag = (el: FluidicElement) => {
   return el.tagName.toLowerCase()
 }
 
-const getTitle = (el: HTMLElement) => {
+const getTitle = (el: FluidicElement) => {
   return el.getAttribute("title") ?? undefined
 }
 
-const getLabel = (el: HTMLElement) => {
+const getLabel = (el: FluidicElement) => {
   return (
     el.getAttribute("aria-label") ??
     el.getAttribute("aria-labelledby") ??
@@ -205,20 +207,23 @@ const getLabel = (el: HTMLElement) => {
   )
 }
 
-const getAltText = (el: HTMLElement) => {
+const getAltText = (el: FluidicElement) => {
   return el.getAttribute("alt") ?? undefined
 }
 
-const getPlaceholder = (el: HTMLElement) => {
+const getPlaceholder = (el: FluidicElement) => {
   return el.getAttribute("placeholder") ?? undefined
 }
 
-const getTestId = (el: HTMLElement) => {
+const getTestId = (el: FluidicElement) => {
   return el.getAttribute("data-testid") ?? undefined
 }
 
-const getText = (el: HTMLElement) => {
-  if (TEXT_MATCH_TAGS.includes(el.tagName.toLowerCase())) {
+const getText = (el: FluidicElement) => {
+  if (
+    el instanceof HTMLElement &&
+    TEXT_MATCH_TAGS.includes(el.tagName.toLowerCase())
+  ) {
     return el.innerText || undefined
   }
 }
@@ -227,7 +232,7 @@ const getText = (el: HTMLElement) => {
 // a particularly useful means of distinguishing elements. We assume the same
 // for ids. How much could we leverage these if we filter out by spellchecking
 // and text entropy?
-const relativeSelectorOf = (el: HTMLElement) => {
+const relativeSelectorOf = (el: FluidicElement) => {
   const tagName = el.tagName.toLowerCase()
   if (
     !el.parentElement ||
@@ -272,9 +277,9 @@ const relativeSelectorOf = (el: HTMLElement) => {
 // Build a series of selectors, starting from our specified element and working
 // our way up to each subsequent parent node. Stop as soon as we finished
 // building a nonambiguous selector.
-const getCSS = (el: HTMLElement) => {
+const getCSS = (el: FluidicElement) => {
   let joined = ""
-  let handle: HTMLElement | null = el
+  let handle: FluidicElement | null = el
 
   while (handle) {
     const rel = relativeSelectorOf(handle)
@@ -288,22 +293,23 @@ const getCSS = (el: HTMLElement) => {
   return joined
 }
 
-export const getSelector = (el: HTMLElement): Selector => {
+export const getSelector = (el: FluidicElement): Selector => {
   const locator: Locator = { tag: getTag(el) }
 
   if (findSelector(locator).length === 1) {
     return locator
   }
 
-  const fields: [keyof Locator, (el: HTMLElement) => string | undefined][] = [
-    ["role", getRole],
-    ["title", getTitle],
-    ["label", getLabel],
-    ["altText", getAltText],
-    ["placeholder", getPlaceholder],
-    ["testId", getTestId],
-    ["text", getText],
-  ]
+  const fields: [keyof Locator, (el: FluidicElement) => string | undefined][] =
+    [
+      ["role", getRole],
+      ["title", getTitle],
+      ["label", getLabel],
+      ["altText", getAltText],
+      ["placeholder", getPlaceholder],
+      ["testId", getTestId],
+      ["text", getText],
+    ]
 
   for (const [key, func] of fields) {
     const result = func(el)
