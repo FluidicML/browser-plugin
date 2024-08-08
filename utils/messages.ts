@@ -106,15 +106,15 @@ export const sendExt = <M extends Message>(
   options?: Runtime.SendMessageOptionsType
 ): Promise<Response<M>> => browser.runtime.sendMessage(message, options)
 
+type TabBroadcast<M extends Message> = {
+  tab: number
+  response: Response<M>
+}
+
 export const broadcastTabs = async <M extends Message>(
   message: M,
   options?: Runtime.SendMessageOptionsType
-): Promise<
-  {
-    tab: number
-    response: Response<M>
-  }[]
-> => {
+): Promise<TabBroadcast<M>[]> => {
   const allTabs = await browser.tabs.query({})
   const contentScriptMatches = new MatchPattern("*://*/*")
   const contentScriptTabs = allTabs.filter(
@@ -126,12 +126,24 @@ export const broadcastTabs = async <M extends Message>(
 
   const responses = await Promise.all(
     contentScriptTabs.map(async (tab) => {
-      const response = await browser.tabs.sendMessage(tab.id!, message, options)
-      return { tab: tab.id!, response }
+      if (tab.id) {
+        try {
+          const response = await browser.tabs.sendMessage(
+            tab.id,
+            message,
+            options
+          )
+          return { tab: tab.id, response }
+        } catch (err) {
+          console.warn(`Could not dispatch to tab ${tab.id}.`)
+        }
+      } else {
+        console.warn("Attempted to dispatch to invalid tab.")
+      }
     })
   )
 
-  return responses
+  return responses.filter((r): r is TabBroadcast<M> => !!r)
 }
 
 // A type-safe representation of the types of messages we anticipate handling
