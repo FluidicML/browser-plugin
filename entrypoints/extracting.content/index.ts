@@ -93,7 +93,11 @@ export default defineContentScript({
 
     addMessageListener((message) => {
       switch (message.event) {
+        case Event.EXTRACTING_CHECK: {
+          return Promise.resolve(true)
+        }
         case Event.EXTRACTING_START: {
+          extractingStop()
           extractingStart()
           break
         }

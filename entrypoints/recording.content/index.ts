@@ -112,6 +112,9 @@ export default defineContentScript({
 
     addMessageListener((message) => {
       switch (message.event) {
+        case Event.RECORDING_CHECK: {
+          return Promise.resolve(true)
+        }
         case Event.RECORDING_START: {
           recordingStop()
           recordingStart()

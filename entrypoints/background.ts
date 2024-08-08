@@ -1,4 +1,5 @@
 import {
+  type ExtractingCheckMessage,
   type RecordingCheckMessage,
   Event,
   sendExt,
@@ -8,10 +9,18 @@ import {
 type ContentScript = {
   css?: string
   js: string
-  message: RecordingCheckMessage
+  message: ExtractingCheckMessage | RecordingCheckMessage
 }
 
 const CONTENT_SCRIPTS: ContentScript[] = [
+  {
+    css: "content-scripts/extracting.css",
+    js: "content-scripts/extracting.js",
+    message: {
+      event: Event.EXTRACTING_CHECK,
+      payload: null,
+    },
+  },
   {
     css: "content-scripts/recording.css",
     js: "content-scripts/recording.js",
@@ -43,23 +52,40 @@ const injectContentScripts = async (tabId: number) => {
   )
 }
 
+const syncExtractingState = async (tabId: number) => {
+  try {
+    const isExtracting = await sendExt({
+      event: Event.EXTRACTING_QUERY,
+      payload: null,
+    })
+    if (!isExtracting) {
+      throw new Error()
+    }
+    await sendTab(tabId, {
+      event: Event.EXTRACTING_START,
+      payload: null,
+    })
+  } catch (e) {
+    await sendTab(tabId, {
+      event: Event.EXTRACTING_STOP,
+      payload: null,
+    })
+  }
+}
+
 const syncRecordingState = async (tabId: number) => {
   try {
     const isRecording = await sendExt({
       event: Event.RECORDING_QUERY,
       payload: null,
     })
-    if (isRecording) {
-      await sendTab(tabId, {
-        event: Event.RECORDING_START,
-        payload: null,
-      })
-    } else {
-      await sendTab(tabId, {
-        event: Event.RECORDING_STOP,
-        payload: null,
-      })
+    if (!isRecording) {
+      throw new Error()
     }
+    await sendTab(tabId, {
+      event: Event.RECORDING_START,
+      payload: null,
+    })
   } catch (e) {
     await sendTab(tabId, {
       event: Event.RECORDING_STOP,
@@ -69,6 +95,7 @@ const syncRecordingState = async (tabId: number) => {
 }
 
 const syncTab = async (tabId: number) => {
+  await syncExtractingState(tabId)
   await syncRecordingState(tabId)
 }
 
@@ -84,7 +111,7 @@ export default defineBackground(() => {
       return
     }
     const tab = await browser.tabs.get(activeInfo.tabId)
-    if (!tab || tab.status === "loading") {
+    if (!tab || tab.url?.startsWith("chrome://") || tab.status === "loading") {
       // Once the tab completes, content scripts will already exist. Let the
       // `onUpdated` listener handle the rest.
       return

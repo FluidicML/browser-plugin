@@ -1,7 +1,9 @@
 import { browser, Runtime } from "wxt/browser"
 
 export enum Event {
+  EXTRACTING_CHECK = "EXTRACTING_CHECK",
   EXTRACTING_CLICK = "EXTRACTING_CLICK",
+  EXTRACTING_QUERY = "EXTRACTING_QUERY",
   EXTRACTING_START = "EXTRACTING_START",
   EXTRACTING_STOP = "EXTRACTING_STOP",
   INJECTING_CLICK = "INJECTING_CLICK",
@@ -24,10 +26,12 @@ type BaseMessage<E extends Event, P = null> = {
   payload: P
 }
 
+export type ExtractingCheckMessage = BaseMessage<Event.EXTRACTING_CHECK>
 export type ExtractingClickMessage = BaseMessage<
   Event.EXTRACTING_CLICK,
   Selector
 >
+export type ExtractingQueryMessage = BaseMessage<Event.EXTRACTING_QUERY>
 export type ExtractingStartMessage = BaseMessage<Event.EXTRACTING_START>
 export type ExtractingStopMessage = BaseMessage<Event.EXTRACTING_STOP>
 
@@ -72,7 +76,9 @@ export type ReplayRecordingKeyupMessage = BaseMessage<
 >
 
 export type Message =
+  | ExtractingCheckMessage
   | ExtractingClickMessage
+  | ExtractingQueryMessage
   | ExtractingStartMessage
   | ExtractingStopMessage
   | InjectingClickMessage

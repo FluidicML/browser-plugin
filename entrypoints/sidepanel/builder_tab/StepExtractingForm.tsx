@@ -11,7 +11,7 @@ import {
   Event,
   addMessageListener,
   removeMessageListener,
-  broadcastTabs,
+  sendTab,
 } from "@/utils/messages"
 import {
   Form,
@@ -99,7 +99,7 @@ const StepExtractingForm = ({
 
   React.useEffect(() => {
     return () => {
-      broadcastTabs({ event: Event.EXTRACTING_STOP, payload: null })
+      sendTab(null, { event: Event.EXTRACTING_STOP, payload: null })
       store.sharedActions.unlock(id)
     }
   }, [store.sharedActions])
@@ -122,6 +122,9 @@ const StepExtractingForm = ({
     }
     const listener = addMessageListener((message) => {
       switch (message.event) {
+        case Event.EXTRACTING_QUERY: {
+          return Promise.resolve(true)
+        }
         case Event.EXTRACTING_CLICK: {
           params.append({ name: "", selector: message.payload })
           break
@@ -143,7 +146,7 @@ const StepExtractingForm = ({
           className="w-full flex gap-2"
           onClick={() => {
             if (isExtracting) {
-              broadcastTabs({
+              sendTab(null, {
                 event: Event.EXTRACTING_STOP,
                 payload: null,
               }).then(() => {
@@ -151,7 +154,7 @@ const StepExtractingForm = ({
                 setIsExtracting(false)
               })
             } else {
-              broadcastTabs({
+              sendTab(null, {
                 event: Event.EXTRACTING_START,
                 payload: null,
               }).then(() => {
