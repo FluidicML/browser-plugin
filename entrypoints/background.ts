@@ -14,6 +14,7 @@ type ContentScript = {
     | ExtractingCheckMessage
     | InjectingCheckMessage
     | RecordingCheckMessage
+    | ReplayCheckMessage
 }
 
 const CONTENT_SCRIPTS: ContentScript[] = [
@@ -38,6 +39,13 @@ const CONTENT_SCRIPTS: ContentScript[] = [
     js: "content-scripts/recording.js",
     message: {
       event: Event.RECORDING_CHECK,
+      payload: null,
+    },
+  },
+  {
+    js: "content-scripts/replaying.js",
+    message: {
+      event: Event.REPLAY_CHECK,
       payload: null,
     },
   },

@@ -17,6 +17,7 @@ export enum Event {
   RECORDING_QUERY = "RECORDING_QUERY",
   RECORDING_START = "RECORDING_START",
   RECORDING_STOP = "RECORDING_STOP",
+  REPLAY_CHECK = "REPLAY_CHECK",
   REPLAY_EXTRACTING_CLICK = "REPLAY_EXTRACTING_CLICK",
   REPLAY_INJECTING = "REPLAY_INJECTING",
   REPLAY_RECORDING_CLICK = "REPLAY_RECORDING_CLICK",
@@ -62,6 +63,7 @@ export type RecordingQueryMessage = BaseMessage<Event.RECORDING_QUERY>
 export type RecordingStartMessage = BaseMessage<Event.RECORDING_START>
 export type RecordingStopMessage = BaseMessage<Event.RECORDING_STOP>
 
+export type ReplayCheckMessage = BaseMessage<Event.REPLAY_CHECK>
 export type ReplayExtractingClickMessage = BaseMessage<
   Event.REPLAY_EXTRACTING_CLICK,
   { name: string; selector: Selector }
@@ -96,6 +98,7 @@ export type Message =
   | RecordingQueryMessage
   | RecordingStartMessage
   | RecordingStopMessage
+  | ReplayCheckMessage
   | ReplayExtractingClickMessage
   | ReplayInjectingMessage
   | ReplayRecordingClickMessage
@@ -129,7 +132,7 @@ export const sendTab = async <M extends Message>(
     return await browser.tabs.sendMessage(tabId, message, options)
   }
   for (const tab of await queryTabs({ active: true, currentWindow: true })) {
-    if (tab.id) {
+    if (tab.id && !tab.url?.startsWith("chrome://")) {
       return await browser.tabs.sendMessage(tab.id, message, options)
     }
   }

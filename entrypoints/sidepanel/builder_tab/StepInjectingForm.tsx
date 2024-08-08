@@ -142,6 +142,38 @@ const StepInjectingForm = ({
   const store = useSharedStore()
   const [activeIndex, setActiveIndex] = React.useState<number | null>(null)
 
+  const toggleInjecting = React.useCallback(
+    async (index: number) => {
+      try {
+        if (activeIndex === null) {
+          await sendTab(null, {
+            event: Event.INJECTING_START,
+            payload: {
+              param: form.watch(`targets.${index}.name`),
+              index,
+            },
+          })
+        } else {
+          await sendTab(null, {
+            event: Event.INJECTING_STOP,
+            payload: null,
+          })
+        }
+      } catch (e) {
+        console.error(e)
+      } finally {
+        if (activeIndex === null) {
+          store.sharedActions.lock(id)
+          setActiveIndex(index)
+        } else {
+          store.sharedActions.unlock(id)
+          setActiveIndex(null)
+        }
+      }
+    },
+    [activeIndex, setActiveIndex, store.sharedActions]
+  )
+
   const form = useForm<StepInjectingSchema>({
     resolver: zodResolver(stepInjectingSchema),
     defaultValues: defaultValues ?? { targets: [{ name: "", selector: "" }] },
@@ -219,28 +251,7 @@ const StepInjectingForm = ({
               form={form}
               index={index}
               params={params}
-              onClick={() => {
-                if (activeIndex === null) {
-                  sendTab(null, {
-                    event: Event.INJECTING_START,
-                    payload: {
-                      param: form.watch(`targets.${index}.name`),
-                      index,
-                    },
-                  }).then(() => {
-                    store.sharedActions.lock(id)
-                    setActiveIndex(index)
-                  })
-                } else {
-                  sendTab(null, {
-                    event: Event.INJECTING_STOP,
-                    payload: null,
-                  }).then(() => {
-                    store.sharedActions.unlock(id)
-                    setActiveIndex(null)
-                  })
-                }
-              }}
+              onClick={() => toggleInjecting(index)}
               onRemove={() => {
                 targets.remove(index)
                 if (activeIndex === index) {

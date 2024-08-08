@@ -87,6 +87,32 @@ const StepExtractingForm = ({
   const store = useSharedStore()
   const [isExtracting, setIsExtracting] = React.useState(false)
 
+  const toggleExtracting = React.useCallback(async () => {
+    try {
+      if (isExtracting) {
+        await sendTab(null, {
+          event: Event.EXTRACTING_STOP,
+          payload: null,
+        })
+      } else {
+        await sendTab(null, {
+          event: Event.EXTRACTING_START,
+          payload: null,
+        })
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      if (isExtracting) {
+        store.sharedActions.unlock(id)
+        setIsExtracting(false)
+      } else {
+        setIsExtracting(true)
+        store.sharedActions.lock(id)
+      }
+    }
+  }, [isExtracting, setIsExtracting, store.sharedActions])
+
   const form = useForm<StepExtractingSchema>({
     resolver: zodResolver(stepExtractingSchema),
     defaultValues: defaultValues ?? { params: [] },
@@ -144,25 +170,7 @@ const StepExtractingForm = ({
         <Button
           type="button"
           className="w-full flex gap-2"
-          onClick={() => {
-            if (isExtracting) {
-              sendTab(null, {
-                event: Event.EXTRACTING_STOP,
-                payload: null,
-              }).then(() => {
-                store.sharedActions.unlock(id)
-                setIsExtracting(false)
-              })
-            } else {
-              sendTab(null, {
-                event: Event.EXTRACTING_START,
-                payload: null,
-              }).then(() => {
-                setIsExtracting(true)
-                store.sharedActions.lock(id)
-              })
-            }
-          }}
+          onClick={toggleExtracting}
         >
           {isExtracting ? (
             <>
