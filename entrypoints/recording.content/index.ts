@@ -8,6 +8,7 @@ import "./styles.css"
 
 import type { ContentScriptContext } from "wxt/client"
 import { Event, addMessageListener, sendExt } from "@/utils/messages"
+import { type FluidicElement, isFluidicElement } from "@/utils/dom"
 
 const OUTLINE_PADDING = 15
 
@@ -36,7 +37,7 @@ export default defineContentScript({
         .forEach((e) => e.classList.remove("fluidic-not-allowed"))
 
       const target = document.elementFromPoint(ev.clientX, ev.clientY)
-      if (!(target instanceof HTMLElement)) {
+      if (!isFluidicElement(target)) {
         target?.classList.add("fluidic-not-allowed")
         return
       }
@@ -71,7 +72,7 @@ export default defineContentScript({
         ev.preventDefault()
       }
 
-      if (!(target instanceof HTMLElement)) {
+      if (!isFluidicElement(target)) {
         console.warn("FLUIDIC", "Clicked non-HTML element.")
         return
       }
@@ -82,22 +83,26 @@ export default defineContentScript({
       })
     }
 
-    let lastKeyupTarget: HTMLElement | null = null
+    let lastKeyupTarget: FluidicElement | null = null
 
     const keyupListener = (ev: KeyboardEvent) => {
       const target = ev.target
-      if (!(target instanceof HTMLInputElement)) {
+
+      if (!isFluidicElement(target)) {
+        console.warn("FLUIDIC", "Clicked non-HTML element.")
         return
       }
+
       sendExt({
         event: Event.RECORDING_KEYUP,
         payload: {
           action: "keyup",
           selector: getSelector(target),
-          value: target instanceof HTMLInputElement ? target.value : ev.key,
+          value: ev.key,
           replace: lastKeyupTarget === target,
         },
       })
+
       lastKeyupTarget = target
     }
 

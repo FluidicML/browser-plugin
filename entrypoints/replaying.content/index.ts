@@ -16,6 +16,12 @@ const replayExtractingClick = async (
   }
 
   const target = matches[0]
+  if (!(target instanceof HTMLElement)) {
+    return {
+      status: TaskStatus.FAILED,
+      message: "Could not extract ferom element.",
+    }
+  }
 
   return {
     status: TaskStatus.SUCCEEDED,
@@ -48,7 +54,7 @@ const replayInjecting = async (
     }
   }
 
-  if (target.isContentEditable) {
+  if (target instanceof HTMLElement && target.isContentEditable) {
     target.innerText = payload.value
     return {
       status: TaskStatus.SUCCEEDED,
@@ -74,11 +80,9 @@ const replayRecordingClick = async (
   }
 
   const target = matches[0]
-
   target.dispatchEvent(
     new MouseEvent("click", { bubbles: true, cancelable: true })
   )
-  target.click()
 
   return { status: TaskStatus.SUCCEEDED, message: "Clicked." }
 }

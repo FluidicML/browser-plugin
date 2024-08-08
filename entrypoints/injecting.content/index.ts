@@ -6,6 +6,7 @@ import "./styles.css"
 
 import type { ContentScriptContext } from "wxt/client"
 import { Event, addMessageListener } from "@/utils/messages"
+import { isFluidicElement } from "@/utils/dom"
 
 const OUTLINE_PADDING = 15
 
@@ -34,7 +35,7 @@ export default defineContentScript({
 
       try {
         const target = document.elementFromPoint(ev.clientX, ev.clientY)
-        if (!(target instanceof HTMLElement)) {
+        if (!isFluidicElement(target)) {
           return
         }
 
@@ -86,7 +87,7 @@ export default defineContentScript({
         }
 
         const target = document.elementFromPoint(ev.clientX, ev.clientY)
-        if (!(target instanceof HTMLElement)) {
+        if (!isFluidicElement(target)) {
           console.warn("FLUIDIC", "Clicked non-HTML element.")
           return
         }
