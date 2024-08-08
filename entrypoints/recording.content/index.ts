@@ -31,14 +31,21 @@ export default defineContentScript({
     // expensive operation, but other events (e.g. mouseover) didn't perform as
     // accurately.
     const moveListener = (ev: MouseEvent) => {
+      document
+        .querySelectorAll(".fluidic-not-allowed")
+        .forEach((e) => e.classList.remove("fluidic-not-allowed"))
+
       const target = document.elementFromPoint(ev.clientX, ev.clientY)
-      if (target instanceof HTMLElement) {
-        const bounds = target.getBoundingClientRect()
-        forceStyle("top", `${bounds.top - OUTLINE_PADDING}px`)
-        forceStyle("left", `${bounds.left - OUTLINE_PADDING}px`)
-        forceStyle("width", `${bounds.width + 2 * OUTLINE_PADDING}px`)
-        forceStyle("height", `${bounds.height + 2 * OUTLINE_PADDING}px`)
+      if (!(target instanceof HTMLElement)) {
+        target?.classList.add("fluidic-not-allowed")
+        return
       }
+
+      const bounds = target.getBoundingClientRect()
+      forceStyle("top", `${bounds.top - OUTLINE_PADDING}px`)
+      forceStyle("left", `${bounds.left - OUTLINE_PADDING}px`)
+      forceStyle("width", `${bounds.width + 2 * OUTLINE_PADDING}px`)
+      forceStyle("height", `${bounds.height + 2 * OUTLINE_PADDING}px`)
     }
 
     // Hides our outline when actively scrolling.
@@ -58,10 +65,17 @@ export default defineContentScript({
 
     const clickListener = (ev: MouseEvent) => {
       const target = document.elementFromPoint(ev.clientX, ev.clientY)
+
+      if (target?.classList.contains("fluidic-not-allowed")) {
+        ev.stopImmediatePropagation()
+        ev.preventDefault()
+      }
+
       if (!(target instanceof HTMLElement)) {
-        console.warn("FLUIDIC", "Clicked on non-HTMLElement.")
+        console.warn("FLUIDIC", "Clicked non-HTML element.")
         return
       }
+
       sendExt({
         event: Event.RECORDING_CLICK,
         payload: { action: "click", selector: getSelector(target) },
