@@ -1,4 +1,6 @@
 import { browser, Runtime } from "wxt/browser"
+import { Selector } from "./selector"
+import { TaskResult } from "./workflow"
 import { isSupportedTab } from "./browser_tabs"
 
 export enum Event {
@@ -131,14 +133,14 @@ export type Response<M extends Message> = M extends
   | RecordingQueryMessage
   ? boolean
   : M extends InjectingQueryMessage
-    ? InjectingStartMessage["payload"]
-    : M extends
-          | ReplayExtractingClickMessage
-          | ReplayInjectingMessage
-          | ReplayRecordingClickMessage
-          | ReplayRecordingKeyupMessage
-      ? TaskResult
-      : null
+  ? InjectingStartMessage["payload"]
+  : M extends
+  | ReplayExtractingClickMessage
+  | ReplayInjectingMessage
+  | ReplayRecordingClickMessage
+  | ReplayRecordingKeyupMessage
+  ? TaskResult
+  : null
 
 export const sendExt = <M extends Message>(
   message: M,

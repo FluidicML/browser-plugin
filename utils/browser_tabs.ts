@@ -1,4 +1,4 @@
-import type { Tabs } from "wxt/browser"
+import { type Tabs, browser } from "wxt/browser"
 
 export const isSupportedTab = (tab?: Tabs.Tab | null) => {
   return (
