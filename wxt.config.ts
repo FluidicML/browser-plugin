@@ -7,7 +7,7 @@ export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: {
     action: { default_title: "Click to open sidebar" },
-    permissions: ["storage", "tabs"],
+    permissions: ["scripting", "storage", "tabs"],
     host_permissions: ["<all_urls>"],
   },
   vite: () => ({

@@ -112,7 +112,11 @@ export default defineContentScript({
 
     addMessageListener((message) => {
       switch (message.event) {
+        case Event.RECORDING_CHECK: {
+          return Promise.resolve(true)
+        }
         case Event.RECORDING_START: {
+          recordingStop()
           recordingStart()
           break
         }
@@ -122,20 +126,5 @@ export default defineContentScript({
         }
       }
     })
-
-    // On a new page load the content script is injected again. Check what
-    // state we're in.
-    try {
-      const isRecording = await sendExt({
-        event: Event.RECORDING_QUERY,
-        payload: null,
-      })
-      if (isRecording) {
-        recordingStart()
-      }
-    } catch (err) {
-      // A communication error indicates the sidepanel isn't open; assume we
-      // aren't recording when this happens.
-    }
   },
 })

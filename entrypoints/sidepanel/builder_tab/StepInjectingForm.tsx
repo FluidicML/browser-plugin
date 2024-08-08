@@ -15,7 +15,7 @@ import {
   Event,
   addMessageListener,
   removeMessageListener,
-  broadcastTabs,
+  sendTab,
 } from "@/utils/messages"
 import {
   Form,
@@ -142,6 +142,38 @@ const StepInjectingForm = ({
   const store = useSharedStore()
   const [activeIndex, setActiveIndex] = React.useState<number | null>(null)
 
+  const toggleInjecting = React.useCallback(
+    async (index: number) => {
+      try {
+        if (activeIndex === null) {
+          await sendTab(null, {
+            event: Event.INJECTING_START,
+            payload: {
+              param: form.watch(`targets.${index}.name`),
+              index,
+            },
+          })
+        } else {
+          await sendTab(null, {
+            event: Event.INJECTING_STOP,
+            payload: null,
+          })
+        }
+      } catch (e) {
+        console.error(e)
+      } finally {
+        if (activeIndex === null) {
+          store.sharedActions.lock(id)
+          setActiveIndex(index)
+        } else {
+          store.sharedActions.unlock(id)
+          setActiveIndex(null)
+        }
+      }
+    },
+    [activeIndex, setActiveIndex, store.sharedActions]
+  )
+
   const form = useForm<StepInjectingSchema>({
     resolver: zodResolver(stepInjectingSchema),
     defaultValues: defaultValues ?? { targets: [{ name: "", selector: "" }] },
@@ -154,7 +186,7 @@ const StepInjectingForm = ({
 
   React.useEffect(() => {
     return () => {
-      broadcastTabs({ event: Event.INJECTING_STOP, payload: null })
+      sendTab(null, { event: Event.INJECTING_STOP, payload: null })
       store.sharedActions.unlock(id)
     }
   }, [store.sharedActions])
@@ -175,8 +207,13 @@ const StepInjectingForm = ({
     if (activeIndex === null) {
       return
     }
+
+    const name = form.watch(`targets.${activeIndex}.name`)
     const listener = addMessageListener((message) => {
       switch (message.event) {
+        case Event.INJECTING_QUERY: {
+          return Promise.resolve({ param: name, index: activeIndex })
+        }
         case Event.INJECTING_CLICK: {
           targets.update(message.payload.index, {
             name: message.payload.param,
@@ -186,6 +223,7 @@ const StepInjectingForm = ({
         }
       }
     })
+
     return () => removeMessageListener(listener)
   }, [activeIndex, targets])
 
@@ -213,28 +251,7 @@ const StepInjectingForm = ({
               form={form}
               index={index}
               params={params}
-              onClick={() => {
-                if (activeIndex === null) {
-                  broadcastTabs({
-                    event: Event.INJECTING_START,
-                    payload: {
-                      param: form.watch(`targets.${index}.name`),
-                      index,
-                    },
-                  }).then(() => {
-                    store.sharedActions.lock(id)
-                    setActiveIndex(index)
-                  })
-                } else {
-                  broadcastTabs({
-                    event: Event.INJECTING_STOP,
-                    payload: null,
-                  }).then(() => {
-                    store.sharedActions.unlock(id)
-                    setActiveIndex(null)
-                  })
-                }
-              }}
+              onClick={() => toggleInjecting(index)}
               onRemove={() => {
                 targets.remove(index)
                 if (activeIndex === index) {

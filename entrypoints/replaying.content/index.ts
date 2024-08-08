@@ -121,6 +121,9 @@ export default defineContentScript({
   main(_context: ContentScriptContext) {
     addMessageListener((message) => {
       switch (message.event) {
+        case Event.REPLAY_CHECK: {
+          return Promise.resolve(true)
+        }
         case Event.REPLAY_EXTRACTING_CLICK: {
           return replayExtractingClick(message.payload)
         }

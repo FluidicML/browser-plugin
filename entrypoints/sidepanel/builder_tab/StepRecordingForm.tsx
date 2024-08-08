@@ -12,7 +12,7 @@ import {
   Event,
   addMessageListener,
   removeMessageListener,
-  broadcastTabs,
+  sendTab,
 } from "@/utils/messages"
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
@@ -137,10 +137,37 @@ const StepRecordingForm = ({
   const store = useSharedStore()
   const [isRecording, setIsRecording] = React.useState(false)
 
+  const toggleRecording = React.useCallback(async () => {
+    try {
+      if (isRecording) {
+        await sendTab(null, {
+          event: Event.RECORDING_STOP,
+          payload: null,
+        })
+      } else {
+        await sendTab(null, {
+          event: Event.RECORDING_START,
+          payload: null,
+        })
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      if (isRecording) {
+        store.sharedActions.unlock(id)
+        setIsRecording(false)
+      } else {
+        setIsRecording(true)
+        store.sharedActions.lock(id)
+      }
+    }
+  }, [isRecording, setIsRecording, store.sharedActions])
+
   const form = useForm<StepRecordingSchema>({
     resolver: zodResolver(stepRecordingSchema),
     defaultValues: defaultValues ?? {},
   })
+
   const recordings = useFieldArray({
     control: form.control,
     name: "recordings",
@@ -152,7 +179,7 @@ const StepRecordingForm = ({
 
   React.useEffect(() => {
     return () => {
-      broadcastTabs({ event: Event.RECORDING_STOP, payload: null })
+      sendTab(null, { event: Event.RECORDING_STOP, payload: null })
       store.sharedActions.unlock(id)
     }
   }, [store.sharedActions])
@@ -218,25 +245,7 @@ const StepRecordingForm = ({
         <Button
           type="button"
           className="w-full flex gap-2"
-          onClick={() => {
-            if (isRecording) {
-              broadcastTabs({
-                event: Event.RECORDING_STOP,
-                payload: null,
-              }).then(() => {
-                store.sharedActions.unlock(id)
-                setIsRecording(false)
-              })
-            } else {
-              broadcastTabs({
-                event: Event.RECORDING_START,
-                payload: null,
-              }).then(() => {
-                setIsRecording(true)
-                store.sharedActions.lock(id)
-              })
-            }
-          }}
+          onClick={toggleRecording}
         >
           {isRecording ? (
             <>

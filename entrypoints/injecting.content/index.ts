@@ -102,7 +102,11 @@ export default defineContentScript({
 
     addMessageListener((message) => {
       switch (message.event) {
+        case Event.INJECTING_CHECK: {
+          return Promise.resolve(true)
+        }
         case Event.INJECTING_START: {
+          injectingStop()
           injectingStart(message.payload)
           break
         }
