@@ -6,6 +6,7 @@ import {
   sendExt,
   sendTab,
 } from "@/utils/messages"
+import { isSupportedTab } from "@/utils/browser_tabs"
 
 // Tabs may not have our content script injected if they were already open
 // before the plugin itself was installed. This array tracks the different
@@ -163,7 +164,7 @@ export default defineBackground(() => {
       return
     }
     const tab = await browser.tabs.get(activeInfo.tabId)
-    if (!tab || tab.url?.startsWith("chrome://") || tab.status === "loading") {
+    if (!tab || tab.status === "loading" || !isSupportedTab(tab)) {
       // Once the tab completes, content scripts will already exist. Let the
       // `onUpdated` listener handle the rest.
       return
@@ -177,7 +178,7 @@ export default defineBackground(() => {
       return
     }
     const tab = await browser.tabs.get(tabId)
-    if (tab.url?.startsWith("chrome://")) {
+    if (!isSupportedTab(tab)) {
       return
     }
     await syncTab(tabId)

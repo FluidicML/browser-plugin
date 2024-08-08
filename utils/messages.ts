@@ -1,4 +1,5 @@
 import { browser, Runtime } from "wxt/browser"
+import { isSupportedTab } from "./browser_tabs"
 
 export enum Event {
   // Checks if the extraction content script is loaded.
@@ -153,7 +154,7 @@ export const sendTab = async <M extends Message>(
     return await browser.tabs.sendMessage(tabId, message, options)
   }
   for (const tab of await queryTabs({ active: true, currentWindow: true })) {
-    if (tab.id && !tab.url?.startsWith("chrome://")) {
+    if (tab.id && isSupportedTab(tab)) {
       return await browser.tabs.sendMessage(tab.id, message, options)
     }
   }
