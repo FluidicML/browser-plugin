@@ -9,13 +9,15 @@ import { Event, addMessageListener } from "@/utils/messages"
 import { isFluidicElement } from "@/utils/dom"
 
 const OUTLINE_PADDING = 15
+const OUTLINE_ID = "fluidic-injecting-outline"
+const OUTLINE_CLASS = "not-allowed"
 
 export default defineContentScript({
   matches: ["*://*/*"],
 
   main(_context: ContentScriptContext) {
     const outline = document.createElement("div")
-    outline.id = "fluidic-injecting-outline"
+    outline.id = OUTLINE_ID
     document.body.appendChild(outline)
 
     const forceStyle = (key: string, value: string | null) => {
@@ -31,7 +33,7 @@ export default defineContentScript({
     // accurately.
     const moveListener = (ev: MouseEvent) => {
       forceStyle("pointer-events", "none")
-      outline.classList.add("not-allowed")
+      outline.classList.add(OUTLINE_CLASS)
 
       try {
         const target = document.elementFromPoint(ev.clientX, ev.clientY)
@@ -50,7 +52,7 @@ export default defineContentScript({
           target instanceof HTMLTextAreaElement ||
           target.isContentEditable
         ) {
-          outline.classList.remove("not-allowed")
+          outline.classList.remove(OUTLINE_CLASS)
         }
       } finally {
         forceStyle("pointer-events", "auto")
@@ -75,7 +77,7 @@ export default defineContentScript({
     let active: { param: string; index: number } | null = null
 
     const clickListener = async (ev: MouseEvent) => {
-      if (outline.classList.contains("not-allowed")) {
+      if (outline.classList.contains(OUTLINE_CLASS)) {
         return
       }
 

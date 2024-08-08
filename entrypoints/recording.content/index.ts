@@ -11,13 +11,15 @@ import { Event, addMessageListener, sendExt } from "@/utils/messages"
 import { type FluidicElement, isFluidicElement } from "@/utils/dom"
 
 const OUTLINE_PADDING = 15
+const OUTLINE_ID = "fluidic-recording-outline"
+const OUTLINE_CLASS = "fluidic-not-allowed"
 
 export default defineContentScript({
   matches: ["*://*/*"],
 
   async main(_context: ContentScriptContext) {
     const outline = document.createElement("div")
-    outline.id = "fluidic-recording-outline"
+    outline.id = OUTLINE_ID
     document.body.appendChild(outline)
 
     const forceStyle = (key: string, value: string | null) => {
@@ -33,12 +35,12 @@ export default defineContentScript({
     // accurately.
     const moveListener = (ev: MouseEvent) => {
       document
-        .querySelectorAll(".fluidic-not-allowed")
-        .forEach((e) => e.classList.remove("fluidic-not-allowed"))
+        .querySelectorAll(`.${OUTLINE_CLASS}`)
+        .forEach((e) => e.classList.remove(OUTLINE_CLASS))
 
       const target = document.elementFromPoint(ev.clientX, ev.clientY)
       if (!isFluidicElement(target)) {
-        target?.classList.add("fluidic-not-allowed")
+        target?.classList.add(OUTLINE_CLASS)
         return
       }
 
@@ -67,7 +69,7 @@ export default defineContentScript({
     const clickListener = (ev: MouseEvent) => {
       const target = document.elementFromPoint(ev.clientX, ev.clientY)
 
-      if (target?.classList.contains("fluidic-not-allowed")) {
+      if (target?.classList.contains(OUTLINE_CLASS)) {
         ev.stopImmediatePropagation()
         ev.preventDefault()
       }
@@ -127,6 +129,9 @@ export default defineContentScript({
       document.removeEventListener("click", clickListener, true)
       document.removeEventListener("scroll", scrollListener, true)
       document.removeEventListener("mousemove", moveListener, true)
+      document
+        .querySelectorAll(`.${OUTLINE_CLASS}`)
+        .forEach((e) => e.classList.remove(OUTLINE_CLASS))
     }
 
     addMessageListener((message) => {
