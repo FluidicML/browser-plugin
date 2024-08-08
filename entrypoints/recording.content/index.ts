@@ -1,9 +1,8 @@
 // This content script is responsible for recording different user actions like
 // clicks or key events. Messaging is used to toggle "recording mode" on and
 // off.
-//
-// Rely on CSS when possible to account for vendor prefixes.
 
+// Rely on CSS when possible to account for vendor prefixes.
 import "./styles.css"
 
 import type { ContentScriptContext } from "wxt/client"

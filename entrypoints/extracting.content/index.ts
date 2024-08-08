@@ -2,7 +2,6 @@
 // elements on the page. Extracted text is then available in subsequent steps.
 
 // Rely on CSS when possible to account for vendor prefixes.
-
 import "./styles.css"
 
 import type { ContentScriptContext } from "wxt/client"
