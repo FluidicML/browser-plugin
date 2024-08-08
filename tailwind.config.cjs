@@ -2,9 +2,9 @@
 module.exports = {
   darkMode: "selector",
   content: [
-    "./components/**/*.{ts,tsx}",
-    "./entrypoints/**/*.{ts,tsx}",
-    "./utils/**/*.{ts,tsx}",
+    "./src/components/**/*.{ts,tsx}",
+    "./src/entrypoints/**/*.{ts,tsx}",
+    "./src/utils/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {

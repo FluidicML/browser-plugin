@@ -1,30 +1,14 @@
 import { defineConfig } from "wxt"
-import tailwindcss from "tailwindcss"
-import autoprefixer from "autoprefixer"
+import viteConfig from "./vite.config"
 
-// See https://wxt.dev/api/config.html
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: {
     action: { default_title: "Click to open sidebar" },
-    permissions: ["storage", "tabs"],
+    permissions: ["storage", "tabs", "activeTab", "scripting"],
     host_permissions: ["<all_urls>"],
   },
-  vite: () => ({
-    css: {
-      postcss: {
-        plugins: [tailwindcss, autoprefixer],
-      },
-    },
-    resolve: {
-      alias: {
-        "@": __dirname,
-      },
-      extensions: [".tsx", ".ts", ".jsx", ".js", ".css"],
-    },
-    optimizeDeps: {
-      include: ["react", "react-dom"],
-    },
-  }),
+  vite: () => viteConfig,
   outDir: "dist",
+  entrypointsDir: "src/entrypoints",
 })

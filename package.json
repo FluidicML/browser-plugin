@@ -2,13 +2,15 @@
   "name": "fluidic-workflows",
   "description": "Workflow automation plugin.",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "scripts": {
     "dev": "wxt",
     "build": "wxt build",
+    "build:client-api": "tsc --noEmit --project tsconfig.build.json",
     "zip": "wxt zip",
     "compile": "tsc --noEmit",
+    "icb": "pnpm i && pnpm run compile && pnpm run build",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
@@ -34,6 +36,7 @@
     "tailwind-merge": "^2.4.0",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^10.0.0",
+    "vite": "^5.2.0",
     "zod": "^3.23.8",
     "zustand": "^4.5.4"
   },
@@ -49,5 +52,11 @@
     "tailwindcss": "^3.4.7",
     "typescript": "^5.5.4",
     "wxt": "^0.18.15"
+  },
+  "_moduleAliases": {
+    "$": "src",
+    "wxt/sandbox": "node_modules/wxt/dist/sandbox",
+    "wxt/browser": "node_modules/wxt/dist/browser",
+    "wxt/client": "node_modules/wxt/dist/client"
   }
 }

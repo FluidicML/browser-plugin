@@ -1,13 +1,22 @@
 {
   "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
-    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
-    "compilerOptions": {
-      "baseUrl": ".",
-      "paths": {
-        "@/*": ["./*"]
-      }
+    "declaration": true,
+    "removeComments": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "strict": false, // TODO (@jrpotter): Update this to comply with strict mode
+    "strictNullChecks": true,
+    "noImplicitAny": false, // TODO (@jrpotter): Update this to comply with no implicit any
+    "alwaysStrict": false, // TODO (@jrpotter): Update this to comply with strict mode
+    "baseUrl": ".",
+    "outDir": "dist/chrome-mv3",
+    "paths": {
+      "$/*": ["src/*"],
+      "wxt/*": ["node_modules/wxt/dist/*"]
     }
-  }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
 }
