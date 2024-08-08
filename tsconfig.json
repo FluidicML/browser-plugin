@@ -3,11 +3,9 @@
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
-    "compilerOptions": {
-      "baseUrl": ".",
-      "paths": {
-        "@/*": ["./*"]
-      }
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
     }
   }
 }
