@@ -1,5 +1,6 @@
 import {
   type ExtractingCheckMessage,
+  type InjectingCheckMessage,
   type RecordingCheckMessage,
   Event,
   sendExt,
@@ -9,7 +10,10 @@ import {
 type ContentScript = {
   css?: string
   js: string
-  message: ExtractingCheckMessage | RecordingCheckMessage
+  message:
+    | ExtractingCheckMessage
+    | InjectingCheckMessage
+    | RecordingCheckMessage
 }
 
 const CONTENT_SCRIPTS: ContentScript[] = [
@@ -18,6 +22,14 @@ const CONTENT_SCRIPTS: ContentScript[] = [
     js: "content-scripts/extracting.js",
     message: {
       event: Event.EXTRACTING_CHECK,
+      payload: null,
+    },
+  },
+  {
+    css: "content-scripts/injecting.css",
+    js: "content-scripts/injecting.js",
+    message: {
+      event: Event.INJECTING_CHECK,
       payload: null,
     },
   },
@@ -73,6 +85,27 @@ const syncExtractingState = async (tabId: number) => {
   }
 }
 
+const syncInjectingState = async (tabId: number) => {
+  try {
+    const injection = await sendExt({
+      event: Event.INJECTING_QUERY,
+      payload: null,
+    })
+    if (!injection) {
+      throw new Error()
+    }
+    await sendTab(tabId, {
+      event: Event.INJECTING_START,
+      payload: injection,
+    })
+  } catch (e) {
+    await sendTab(tabId, {
+      event: Event.INJECTING_STOP,
+      payload: null,
+    })
+  }
+}
+
 const syncRecordingState = async (tabId: number) => {
   try {
     const isRecording = await sendExt({
@@ -96,6 +129,7 @@ const syncRecordingState = async (tabId: number) => {
 
 const syncTab = async (tabId: number) => {
   await syncExtractingState(tabId)
+  await syncInjectingState(tabId)
   await syncRecordingState(tabId)
 }
 

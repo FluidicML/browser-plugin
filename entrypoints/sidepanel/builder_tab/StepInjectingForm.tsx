@@ -15,7 +15,7 @@ import {
   Event,
   addMessageListener,
   removeMessageListener,
-  broadcastTabs,
+  sendTab,
 } from "@/utils/messages"
 import {
   Form,
@@ -154,7 +154,7 @@ const StepInjectingForm = ({
 
   React.useEffect(() => {
     return () => {
-      broadcastTabs({ event: Event.INJECTING_STOP, payload: null })
+      sendTab(null, { event: Event.INJECTING_STOP, payload: null })
       store.sharedActions.unlock(id)
     }
   }, [store.sharedActions])
@@ -175,8 +175,13 @@ const StepInjectingForm = ({
     if (activeIndex === null) {
       return
     }
+
+    const name = form.watch(`targets.${activeIndex}.name`)
     const listener = addMessageListener((message) => {
       switch (message.event) {
+        case Event.INJECTING_QUERY: {
+          return Promise.resolve({ param: name, index: activeIndex })
+        }
         case Event.INJECTING_CLICK: {
           targets.update(message.payload.index, {
             name: message.payload.param,
@@ -186,6 +191,7 @@ const StepInjectingForm = ({
         }
       }
     })
+
     return () => removeMessageListener(listener)
   }, [activeIndex, targets])
 
@@ -215,7 +221,7 @@ const StepInjectingForm = ({
               params={params}
               onClick={() => {
                 if (activeIndex === null) {
-                  broadcastTabs({
+                  sendTab(null, {
                     event: Event.INJECTING_START,
                     payload: {
                       param: form.watch(`targets.${index}.name`),
@@ -226,7 +232,7 @@ const StepInjectingForm = ({
                     setActiveIndex(index)
                   })
                 } else {
-                  broadcastTabs({
+                  sendTab(null, {
                     event: Event.INJECTING_STOP,
                     payload: null,
                   }).then(() => {

@@ -6,7 +6,9 @@ export enum Event {
   EXTRACTING_QUERY = "EXTRACTING_QUERY",
   EXTRACTING_START = "EXTRACTING_START",
   EXTRACTING_STOP = "EXTRACTING_STOP",
+  INJECTING_CHECK = "INJECTING_CHECK",
   INJECTING_CLICK = "INJECTING_CLICK",
+  INJECTING_QUERY = "INJECTING_QUERY",
   INJECTING_START = "INJECTING_START",
   INJECTING_STOP = "INJECTING_STOP",
   RECORDING_CHECK = "RECORDING_CHECK",
@@ -35,10 +37,12 @@ export type ExtractingQueryMessage = BaseMessage<Event.EXTRACTING_QUERY>
 export type ExtractingStartMessage = BaseMessage<Event.EXTRACTING_START>
 export type ExtractingStopMessage = BaseMessage<Event.EXTRACTING_STOP>
 
+export type InjectingCheckMessage = BaseMessage<Event.INJECTING_CHECK>
 export type InjectingClickMessage = BaseMessage<
   Event.INJECTING_CLICK,
   { param: string; index: number; selector: Selector }
 >
+export type InjectingQueryMessage = BaseMessage<Event.INJECTING_QUERY>
 export type InjectingStartMessage = BaseMessage<
   Event.INJECTING_START,
   { param: string; index: number }
@@ -81,7 +85,9 @@ export type Message =
   | ExtractingQueryMessage
   | ExtractingStartMessage
   | ExtractingStopMessage
+  | InjectingCheckMessage
   | InjectingClickMessage
+  | InjectingQueryMessage
   | InjectingStartMessage
   | InjectingStopMessage
   | RecordingCheckMessage
@@ -95,15 +101,24 @@ export type Message =
   | ReplayRecordingClickMessage
   | ReplayRecordingKeyupMessage
 
-export type Response<M extends Message> = M extends RecordingQueryMessage
+export type Response<M extends Message> = M extends
+  | ExtractingQueryMessage
+  | RecordingQueryMessage
   ? boolean
-  : M extends
-        | ReplayExtractingClickMessage
-        | ReplayInjectingMessage
-        | ReplayRecordingClickMessage
-        | ReplayRecordingKeyupMessage
-    ? TaskResult
-    : null
+  : M extends InjectingQueryMessage
+    ? InjectingStartMessage["payload"]
+    : M extends
+          | ReplayExtractingClickMessage
+          | ReplayInjectingMessage
+          | ReplayRecordingClickMessage
+          | ReplayRecordingKeyupMessage
+      ? TaskResult
+      : null
+
+export const sendExt = <M extends Message>(
+  message: M,
+  options?: Runtime.SendMessageOptionsType
+): Promise<Response<M>> => browser.runtime.sendMessage(message, options)
 
 export const sendTab = async <M extends Message>(
   tabId: number | null,
@@ -119,51 +134,6 @@ export const sendTab = async <M extends Message>(
     }
   }
   throw new Error("Could not find active tab.")
-}
-
-export const sendExt = <M extends Message>(
-  message: M,
-  options?: Runtime.SendMessageOptionsType
-): Promise<Response<M>> => browser.runtime.sendMessage(message, options)
-
-type TabBroadcast<M extends Message> = {
-  tab: number
-  response: Response<M>
-}
-
-export const broadcastTabs = async <M extends Message>(
-  message: M,
-  options?: Runtime.SendMessageOptionsType
-): Promise<TabBroadcast<M>[]> => {
-  const allTabs = await browser.tabs.query({})
-  const contentScriptMatches = new MatchPattern("*://*/*")
-  const contentScriptTabs = allTabs.filter(
-    (tab) =>
-      tab.id != null &&
-      tab.url != null &&
-      contentScriptMatches.includes(tab.url)
-  )
-
-  const responses = await Promise.all(
-    contentScriptTabs.map(async (tab) => {
-      if (tab.id) {
-        try {
-          const response = await browser.tabs.sendMessage(
-            tab.id,
-            message,
-            options
-          )
-          return { tab: tab.id, response }
-        } catch (err) {
-          console.warn(`Could not dispatch to tab ${tab.id}.`)
-        }
-      } else {
-        console.warn("Attempted to dispatch to invalid tab.")
-      }
-    })
-  )
-
-  return responses.filter((r): r is TabBroadcast<M> => !!r)
 }
 
 // A type-safe representation of the types of messages we anticipate handling
