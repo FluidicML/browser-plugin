@@ -12,7 +12,7 @@ import {
   Event,
   addMessageListener,
   removeMessageListener,
-  broadcastTabs,
+  sendTab,
 } from "@/utils/messages"
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
@@ -152,7 +152,7 @@ const StepRecordingForm = ({
 
   React.useEffect(() => {
     return () => {
-      broadcastTabs({ event: Event.RECORDING_STOP, payload: null })
+      sendTab(null, { event: Event.RECORDING_STOP, payload: null })
       store.sharedActions.unlock(id)
     }
   }, [store.sharedActions])
@@ -220,7 +220,7 @@ const StepRecordingForm = ({
           className="w-full flex gap-2"
           onClick={() => {
             if (isRecording) {
-              broadcastTabs({
+              sendTab(null, {
                 event: Event.RECORDING_STOP,
                 payload: null,
               }).then(() => {
@@ -228,7 +228,7 @@ const StepRecordingForm = ({
                 setIsRecording(false)
               })
             } else {
-              broadcastTabs({
+              sendTab(null, {
                 event: Event.RECORDING_START,
                 payload: null,
               }).then(() => {

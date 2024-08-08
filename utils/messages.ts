@@ -7,6 +7,7 @@ export enum Event {
   INJECTING_CLICK = "INJECTING_CLICK",
   INJECTING_START = "INJECTING_START",
   INJECTING_STOP = "INJECTING_STOP",
+  RECORDING_CHECK = "RECORDING_CHECK",
   RECORDING_CLICK = "RECORDING_CLICK",
   RECORDING_KEYUP = "RECORDING_KEYUP",
   RECORDING_QUERY = "RECORDING_QUERY",
@@ -29,6 +30,7 @@ export type ExtractingClickMessage = BaseMessage<
 >
 export type ExtractingStartMessage = BaseMessage<Event.EXTRACTING_START>
 export type ExtractingStopMessage = BaseMessage<Event.EXTRACTING_STOP>
+
 export type InjectingClickMessage = BaseMessage<
   Event.INJECTING_CLICK,
   { param: string; index: number; selector: Selector }
@@ -38,6 +40,8 @@ export type InjectingStartMessage = BaseMessage<
   { param: string; index: number }
 >
 export type InjectingStopMessage = BaseMessage<Event.INJECTING_STOP>
+
+export type RecordingCheckMessage = BaseMessage<Event.RECORDING_CHECK>
 export type RecordingClickMessage = BaseMessage<
   Event.RECORDING_CLICK,
   { action: "click"; selector: Selector }
@@ -49,6 +53,7 @@ export type RecordingKeyupMessage = BaseMessage<
 export type RecordingQueryMessage = BaseMessage<Event.RECORDING_QUERY>
 export type RecordingStartMessage = BaseMessage<Event.RECORDING_START>
 export type RecordingStopMessage = BaseMessage<Event.RECORDING_STOP>
+
 export type ReplayExtractingClickMessage = BaseMessage<
   Event.REPLAY_EXTRACTING_CLICK,
   { name: string; selector: Selector }
@@ -73,6 +78,7 @@ export type Message =
   | InjectingClickMessage
   | InjectingStartMessage
   | InjectingStopMessage
+  | RecordingCheckMessage
   | RecordingClickMessage
   | RecordingKeyupMessage
   | RecordingQueryMessage
@@ -83,23 +89,31 @@ export type Message =
   | ReplayRecordingClickMessage
   | ReplayRecordingKeyupMessage
 
-// prettier-ignore
-export type Response<M extends Message> =
-    M extends RecordingQueryMessage
+export type Response<M extends Message> = M extends RecordingQueryMessage
   ? boolean
   : M extends
-      | ReplayExtractingClickMessage
-      | ReplayInjectingMessage
-      | ReplayRecordingClickMessage
-      | ReplayRecordingKeyupMessage
-  ? TaskResult
-  : null
+        | ReplayExtractingClickMessage
+        | ReplayInjectingMessage
+        | ReplayRecordingClickMessage
+        | ReplayRecordingKeyupMessage
+    ? TaskResult
+    : null
 
-export const sendTab = <M extends Message>(
-  tabId: number,
+export const sendTab = async <M extends Message>(
+  tabId: number | null,
   message: M,
   options?: Runtime.SendMessageOptionsType
-): Promise<Response<M>> => browser.tabs.sendMessage(tabId, message, options)
+): Promise<Response<M>> => {
+  if (tabId !== null) {
+    return await browser.tabs.sendMessage(tabId, message, options)
+  }
+  for (const tab of await queryTabs({ active: true, currentWindow: true })) {
+    if (tab.id) {
+      return await browser.tabs.sendMessage(tab.id, message, options)
+    }
+  }
+  throw new Error("Could not find active tab.")
+}
 
 export const sendExt = <M extends Message>(
   message: M,
