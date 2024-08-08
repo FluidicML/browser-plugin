@@ -30,14 +30,26 @@ export default defineContentScript({
     // accurately.
     const moveListener = (ev: MouseEvent) => {
       forceStyle("pointer-events", "none")
+      outline.classList.add("not-allowed")
+
       try {
         const target = document.elementFromPoint(ev.clientX, ev.clientY)
-        if (target instanceof HTMLElement) {
-          const bounds = target.getBoundingClientRect()
-          forceStyle("top", `${bounds.top - OUTLINE_PADDING}px`)
-          forceStyle("left", `${bounds.left - OUTLINE_PADDING}px`)
-          forceStyle("width", `${bounds.width + 2 * OUTLINE_PADDING}px`)
-          forceStyle("height", `${bounds.height + 2 * OUTLINE_PADDING}px`)
+        if (!(target instanceof HTMLElement)) {
+          return
+        }
+
+        const bounds = target.getBoundingClientRect()
+        forceStyle("top", `${bounds.top - OUTLINE_PADDING}px`)
+        forceStyle("left", `${bounds.left - OUTLINE_PADDING}px`)
+        forceStyle("width", `${bounds.width + 2 * OUTLINE_PADDING}px`)
+        forceStyle("height", `${bounds.height + 2 * OUTLINE_PADDING}px`)
+
+        if (
+          target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target.isContentEditable
+        ) {
+          outline.classList.remove("not-allowed")
         }
       } finally {
         forceStyle("pointer-events", "auto")
@@ -62,16 +74,23 @@ export default defineContentScript({
     let active: { param: string; index: number } | null = null
 
     const clickListener = async (ev: MouseEvent) => {
+      if (outline.classList.contains("not-allowed")) {
+        return
+      }
+
       forceStyle("pointer-events", "none")
       try {
-        const target = document.elementFromPoint(ev.clientX, ev.clientY)
-        if (!(target instanceof HTMLElement)) {
-          console.warn("FLUIDIC", "Clicked on non-HTMLElement.")
+        if (active === null) {
+          console.error("No active parameter.")
           return
         }
-        if (active === null) {
-          throw new Error("No parameter specified.")
+
+        const target = document.elementFromPoint(ev.clientX, ev.clientY)
+        if (!(target instanceof HTMLElement)) {
+          console.warn("Clicked non-HTML element.")
+          return
         }
+
         sendExt({
           event: Event.INJECTING_CLICK,
           payload: {
