@@ -1,6 +1,7 @@
 {
   "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "declaration": true,
     "removeComments": true,
@@ -10,7 +11,8 @@
     "paths": {
       "@/*": ["./*"]
     }
+  }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", ".wxt/wxt.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
