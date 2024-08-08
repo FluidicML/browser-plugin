@@ -7,6 +7,16 @@ import {
   sendTab,
 } from "@/utils/messages"
 
+// Tabs may not have our content script injected if they were already open
+// before the plugin itself was installed. This array tracks the different
+// content scripts we have available to us that need to be injected.
+//
+// As an alternative, we could have considered injecting scripts using some
+// installation listener. This fails though for tabs that have been dormant for
+// too long - their DOM needs to be reloaded which only happens when the user
+// activates the tab.
+//
+// TODO: Add an assertion that all relevant scripts are included here.
 type ContentScript = {
   css?: string
   js: string
