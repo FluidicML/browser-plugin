@@ -31,14 +31,22 @@ export default defineContentScript({
     // accurately.
     const moveListener = (ev: MouseEvent) => {
       forceStyle("pointer-events", "none")
+      outline.classList.add("not-allowed")
+
       try {
         const target = document.elementFromPoint(ev.clientX, ev.clientY)
-        if (target instanceof HTMLElement) {
-          const bounds = target.getBoundingClientRect()
-          forceStyle("top", `${bounds.top - OUTLINE_PADDING}px`)
-          forceStyle("left", `${bounds.left - OUTLINE_PADDING}px`)
-          forceStyle("width", `${bounds.width + 2 * OUTLINE_PADDING}px`)
-          forceStyle("height", `${bounds.height + 2 * OUTLINE_PADDING}px`)
+        if (!(target instanceof HTMLElement)) {
+          return
+        }
+
+        const bounds = target.getBoundingClientRect()
+        forceStyle("top", `${bounds.top - OUTLINE_PADDING}px`)
+        forceStyle("left", `${bounds.left - OUTLINE_PADDING}px`)
+        forceStyle("width", `${bounds.width + 2 * OUTLINE_PADDING}px`)
+        forceStyle("height", `${bounds.height + 2 * OUTLINE_PADDING}px`)
+
+        if (target.innerText) {
+          outline.classList.remove("not-allowed")
         }
       } finally {
         forceStyle("pointer-events", "auto")
@@ -61,13 +69,18 @@ export default defineContentScript({
     }
 
     const clickListener = (ev: MouseEvent) => {
+      if (outline.classList.contains("not-allowed")) {
+        return
+      }
+
       forceStyle("pointer-events", "none")
       try {
         const target = document.elementFromPoint(ev.clientX, ev.clientY)
         if (!(target instanceof HTMLElement)) {
-          console.warn("FLUIDIC", "Clicked on non-HTMLElement.")
+          console.warn("FLUIDIC", "Clicked non-HTML element.")
           return
         }
+
         sendExt({
           event: Event.EXTRACTING_CLICK,
           payload: getSelector(target),

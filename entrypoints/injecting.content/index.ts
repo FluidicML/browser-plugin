@@ -81,13 +81,13 @@ export default defineContentScript({
       forceStyle("pointer-events", "none")
       try {
         if (active === null) {
-          console.error("No active parameter.")
+          console.error("FLUIDIC", "No active parameter.")
           return
         }
 
         const target = document.elementFromPoint(ev.clientX, ev.clientY)
         if (!(target instanceof HTMLElement)) {
-          console.warn("Clicked non-HTML element.")
+          console.warn("FLUIDIC", "Clicked non-HTML element.")
           return
         }
 
