@@ -79,7 +79,7 @@ const ActionCard = ({
   }
 
   return (
-    <Card>
+    <Card className="space-y-4">
       <CardTitle>
         {title}
         <Button
@@ -92,7 +92,7 @@ const ActionCard = ({
         </Button>
       </CardTitle>
       <CardDescription>{Subtitle()}</CardDescription>
-      <CardContent className="pt-2">
+      <CardContent>
         <SelectorTable selector={recording.selector} />
         <Separator className="my-3" />
         <Collapsible>
