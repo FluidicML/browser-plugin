@@ -1,4 +1,4 @@
-import { type Step } from "./schema"
+import { InitSchema, type Step } from "./schema"
 
 // Workflows are represented as a sequence of steps, each of which is further
 // broken down into one or more tasks. From the workflow's perspective, a task
