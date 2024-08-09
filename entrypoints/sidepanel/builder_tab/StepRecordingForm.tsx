@@ -14,6 +14,8 @@ import {
   removeMessageListener,
   sendTab,
 } from "@/utils/messages"
+import CollapseIcon from "@/components/icons/Collapse"
+import ExpandIcon from "@/components/icons/Expand"
 import PlayIcon from "@/components/icons/Play"
 import StopIcon from "@/components/icons/Stop"
 import TrashIcon from "@/components/icons/Trash"
@@ -25,14 +27,20 @@ import {
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form"
 import { Separator } from "@/components/ui/separator"
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import { useSharedStore } from "../store"
 import SelectorTable from "./SelectorTable"
 
@@ -49,6 +57,8 @@ const ActionCard = ({
   recording,
   onRemove,
 }: ActionCardProps) => {
+  const [isExpanded, setIsExpanded] = React.useState(false)
+
   const action = recording.action
   const title = `Step ${index + 1} - ${action.slice(0, 1).toUpperCase() + action.slice(1)}`
 
@@ -69,55 +79,66 @@ const ActionCard = ({
   }
 
   return (
-    <Card className="relative">
-      <CardTitle>{title}</CardTitle>
+    <Card>
+      <CardTitle>
+        {title}
+        <Button
+          type="button"
+          size="xicon"
+          className="float-right group hover:bg-destructive/90"
+          onClick={onRemove}
+        >
+          <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
+        </Button>
+      </CardTitle>
       <CardDescription>{Subtitle()}</CardDescription>
       <CardContent className="pt-2">
         <SelectorTable selector={recording.selector} />
         <Separator className="my-3" />
-        <div className="flex">
-          <div className="basis-1/2 flex gap-1 items-center">
+        <Collapsible>
+          <CollapsibleTrigger
+            className="w-full"
+            onClick={() => setIsExpanded((e) => !e)}
+          >
+            <div className="flex items-center">
+              More Options
+              <Button className="ml-auto" size="xicon" variant="ghost">
+                {isExpanded ? (
+                  <CollapseIcon className="w-5 h-5 fill-black dark:fill-white" />
+                ) : (
+                  <ExpandIcon className="w-5 h-5 fill-black dark:fill-white" />
+                )}
+              </Button>
+            </div>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-1">
             <FormField
               control={control}
               name={`recordings.${index}.fallible`}
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
+                <FormItem className="flex gap-2 items-start">
+                  <FormControl className="mt-3">
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
                   </FormControl>
-                  <TooltipProvider delayDuration={250}>
-                    <Tooltip>
-                      <TooltipTrigger
-                        type="button"
-                        className="cursor-help underline"
-                      >
-                        Can fail?
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-72">
-                        <p>
-                          If this action were to fail, continue executing the
-                          remainder of the workflow.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <div>
+                    <FormLabel className="text-sm">
+                      This step can fail.
+                    </FormLabel>
+                    <FormDescription className="text-xs">
+                      Certain actions aren't reproducible on every version of a
+                      webpage. Setting this lets the workflow continue even when
+                      the action fails.
+                    </FormDescription>
+                  </div>
                 </FormItem>
               )}
             />
-          </div>
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
-      <Button
-        type="button"
-        size="xicon"
-        className="absolute top-2 right-2 group hover:bg-destructive/90"
-        onClick={onRemove}
-      >
-        <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
-      </Button>
     </Card>
   )
 }
