@@ -19,6 +19,16 @@ import { useSharedStore } from "./store"
 import { waitForTab, updateTab } from "@/utils/browser_tabs"
 import StepResultCard from "./runner_tab/StepResultCard"
 
+type Context = {
+  workflow: Workflow
+  tabId: number
+  stepIndex: number
+  taskIndex: number
+  params: Map<string, string>
+  openAIKey: string
+  replayTimeoutMillis: number
+}
+
 const interpolate = (value: string, params: Map<string, string>): string => {
   let interpolated = value
   for (const [key, val] of params.entries()) {
@@ -29,51 +39,48 @@ const interpolate = (value: string, params: Map<string, string>): string => {
 }
 
 const runExtractingTask = async (
-  tabId: number,
-  values: StepExtractingSchema,
-  taskIndex: number
+  context: Context,
+  values: StepExtractingSchema
 ): Promise<TaskResult> => {
-  return await sendTab<ReplayExtractingClickMessage>(tabId, {
+  return await sendTab<ReplayExtractingClickMessage>(context.tabId, {
     event: Event.REPLAY_EXTRACTING_CLICK,
     payload: {
-      name: values.params[taskIndex].name,
-      selector: values.params[taskIndex].selector,
+      name: values.params[context.taskIndex].name,
+      selector: values.params[context.taskIndex].selector,
+      timeoutMillis: context.replayTimeoutMillis,
     },
   })
 }
 
 const runInjectingTask = async (
-  tabId: number,
-  values: StepInjectingSchema,
-  params: Map<string, string>,
-  taskIndex: number
+  context: Context,
+  values: StepInjectingSchema
 ): Promise<TaskResult> => {
-  return await sendTab<ReplayInjectingMessage>(tabId, {
+  return await sendTab<ReplayInjectingMessage>(context.tabId, {
     event: Event.REPLAY_INJECTING,
     payload: {
-      name: values.targets[taskIndex].name,
-      selector: values.targets[taskIndex].selector,
-      value: params.get(values.targets[taskIndex].name) ?? "",
+      name: values.targets[context.taskIndex].name,
+      selector: values.targets[context.taskIndex].selector,
+      value: context.params.get(values.targets[context.taskIndex].name) ?? "",
+      timeoutMillis: context.replayTimeoutMillis,
     },
   })
 }
 
 const runNavigateTask = async (
-  tabId: number,
-  values: StepNavigateSchema,
-  params: Map<string, string>
+  context: Context,
+  values: StepNavigateSchema
 ): Promise<TaskResult> => {
-  const interpolated = interpolate(values.url, params)
-  await updateTab(tabId, { url: interpolated })
+  const interpolated = interpolate(values.url, context.params)
+  await updateTab(context.tabId, { url: interpolated })
   return { status: TaskStatus.SUCCEEDED }
 }
 
 const runOpenAITask = async (
-  values: StepOpenAISchema,
-  params: Map<string, string>,
-  openAIKey: string
+  context: Context,
+  values: StepOpenAISchema
 ): Promise<TaskResult> => {
-  if (!openAIKey) {
+  if (!context.openAIKey) {
     return { status: TaskStatus.FAILED, message: "Invalid OpenAI API Key." }
   }
 
@@ -87,14 +94,14 @@ const runOpenAITask = async (
 
   try {
     const response = await chatCompletion({
-      openAIKey,
+      openAIKey: context.openAIKey,
       systemPrompt: `
-        ${interpolate(values.system, params)}
+        ${interpolate(values.system, context.params)}
 
         # FORMATTING
         Output responses in JSON.
       `,
-      userPrompt: interpolate(values.user, params),
+      userPrompt: interpolate(values.user, context.params),
       tools: [
         {
           type: "function",
@@ -134,7 +141,7 @@ const runOpenAITask = async (
 }
 
 const replayRecordingTask = async (
-  tabId: number,
+  context: Context,
   recording: StepRecordingSchema["recordings"][number]
 ): Promise<TaskResult> => {
   const action = recording.action
@@ -142,16 +149,23 @@ const replayRecordingTask = async (
   let result: TaskResult
   switch (action) {
     case "click": {
-      result = await sendTab<ReplayRecordingClickMessage>(tabId, {
+      result = await sendTab<ReplayRecordingClickMessage>(context.tabId, {
         event: Event.REPLAY_RECORDING_CLICK,
-        payload: { selector: recording.selector },
+        payload: {
+          selector: recording.selector,
+          timeoutMillis: context.replayTimeoutMillis,
+        },
       })
       break
     }
     case "keyup": {
-      result = await sendTab<ReplayRecordingKeyupMessage>(tabId, {
+      result = await sendTab<ReplayRecordingKeyupMessage>(context.tabId, {
         event: Event.REPLAY_RECORDING_KEYUP,
-        payload: { selector: recording.selector, value: recording.value },
+        payload: {
+          selector: recording.selector,
+          value: recording.value,
+          timeoutMillis: context.replayTimeoutMillis,
+        },
       })
       break
     }
@@ -165,15 +179,14 @@ const replayRecordingTask = async (
 }
 
 const runRecordingTask = async (
-  tabId: number,
-  taskIndex: number,
+  context: Context,
   values: StepRecordingSchema
 ): Promise<TaskResult> => {
-  const recording = values.recordings[taskIndex]
+  const recording = values.recordings[context.taskIndex]
 
   let result: TaskResult
   try {
-    result = await replayRecordingTask(tabId, recording)
+    result = await replayRecordingTask(context, recording)
   } catch (e) {
     // We may end up failing if the last action we invoked loaded a new page.
     // In these cases, we just need to wait for the page to reload. Try again
@@ -186,8 +199,8 @@ const runRecordingTask = async (
     //
     // TODO: This error handling needs to be expanded on once we're ready to
     // take on multi-tab flows.
-    await waitForTab(tabId)
-    result = await replayRecordingTask(tabId, recording)
+    await waitForTab(context.tabId)
+    result = await replayRecordingTask(context, recording)
   }
 
   if (result.status === TaskStatus.FAILED && recording.fallible) {
@@ -197,38 +210,26 @@ const runRecordingTask = async (
   return result
 }
 
-const runTask = async (args: {
-  workflow: Workflow
-  tabId: number
-  stepIndex: number
-  taskIndex: number
-  params: Map<string, string>
-  openAIKey: string
-}): Promise<TaskResult> => {
-  const step = args.workflow.steps[args.stepIndex]
+const runTask = async (context: Context): Promise<TaskResult> => {
+  const step = context.workflow.steps[context.stepIndex]
   const kind = step.kind
 
   let result: TaskResult
   switch (kind) {
     case StepKind.EXTRACTING: {
-      result = await runExtractingTask(args.tabId, step.values, args.taskIndex)
+      result = await runExtractingTask(context, step.values)
       break
     }
     case StepKind.INJECTING: {
-      result = await runInjectingTask(
-        args.tabId,
-        step.values,
-        args.params,
-        args.taskIndex
-      )
+      result = await runInjectingTask(context, step.values)
       break
     }
     case StepKind.NAVIGATE: {
-      result = await runNavigateTask(args.tabId, step.values, args.params)
+      result = await runNavigateTask(context, step.values)
       break
     }
     case StepKind.OPENAI: {
-      result = await runOpenAITask(step.values, args.params, args.openAIKey)
+      result = await runOpenAITask(context, step.values)
       break
     }
     case StepKind.PROMPT: {
@@ -236,7 +237,7 @@ const runTask = async (args: {
       break
     }
     case StepKind.RECORDING: {
-      result = await runRecordingTask(args.tabId, args.taskIndex, step.values)
+      result = await runRecordingTask(context, step.values)
       break
     }
     default: {
@@ -276,6 +277,7 @@ const RunnerTab = () => {
       taskIndex: sharedStore.runnerTaskIndex,
       params: runnerParams,
       openAIKey: sharedStore.settingsOpenAIKey,
+      replayTimeoutMillis: sharedStore.settingsReplayTimeoutSecs * 1000,
     }).then((result) => {
       sharedStore.runnerActions.pushTaskResult(result)
     })
@@ -287,6 +289,7 @@ const RunnerTab = () => {
     sharedStore.runnerTaskIndex,
     sharedStore.runnerActions,
     sharedStore.settingsOpenAIKey,
+    sharedStore.settingsReplayTimeoutSecs,
   ])
 
   if (sharedStore.runnerActive === null) {

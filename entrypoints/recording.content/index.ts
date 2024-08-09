@@ -13,7 +13,7 @@ const OUTLINE_PADDING = 15
 const OUTLINE_ID = "fluidic-recording-outline"
 const OUTLINE_CLASS = "fluidic-not-allowed"
 
-export default defineContentScript({
+const definition: ReturnType<typeof defineContentScript> = defineContentScript({
   matches: ["*://*/*"],
 
   async main(_context: ContentScriptContext) {
@@ -151,3 +151,5 @@ export default defineContentScript({
     })
   },
 })
+
+export default definition

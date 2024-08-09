@@ -2,12 +2,10 @@ import type { ContentScriptContext } from "wxt/client"
 import { TaskStatus } from "@/utils/workflow"
 import { Event, type Response, addMessageListener } from "@/utils/messages"
 
-const TIMEOUT_MILLIS = 5_000
-
 const replayExtractingClick = async (
   payload: ReplayExtractingClickMessage["payload"]
 ): Promise<Response<ReplayExtractingClickMessage>> => {
-  const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
+  const matches = await waitForSelector(payload.selector, payload.timeoutMillis)
 
   if (matches.length === 0) {
     return { status: TaskStatus.FAILED, message: "Could not find element." }
@@ -45,7 +43,7 @@ const replayExtractingClick = async (
 const replayInjecting = async (
   payload: ReplayInjectingMessage["payload"]
 ): Promise<Response<ReplayInjectingMessage>> => {
-  const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
+  const matches = await waitForSelector(payload.selector, payload.timeoutMillis)
 
   if (matches.length === 0) {
     return { status: TaskStatus.FAILED, message: "Could not find element." }
@@ -83,7 +81,7 @@ const replayInjecting = async (
 const replayRecordingClick = async (
   payload: ReplayRecordingClickMessage["payload"]
 ): Promise<Response<ReplayRecordingClickMessage>> => {
-  const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
+  const matches = await waitForSelector(payload.selector, payload.timeoutMillis)
 
   if (matches.length === 0) {
     return { status: TaskStatus.FAILED, message: "Could not find element." }
@@ -102,7 +100,7 @@ const replayRecordingClick = async (
 const replayRecordingKeyup = async (
   payload: ReplayRecordingKeyupMessage["payload"]
 ): Promise<Response<ReplayRecordingKeyupMessage>> => {
-  const matches = await waitForSelector(payload.selector, TIMEOUT_MILLIS)
+  const matches = await waitForSelector(payload.selector, payload.timeoutMillis)
 
   if (matches.length === 0) {
     return { status: TaskStatus.FAILED, message: "Could not find element." }
@@ -131,7 +129,7 @@ const replayRecordingKeyup = async (
   return { status: TaskStatus.SUCCEEDED, message: "Keyup." }
 }
 
-export default defineContentScript({
+const definition: ReturnType<typeof defineContentScript> = defineContentScript({
   matches: ["*://*/*"],
 
   main(_context: ContentScriptContext) {
@@ -156,3 +154,5 @@ export default defineContentScript({
     })
   },
 })
+
+export default definition

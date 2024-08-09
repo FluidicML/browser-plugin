@@ -12,7 +12,7 @@ const OUTLINE_PADDING = 15
 const OUTLINE_ID = "fluidic-extracting-outline"
 const OUTLINE_CLASS = "not-allowed"
 
-export default defineContentScript({
+const definition: ReturnType<typeof defineContentScript> = defineContentScript({
   matches: ["*://*/*"],
 
   main(_context: ContentScriptContext) {
@@ -129,3 +129,5 @@ export default defineContentScript({
     })
   },
 })
+
+export default definition

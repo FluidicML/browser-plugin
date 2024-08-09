@@ -90,19 +90,19 @@ export type RecordingStopMessage = BaseMessage<Event.RECORDING_STOP>
 export type ReplayCheckMessage = BaseMessage<Event.REPLAY_CHECK>
 export type ReplayExtractingClickMessage = BaseMessage<
   Event.REPLAY_EXTRACTING_CLICK,
-  { name: string; selector: Selector }
+  { name: string; selector: Selector; timeoutMillis: number }
 >
 export type ReplayInjectingMessage = BaseMessage<
   Event.REPLAY_INJECTING,
-  { name: string; selector: Selector; value: string }
+  { name: string; selector: Selector; value: string; timeoutMillis: number }
 >
 export type ReplayRecordingClickMessage = BaseMessage<
   Event.REPLAY_RECORDING_CLICK,
-  { selector: Selector }
+  { selector: Selector; timeoutMillis: number }
 >
 export type ReplayRecordingKeyupMessage = BaseMessage<
   Event.REPLAY_RECORDING_KEYUP,
-  { selector: Selector; value: string }
+  { selector: Selector; value: string; timeoutMillis: number }
 >
 
 export type Message =
@@ -133,14 +133,14 @@ export type Response<M extends Message> = M extends
   | RecordingQueryMessage
   ? boolean
   : M extends InjectingQueryMessage
-  ? InjectingStartMessage["payload"]
-  : M extends
-  | ReplayExtractingClickMessage
-  | ReplayInjectingMessage
-  | ReplayRecordingClickMessage
-  | ReplayRecordingKeyupMessage
-  ? TaskResult
-  : null
+    ? InjectingStartMessage["payload"]
+    : M extends
+          | ReplayExtractingClickMessage
+          | ReplayInjectingMessage
+          | ReplayRecordingClickMessage
+          | ReplayRecordingKeyupMessage
+      ? TaskResult
+      : null
 
 export const sendExt = <M extends Message>(
   message: M,

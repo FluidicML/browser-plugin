@@ -16,6 +16,7 @@ import { useSharedStore } from "./store"
 
 type SettingsFormData = {
   openaiApiKey: string
+  replayTimeoutSecs: number
 }
 
 const SettingsTab = () => {
@@ -25,6 +26,7 @@ const SettingsTab = () => {
   const form = useForm<SettingsFormData>({
     defaultValues: {
       openaiApiKey: store.settingsOpenAIKey ?? undefined,
+      replayTimeoutSecs: store.settingsReplayTimeoutSecs ?? undefined,
     },
   })
 
@@ -32,6 +34,9 @@ const SettingsTab = () => {
     const subscription = form.watch((values) => {
       if (values.openaiApiKey !== undefined) {
         store.settingsActions.setOpenAIKey(values.openaiApiKey)
+      }
+      if (values.replayTimeoutSecs !== undefined) {
+        store.settingsActions.setReplayTimeoutSecs(values.replayTimeoutSecs)
       }
     })
     return () => subscription.unsubscribe()
@@ -64,6 +69,24 @@ const SettingsTab = () => {
           <Checkbox onCheckedChange={(v) => setApiKeyVisible(!!v)} />
           Toggle Visibility
         </div>
+
+        <FormField
+          control={form.control}
+          name="replayTimeoutSecs"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Replay Timeout</FormLabel>
+              <FormDescription>
+                How long we wait (in seconds) for a page to load, an element to
+                appear, etc. before potentially failing.
+              </FormDescription>
+              <FormControl>
+                <Input type="number" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </form>
     </Form>
   )

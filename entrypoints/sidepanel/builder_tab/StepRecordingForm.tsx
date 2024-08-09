@@ -102,13 +102,13 @@ const ActionCard = ({
           >
             <div className="flex items-center">
               More Options
-              <Button className="ml-auto" size="xicon" variant="ghost">
+              <div className="ml-auto">
                 {isExpanded ? (
                   <CollapseIcon className="w-5 h-5 fill-black dark:fill-white" />
                 ) : (
                   <ExpandIcon className="w-5 h-5 fill-black dark:fill-white" />
                 )}
-              </Button>
+              </div>
             </div>
           </CollapsibleTrigger>
           <CollapsibleContent className="pt-1">

@@ -72,8 +72,9 @@ export const useSharedStore = create<SharedState>()(
       name: "fluidic-workflows",
 
       partialize: (state) => ({
-        settingsOpenAIKey: state.settingsOpenAIKey,
         librarySaved: state.librarySaved,
+        settingsOpenAIKey: state.settingsOpenAIKey,
+        settingsReplayTimeoutSecs: state.settingsReplayTimeoutSecs,
       }),
 
       storage: createJSONStorage(() => ({
