@@ -6,8 +6,8 @@ import {
   Event,
   sendExt,
   sendTab,
-} from "@/utils/messages";
-import { isSupportedTab } from "@/utils/browser_tabs";
+} from "@/utils/messages"
+import { isSupportedTab } from "@/utils/browser_tabs"
 
 // Tabs may not have our content script injected if they were already open
 // before the plugin itself was installed. This array tracks the different
@@ -20,14 +20,14 @@ import { isSupportedTab } from "@/utils/browser_tabs";
 //
 // TODO: Add an assertion that all relevant scripts are included here.
 type ContentScript = {
-  css?: string;
-  js: string;
+  css?: string
+  js: string
   message:
     | ExtractingCheckMessage
     | InjectingCheckMessage
     | RecordingCheckMessage
-    | ReplayCheckMessage;
-};
+    | ReplayCheckMessage
+}
 
 const CONTENT_SCRIPTS: ContentScript[] = [
   {
@@ -61,140 +61,140 @@ const CONTENT_SCRIPTS: ContentScript[] = [
       payload: null,
     },
   },
-];
+]
 
 const injectContentScripts = async (tabId: number) => {
   await Promise.all(
     CONTENT_SCRIPTS.map(async (script) => {
       try {
-        await browser.tabs.sendMessage(tabId, script.message);
+        await browser.tabs.sendMessage(tabId, script.message)
       } catch (e) {
         if (script.css) {
           await browser.scripting.insertCSS({
             files: [script.css],
             target: { tabId },
-          });
+          })
         }
         await browser.scripting.executeScript({
           files: [script.js],
           target: { tabId },
-        });
+        })
       }
     })
-  );
-};
+  )
+}
 
 const syncExtractingState = async (tabId: number) => {
   try {
     const isExtracting = await sendExt({
       event: Event.EXTRACTING_QUERY,
       payload: null,
-    });
+    })
     if (!isExtracting) {
-      throw new Error();
+      throw new Error()
     }
     await sendTab(tabId, {
       event: Event.EXTRACTING_START,
       payload: null,
-    });
+    })
   } catch (e) {
     await sendTab(tabId, {
       event: Event.EXTRACTING_STOP,
       payload: null,
-    });
+    })
   }
-};
+}
 
 const syncInjectingState = async (tabId: number) => {
   try {
     const injection = await sendExt({
       event: Event.INJECTING_QUERY,
       payload: null,
-    });
+    })
     if (!injection) {
-      throw new Error();
+      throw new Error()
     }
     await sendTab(tabId, {
       event: Event.INJECTING_START,
       payload: injection,
-    });
+    })
   } catch (e) {
     await sendTab(tabId, {
       event: Event.INJECTING_STOP,
       payload: null,
-    });
+    })
   }
-};
+}
 
 const syncRecordingState = async (tabId: number) => {
   try {
     const isRecording = await sendExt({
       event: Event.RECORDING_QUERY,
       payload: null,
-    });
+    })
     if (!isRecording) {
-      throw new Error();
+      throw new Error()
     }
     await sendTab(tabId, {
       event: Event.RECORDING_START,
       payload: null,
-    });
+    })
   } catch (e) {
     await sendTab(tabId, {
       event: Event.RECORDING_STOP,
       payload: null,
-    });
+    })
   }
-};
+}
 
 const syncTab = async (tabId: number) => {
-  await syncExtractingState(tabId);
-  await syncInjectingState(tabId);
-  await syncRecordingState(tabId);
-};
+  await syncExtractingState(tabId)
+  await syncInjectingState(tabId)
+  await syncRecordingState(tabId)
+}
 
 const handleDeepLink = async (tabId: number, url: string) => {
-  const urlObj = new URL(url);
-  const workflowId = urlObj.searchParams.get('workflowId');
+  const urlObj = new URL(url)
+  const workflowId = urlObj.searchParams.get("workflowId")
   if (workflowId) {
-    await browser.storage.local.set({ workflowId });
-    await injectContentScripts(tabId);
-    await browser.tabs.reload(tabId);
+    await browser.storage.local.set({ workflowId })
+    await injectContentScripts(tabId)
+    await browser.tabs.reload(tabId)
   }
-};
+}
 
 export default defineBackground(() => {
   // https://github.com/wxt-dev/wxt/issues/570
   // @ts-ignore
   browser.sidePanel
     .setPanelBehavior({ openPanelOnActionClick: true })
-    .catch((e: any) => console.error("FLUIDIC", e));
+    .catch((e: any) => console.error("FLUIDIC", e))
 
   browser.tabs.onActivated.addListener(async (activeInfo) => {
     if (!activeInfo.tabId) {
-      return;
+      return
     }
-    const tab = await browser.tabs.get(activeInfo.tabId);
+    const tab = await browser.tabs.get(activeInfo.tabId)
     if (!tab || tab.status === "loading" || !isSupportedTab(tab)) {
       // Once the tab completes, content scripts will already exist. Let the
       // `onUpdated` listener handle the rest.
-      return;
+      return
     }
     if (tab.url) {
-      await handleDeepLink(activeInfo.tabId, tab.url);
+      await handleDeepLink(activeInfo.tabId, tab.url)
     } else {
-      await injectContentScripts(activeInfo.tabId);
-      await syncTab(activeInfo.tabId);
+      await injectContentScripts(activeInfo.tabId)
+      await syncTab(activeInfo.tabId)
     }
-  });
+  })
 
   browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (!tabId || changeInfo.status !== "complete") {
-      return;
+      return
     }
     if (!isSupportedTab(tab)) {
-      return;
+      return
     }
-    await syncTab(tabId);
-  });
-});
+    await syncTab(tabId)
+  })
+})
