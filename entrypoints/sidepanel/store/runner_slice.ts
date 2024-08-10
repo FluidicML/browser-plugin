@@ -3,6 +3,7 @@ import {
   StepResult,
   StepStatus,
   TaskStatus,
+  TaskResult,
   getStepResultParams,
   getStepResultStatus,
 } from "@/utils/workflow"

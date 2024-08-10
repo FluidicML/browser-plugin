@@ -1,3 +1,4 @@
+// apps/fluidic-workflows/entrypoints/sidepanel/store/library_slice.ts
 import type { Workflow } from "@/utils/workflow"
 import { type SharedStateCreator } from "./index"
 

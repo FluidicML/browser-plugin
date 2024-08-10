@@ -1,3 +1,4 @@
+// apps/fluidic-workflows/entrypoints/replaying.content/index.ts
 import type { ContentScriptContext } from "wxt/client"
 import { TaskStatus } from "@/utils/workflow"
 import { Event, type Response, addMessageListener } from "@/utils/messages"
