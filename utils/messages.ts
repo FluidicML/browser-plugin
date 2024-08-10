@@ -46,6 +46,8 @@ export enum Event {
   REPLAY_RECORDING_CLICK = "REPLAY_RECORDING_CLICK",
   // Sent on a recording (keyup) replay.
   REPLAY_RECORDING_KEYUP = "REPLAY_RECORDING_KEYUP",
+  // Handles deep link workflow execution.
+  DEEPLINK_WORKFLOW = "DEEPLINK_WORKFLOW",
 }
 
 type BaseMessage<E extends Event, P = null> = {
@@ -105,6 +107,11 @@ export type ReplayRecordingKeyupMessage = BaseMessage<
   { selector: Selector; value: string; timeoutMillis: number }
 >
 
+export type DeepLinkWorkflowMessage = BaseMessage<
+  Event.DEEPLINK_WORKFLOW,
+  { workflowId: string }
+>
+
 export type Message =
   | ExtractingCheckMessage
   | ExtractingClickMessage
@@ -127,6 +134,7 @@ export type Message =
   | ReplayInjectingMessage
   | ReplayRecordingClickMessage
   | ReplayRecordingKeyupMessage
+  | DeepLinkWorkflowMessage
 
 export type Response<M extends Message> = M extends
   | ExtractingQueryMessage
@@ -140,7 +148,9 @@ export type Response<M extends Message> = M extends
           | ReplayRecordingClickMessage
           | ReplayRecordingKeyupMessage
       ? TaskResult
-      : null
+      : M extends DeepLinkWorkflowMessage
+        ? null
+        : null
 
 export const sendExt = <M extends Message>(
   message: M,

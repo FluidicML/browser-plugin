@@ -2,6 +2,8 @@ import {
   type ExtractingCheckMessage,
   type InjectingCheckMessage,
   type RecordingCheckMessage,
+  type ReplayCheckMessage,
+  type DeepLinkWorkflowMessage,
   Event,
   sendExt,
   sendTab,
@@ -26,6 +28,7 @@ type ContentScript = {
     | InjectingCheckMessage
     | RecordingCheckMessage
     | ReplayCheckMessage
+    | DeepLinkWorkflowMessage
 }
 
 const CONTENT_SCRIPTS: ContentScript[] = [
@@ -62,7 +65,7 @@ const CONTENT_SCRIPTS: ContentScript[] = [
   },
 ]
 
-const injectContentScripts = async (tabId: number) => {
+const injectContentScripts = async (tabId: number): Promise<void> => {
   await Promise.all(
     CONTENT_SCRIPTS.map(async (script) => {
       try {
@@ -83,7 +86,7 @@ const injectContentScripts = async (tabId: number) => {
   )
 }
 
-const syncExtractingState = async (tabId: number) => {
+const syncExtractingState = async (tabId: number): Promise<void> => {
   try {
     const isExtracting = await sendExt({
       event: Event.EXTRACTING_QUERY,
@@ -104,7 +107,7 @@ const syncExtractingState = async (tabId: number) => {
   }
 }
 
-const syncInjectingState = async (tabId: number) => {
+const syncInjectingState = async (tabId: number): Promise<void> => {
   try {
     const injection = await sendExt({
       event: Event.INJECTING_QUERY,
@@ -125,7 +128,7 @@ const syncInjectingState = async (tabId: number) => {
   }
 }
 
-const syncRecordingState = async (tabId: number) => {
+const syncRecordingState = async (tabId: number): Promise<void> => {
   try {
     const isRecording = await sendExt({
       event: Event.RECORDING_QUERY,
@@ -146,13 +149,27 @@ const syncRecordingState = async (tabId: number) => {
   }
 }
 
-const syncTab = async (tabId: number) => {
+const syncTab = async (tabId: number): Promise<void> => {
   await syncExtractingState(tabId)
   await syncInjectingState(tabId)
   await syncRecordingState(tabId)
 }
 
-export default defineBackground(() => {
+// Initial use case for Playwright-chromium trigger but could be used for installed plugin direct preload/execution as well
+const handleDeepLink = async (tabId: number, url: string): Promise<void> => {
+  const urlObj = new URL(url)
+  const workflowId = urlObj.searchParams.get("workflowId")
+  if (workflowId) {
+    await injectContentScripts(tabId)
+    await sendTab(tabId, {
+      event: Event.DEEPLINK_WORKFLOW,
+      payload: { workflowId },
+    })
+    await browser.tabs.reload(tabId)
+  }
+}
+
+const onDefineBackground = (): void => {
   // https://github.com/wxt-dev/wxt/issues/570
   // @ts-ignore
   browser.sidePanel
@@ -169,18 +186,24 @@ export default defineBackground(() => {
       // `onUpdated` listener handle the rest.
       return
     }
-    await injectContentScripts(activeInfo.tabId)
-    await syncTab(activeInfo.tabId)
+    if (tab.url) {
+      await handleDeepLink(activeInfo.tabId, tab.url)
+    } else {
+      await injectContentScripts(activeInfo.tabId)
+      await syncTab(activeInfo.tabId)
+    }
   })
 
-  browser.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
+  browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (!tabId || changeInfo.status !== "complete") {
       return
     }
-    const tab = await browser.tabs.get(tabId)
     if (!isSupportedTab(tab)) {
       return
     }
     await syncTab(tabId)
   })
-})
+}
+
+// @ts-ignore
+export default defineBackground(onDefineBackground)

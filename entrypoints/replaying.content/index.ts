@@ -1,6 +1,9 @@
 import type { ContentScriptContext } from "wxt/client"
 import { TaskStatus } from "@/utils/workflow"
 import { Event, type Response, addMessageListener } from "@/utils/messages"
+import { StepKind } from "@/utils/schema"
+
+const TIMEOUT_MILLIS = 5_000
 
 const replayExtractingClick = async (
   payload: ReplayExtractingClickMessage["payload"]
@@ -129,12 +132,79 @@ const replayRecordingKeyup = async (
   return { status: TaskStatus.SUCCEEDED, message: "Keyup." }
 }
 
+const fetchAndExecuteWorkflow = async (workflowId: string): Promise<void> => {
+  // TODO(@morganhowell95): Replace with remote api origin
+  const response = await fetch(
+    `http://localhost:80/api/workflows/${workflowId}`
+  )
+  const workflow: Workflow = await response.json()
+
+  console.log(
+    `Fetched workflow ${workflowId} with payload ${JSON.stringify(workflow)}`
+  )
+
+  // Execute the workflow
+  for (const step of workflow.steps) {
+    switch (step.kind) {
+      case StepKind.EXTRACTING:
+        for (const param of step.values.params) {
+          await replayExtractingClick({
+            name: param.name,
+            selector: param.selector,
+            timeoutMillis: TIMEOUT_MILLIS,
+          })
+        }
+        break
+      case StepKind.INJECTING:
+        for (const target of step.values.targets) {
+          await replayInjecting({
+            name: target.name,
+            selector: target.selector,
+            value: "",
+            timeoutMillis: TIMEOUT_MILLIS,
+          })
+        }
+        break
+      case StepKind.NAVIGATE:
+        window.location.href = step.values.url
+        break
+      case StepKind.PROMPT:
+        // Handle prompt
+        break
+      case StepKind.OPENAI:
+        // Handle OpenAI step
+        break
+      case StepKind.RECORDING:
+        for (const recording of step.values.recordings) {
+          if (recording.action === "click") {
+            await replayRecordingClick({
+              selector: recording.selector,
+              timeoutMillis: TIMEOUT_MILLIS,
+            })
+          } else if (recording.action === "keyup") {
+            await replayRecordingKeyup({
+              selector: recording.selector,
+              value: recording.value,
+              timeoutMillis: TIMEOUT_MILLIS,
+            })
+          }
+        }
+        break
+    }
+  }
+}
+
 const definition: ReturnType<typeof defineContentScript> = defineContentScript({
   matches: ["*://*/*"],
 
   main(_context: ContentScriptContext) {
     addMessageListener((message) => {
       switch (message.event) {
+        case Event.DEEPLINK_WORKFLOW: {
+          const workflowId: string = message.payload.workflowId
+          fetchAndExecuteWorkflow(workflowId)
+          break
+        }
         case Event.REPLAY_CHECK: {
           return Promise.resolve(true)
         }
