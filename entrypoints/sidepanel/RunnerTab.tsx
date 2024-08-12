@@ -156,7 +156,7 @@ const replayRecordingTask = async (
         event: Event.REPLAY_RECORDING_CLICK,
         payload: {
           selector: recording.selector,
-          timeoutSecs: context.replayTimeoutSecs,
+          timeoutSecs: recording.replayTimeoutSecs ?? context.replayTimeoutSecs,
         },
       })
       break
@@ -167,7 +167,7 @@ const replayRecordingTask = async (
         payload: {
           selector: recording.selector,
           value: recording.value,
-          timeoutSecs: context.replayTimeoutSecs,
+          timeoutSecs: recording.replayTimeoutSecs ?? context.replayTimeoutSecs,
         },
       })
       break
