@@ -81,7 +81,10 @@ const runOpenAITask = async (
   values: StepOpenAISchema
 ): Promise<TaskResult> => {
   if (!context.openAIKey) {
-    return { status: TaskStatus.FAILED, message: "Invalid OpenAI API Key." }
+    return {
+      status: TaskStatus.FAILED,
+      message: "Invalid OpenAI API Key.",
+    }
   }
 
   const props: { [key: string]: { type: string; description: string } } = {}
@@ -203,8 +206,16 @@ const runRecordingTask = async (
     result = await replayRecordingTask(context, recording)
   }
 
-  if (result.status === TaskStatus.FAILED && recording.fallible) {
+  if (recording.fallible && result.status === TaskStatus.FAILED) {
     result.status = TaskStatus.SKIPPED
+  }
+
+  if (
+    recording.confirmed &&
+    (result.status === TaskStatus.SUCCEEDED ||
+      result.status === TaskStatus.SKIPPED)
+  ) {
+    result.isPaused = true
   }
 
   return result
@@ -233,7 +244,7 @@ const runTask = async (context: Context): Promise<TaskResult> => {
       break
     }
     case StepKind.PROMPT: {
-      result = { status: TaskStatus.PAUSED }
+      result = { status: TaskStatus.SUCCEEDED, isPaused: true }
       break
     }
     case StepKind.RECORDING: {
@@ -270,8 +281,8 @@ const RunnerTab = () => {
     if (
       workflow === null ||
       tabId === null ||
-      sharedStore.runnerActions.isFinished(workflow) ||
-      sharedStore.runnerActions.getStatus(workflow) === StepStatus.PAUSED
+      sharedStore.runnerActions.isPaused(workflow) ||
+      sharedStore.runnerActions.isFinished(workflow)
     ) {
       return
     }

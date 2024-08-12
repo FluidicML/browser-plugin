@@ -81,7 +81,7 @@ const StepResultCard = ({
     }
   }
 
-  const status = result ? getStepResultStatus(result) : StepStatus.PAUSED
+  const status = result ? getStepResultStatus(result) : null
 
   return (
     <Card>
@@ -90,7 +90,7 @@ const StepResultCard = ({
           <CloseIcon className="w-5 h-5 fill-red-700" />
         ) : result === null ||
           result.results.length < taskLength ||
-          status === StepStatus.PAUSED ? (
+          result.isPaused ? (
           <LoadingIcon className="w-5 h-5 fill-emerald-600" />
         ) : (
           <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />

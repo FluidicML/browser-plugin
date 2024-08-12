@@ -12,7 +12,6 @@ export type Workflow = {
 export enum TaskStatus {
   SUCCEEDED = "succeeded",
   FAILED = "failed",
-  PAUSED = "paused",
   SKIPPED = "skipped",
 }
 
@@ -23,26 +22,26 @@ export type TaskResult = {
   // latter isn't serializable. This would otherwise make communicating results
   // through message passing impossible.
   params?: [string, string][]
+  // Indicates the workflow has stopped execution. User interaction is required
+  // to continue.
+  isPaused?: boolean
 }
 
 export enum StepStatus {
   SUCCEEDED = "succeeded",
   FAILED = "failed",
-  PAUSED = "paused",
 }
 
 // A collection of task results. A step is considered successful if none of its
 // tasks failed (notice this is different from each task succeeding).
 export type StepResult = {
   results: TaskResult[]
+  isPaused?: boolean
 }
 
 export const getStepResultStatus = (result: StepResult): StepStatus => {
   for (let i = result.results.length - 1; i >= 0; --i) {
     const status = result.results[i].status
-    if (status === TaskStatus.PAUSED) {
-      return StepStatus.PAUSED
-    }
     if (status === TaskStatus.FAILED) {
       return StepStatus.FAILED
     }
