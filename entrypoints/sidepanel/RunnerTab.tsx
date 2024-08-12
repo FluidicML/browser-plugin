@@ -32,7 +32,7 @@ type Context = {
 const interpolate = (value: string, params: Map<string, string>): string => {
   let interpolated = value
   for (const [key, val] of params.entries()) {
-    const re = new RegExp(`{${key}}`, "g")
+    const re = new RegExp(`\\{${key}\\}`, "g")
     interpolated = interpolated.replace(re, val)
   }
   return interpolated
@@ -279,17 +279,16 @@ const RunnerTab = () => {
       openAIKey: sharedStore.settingsOpenAIKey,
       replayTimeoutMillis: sharedStore.settingsReplayTimeoutSecs * 1000,
     }).then((result) => {
-      sharedStore.runnerActions.pushTaskResult(result)
+      if (sharedStore.runnerActive?.uuid === workflow.uuid) {
+        sharedStore.runnerActions.pushTaskResult(result)
+      }
     })
   }, [
-    runnerParams,
+    // Be careful with what is included in this list. We want to ensure only
+    // successfully completing tasks advance the workflow.
     sharedStore.runnerActive,
-    sharedStore.runnerTabId,
     sharedStore.runnerStepIndex,
     sharedStore.runnerTaskIndex,
-    sharedStore.runnerActions,
-    sharedStore.settingsOpenAIKey,
-    sharedStore.settingsReplayTimeoutSecs,
   ])
 
   if (sharedStore.runnerActive === null) {

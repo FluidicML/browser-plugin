@@ -1,6 +1,7 @@
 import {
   type Workflow,
-  StepResult,
+  type StepResult,
+  type TaskResult,
   StepStatus,
   TaskStatus,
   getStepResultParams,
@@ -51,7 +52,10 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       if (active === null || get().runnerTabId === null) {
         return true
       }
-      return get().runnerStepIndex >= active.steps.length
+      return (
+        get().runnerActions.getStatus() === StepStatus.FAILED ||
+        get().runnerStepIndex >= active.steps.length
+      )
     },
 
     getParams: () => {
@@ -152,7 +156,10 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
             result,
           ],
         }
-        if (result.status !== TaskStatus.PAUSED) {
+        if (
+          result.status !== TaskStatus.PAUSED &&
+          result.status !== TaskStatus.FAILED
+        ) {
           s.runnerStepIndex = stepIndex
           s.runnerTaskIndex = taskIndex
         }
