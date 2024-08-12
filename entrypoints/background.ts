@@ -3,7 +3,7 @@ import {
   type InjectingCheckMessage,
   type RecordingCheckMessage,
   type ReplayCheckMessage,
-  type DeepLinkWorkflowMessage,
+  type ReplayDeepLinkWorkflowMessage,
   Event,
   sendExt,
   sendTab,
@@ -28,7 +28,7 @@ type ContentScript = {
     | InjectingCheckMessage
     | RecordingCheckMessage
     | ReplayCheckMessage
-    | DeepLinkWorkflowMessage
+    | ReplayDeepLinkWorkflowMessage
 }
 
 const CONTENT_SCRIPTS: ContentScript[] = [

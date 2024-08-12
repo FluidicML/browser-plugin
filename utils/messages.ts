@@ -107,7 +107,7 @@ export type ReplayRecordingKeyupMessage = BaseMessage<
   { selector: Selector; value: string; timeoutMillis: number }
 >
 
-export type DeepLinkWorkflowMessage = BaseMessage<
+export type ReplayDeepLinkWorkflowMessage = BaseMessage<
   Event.DEEPLINK_WORKFLOW,
   { workflowId: string }
 >
@@ -134,7 +134,7 @@ export type Message =
   | ReplayInjectingMessage
   | ReplayRecordingClickMessage
   | ReplayRecordingKeyupMessage
-  | DeepLinkWorkflowMessage
+  | ReplayDeepLinkWorkflowMessage
 
 export type Response<M extends Message> = M extends
   | ExtractingQueryMessage
@@ -147,10 +147,9 @@ export type Response<M extends Message> = M extends
           | ReplayInjectingMessage
           | ReplayRecordingClickMessage
           | ReplayRecordingKeyupMessage
+          | ReplayDeepLinkWorkflowMessage
       ? TaskResult
-      : M extends DeepLinkWorkflowMessage
-        ? null
-        : null
+      : null
 
 export const sendExt = <M extends Message>(
   message: M,

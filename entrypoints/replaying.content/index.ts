@@ -1,6 +1,11 @@
 import type { ContentScriptContext } from "wxt/client"
 import { TaskStatus } from "@/utils/workflow"
-import { Event, type Response, addMessageListener } from "@/utils/messages"
+import {
+  Event,
+  addMessageListener,
+  type ReplayDeepLinkWorkflowMessage,
+  type Response,
+} from "@/utils/messages"
 import { StepKind } from "@/utils/schema"
 
 const TIMEOUT_MILLIS = 5_000
@@ -132,7 +137,9 @@ const replayRecordingKeyup = async (
   return { status: TaskStatus.SUCCEEDED, message: "Keyup." }
 }
 
-const fetchAndExecuteWorkflow = async (workflowId: string): Promise<void> => {
+const replayDeeplinkWorkflow = async (
+  workflowId: string
+): Promise<Response<ReplayDeepLinkWorkflowMessage>> => {
   // TODO(@morganhowell95): Replace with remote api origin
   const response = await fetch(
     `http://localhost:80/api/workflows/${workflowId}`
@@ -192,6 +199,8 @@ const fetchAndExecuteWorkflow = async (workflowId: string): Promise<void> => {
         break
     }
   }
+
+  return { status: TaskStatus.SUCCEEDED, message: workflowId }
 }
 
 const definition: ReturnType<typeof defineContentScript> = defineContentScript({
@@ -201,9 +210,7 @@ const definition: ReturnType<typeof defineContentScript> = defineContentScript({
     addMessageListener((message) => {
       switch (message.event) {
         case Event.DEEPLINK_WORKFLOW: {
-          const workflowId: string = message.payload.workflowId
-          fetchAndExecuteWorkflow(workflowId)
-          break
+          return replayDeeplinkWorkflow(message.payload.workflowId)
         }
         case Event.REPLAY_CHECK: {
           return Promise.resolve(true)
