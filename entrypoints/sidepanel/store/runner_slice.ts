@@ -19,11 +19,17 @@ export type RunnerSlice = {
 
   runnerActions: {
     startWorkflow: (workflow: Workflow) => Promise<void>
-    isFinished: () => boolean
-    getParams: () => Map<string, string>
-    getStatus: () => StepStatus
-    popTaskResult: () => void
-    pushTaskResult: (result: TaskResult) => void
+    // Until we support running workflows in parallel, every action should take
+    // in a workflow to be used as a guard. If the passed workflow does not
+    // match the active workflow, the action should be a no-op or return a
+    // reasonable default.
+    //
+    // TODO: Extend `runnerActive` to `runnerActives`.
+    isFinished: (workflow: Workflow) => boolean
+    getParams: (workflow: Workflow) => Map<string, string>
+    getStatus: (workflow: Workflow) => StepStatus
+    popTaskResult: (workflow: Workflow) => void
+    pushTaskResult: (workflow: Workflow, result: TaskResult) => void
   }
 }
 
@@ -47,39 +53,49 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       })
     },
 
-    isFinished: () => {
+    isFinished: (workflow) => {
       const active = get().runnerActive
-      if (active === null || get().runnerTabId === null) {
+      if (active?.uuid !== workflow.uuid || get().runnerTabId === null) {
         return true
       }
+
       return (
-        get().runnerActions.getStatus() === StepStatus.FAILED ||
+        get().runnerActions.getStatus(workflow) === StepStatus.FAILED ||
         get().runnerStepIndex >= active.steps.length
       )
     },
 
-    getParams: () => {
+    getParams: (workflow) => {
       const params = new Map()
+      if (get().runnerActive?.uuid !== workflow.uuid) {
+        return params
+      }
+
       get().runnerResults.forEach((result) => {
         for (const [key, val] of getStepResultParams(result).entries()) {
           params.set(key, val)
         }
       })
+
       return params
     },
 
-    getStatus: () => {
+    getStatus: (workflow) => {
+      if (get().runnerActive?.uuid !== workflow.uuid) {
+        return StepStatus.FAILED
+      }
+
       const step = get().runnerResults[get().runnerStepIndex]
       if (!step) {
         return StepStatus.SUCCEEDED
       }
+
       return getStepResultStatus(step)
     },
 
-    popTaskResult: () => {
+    popTaskResult: (workflow) => {
       const active = get().runnerActive
-      if (!active) {
-        console.error("Pushing task result with no active workflow set.")
+      if (active?.uuid !== workflow.uuid) {
         return
       }
 
@@ -88,10 +104,9 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       })
     },
 
-    pushTaskResult: (result: TaskResult) => {
+    pushTaskResult: (workflow, result) => {
       const active = get().runnerActive
-      if (!active) {
-        console.error("Pushing task result with no active workflow set.")
+      if (active?.uuid !== workflow.uuid) {
         return
       }
 

@@ -84,8 +84,11 @@ const StepPromptContent = ({
   })
 
   const onSubmit: SubmitHandler<StepPromptContentSchema> = (values) => {
-    store.runnerActions.popTaskResult()
-    store.runnerActions.pushTaskResult({
+    if (store.runnerActive === null) {
+      return
+    }
+    store.runnerActions.popTaskResult(store.runnerActive)
+    store.runnerActions.pushTaskResult(store.runnerActive, {
       status: TaskStatus.SUCCEEDED,
       params: values.params.map((p) => [p.name, p.value]),
     })

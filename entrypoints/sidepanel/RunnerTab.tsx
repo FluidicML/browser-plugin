@@ -251,9 +251,15 @@ const runTask = async (context: Context): Promise<TaskResult> => {
 
 const RunnerTab = () => {
   const sharedStore = useSharedStore()
+
   const runnerParams = React.useMemo(() => {
-    return sharedStore.runnerActions.getParams()
-  }, [sharedStore.runnerStepIndex, sharedStore.runnerTaskIndex])
+    const workflow = sharedStore.runnerActive
+    return workflow ? sharedStore.runnerActions.getParams(workflow) : new Map()
+  }, [
+    sharedStore.runnerActive,
+    sharedStore.runnerStepIndex,
+    sharedStore.runnerTaskIndex,
+  ])
 
   // Process each step/task of the workflow. On completion, trigger an update
   // to reinvoke this same effect.
@@ -264,8 +270,8 @@ const RunnerTab = () => {
     if (
       workflow === null ||
       tabId === null ||
-      sharedStore.runnerActions.isFinished() ||
-      sharedStore.runnerActions.getStatus() === StepStatus.PAUSED
+      sharedStore.runnerActions.isFinished(workflow) ||
+      sharedStore.runnerActions.getStatus(workflow) === StepStatus.PAUSED
     ) {
       return
     }
@@ -279,9 +285,7 @@ const RunnerTab = () => {
       openAIKey: sharedStore.settingsOpenAIKey,
       replayTimeoutMillis: sharedStore.settingsReplayTimeoutSecs * 1000,
     }).then((result) => {
-      if (sharedStore.runnerActive?.uuid === workflow.uuid) {
-        sharedStore.runnerActions.pushTaskResult(result)
-      }
+      sharedStore.runnerActions.pushTaskResult(workflow, result)
     })
   }, [
     // Be careful with what is included in this list. We want to ensure only
@@ -304,9 +308,10 @@ const RunnerTab = () => {
     <div className="flex flex-col gap-4 p-4">
       <Card>
         <CardTitle className="pt-2 flex items-center gap-2">
-          {sharedStore.runnerActions.getStatus() === StepStatus.FAILED ? (
+          {sharedStore.runnerActions.getStatus(sharedStore.runnerActive) ===
+          StepStatus.FAILED ? (
             <CloseIcon className="w-5 h-5 rounded-full fill-red-700" />
-          ) : sharedStore.runnerActions.isFinished() ? (
+          ) : sharedStore.runnerActions.isFinished(sharedStore.runnerActive) ? (
             <CheckmarkIcon className="w-5 h-5 rounded-full fill-emerald-600" />
           ) : (
             <LoadingIcon className="w-5 h-5 fill-emerald-600" />
