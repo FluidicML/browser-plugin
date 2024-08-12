@@ -11,11 +11,11 @@ export type StepContentProps<V> = {
 }
 
 export const TaskStatusIcon = ({ task }: { task: TaskResult }) => {
-  if (task.status === TaskStatus.SKIPPED) {
-    return <NullIcon className="w-4 h-4 rounded-full fill-yellow-700" />
-  }
   if (task.status === TaskStatus.SUCCEEDED) {
     return <CheckmarkIcon className="w-4 h-4 rounded-full fill-emerald-600" />
+  }
+  if (task.status === TaskStatus.SKIPPED) {
+    return <NullIcon className="w-4 h-4 rounded-full fill-yellow-700" />
   }
   return <CloseIcon className="w-4 h-4 fill-red-700" />
 }
