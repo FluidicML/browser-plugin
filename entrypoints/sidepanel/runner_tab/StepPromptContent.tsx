@@ -102,7 +102,7 @@ const StepPromptContent = ({
     return <span>{latest.message ?? "Unknown error."}</span>
   }
 
-  if (latest.status === TaskStatus.PAUSED) {
+  if (latest.isPaused) {
     return (
       <Form {...form}>
         <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>

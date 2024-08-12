@@ -3,7 +3,6 @@ import {
   type StepResult,
   type TaskResult,
   StepStatus,
-  TaskStatus,
   getStepResultParams,
   getStepResultStatus,
 } from "@/utils/workflow"
@@ -26,9 +25,10 @@ export type RunnerSlice = {
     //
     // TODO: Extend `runnerActive` to `runnerActives`.
     isFinished: (workflow: Workflow) => boolean
+    isPaused: (workflow: Workflow) => boolean
     getParams: (workflow: Workflow) => Map<string, string>
     getStatus: (workflow: Workflow) => StepStatus
-    popTaskResult: (workflow: Workflow) => void
+    popTaskResult: (workflow: Workflow) => TaskResult | null
     pushTaskResult: (workflow: Workflow, result: TaskResult) => void
   }
 }
@@ -65,6 +65,19 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       )
     },
 
+    isPaused: (workflow) => {
+      if (get().runnerActive?.uuid !== workflow.uuid) {
+        return false
+      }
+
+      const step = get().runnerResults[get().runnerStepIndex]
+      if (!step) {
+        return false
+      }
+
+      return step.isPaused ?? false
+    },
+
     getParams: (workflow) => {
       const params = new Map()
       if (get().runnerActive?.uuid !== workflow.uuid) {
@@ -96,12 +109,19 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
     popTaskResult: (workflow) => {
       const active = get().runnerActive
       if (active?.uuid !== workflow.uuid) {
-        return
+        return null
       }
+
+      const latest =
+        get().runnerResults[get().runnerStepIndex]?.results?.[
+          get().runnerTaskIndex
+        ]
 
       set((s) => {
         s.runnerResults[s.runnerStepIndex]?.results?.pop()
       })
+
+      return latest ?? null
     },
 
     pushTaskResult: (workflow, result) => {
@@ -171,10 +191,7 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
             result,
           ],
         }
-        if (
-          result.status !== TaskStatus.PAUSED &&
-          result.status !== TaskStatus.FAILED
-        ) {
+        if (!result.isPaused && result.status !== TaskStatus.FAILED) {
           s.runnerStepIndex = stepIndex
           s.runnerTaskIndex = taskIndex
         }

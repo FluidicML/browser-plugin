@@ -124,13 +124,34 @@ const ActionCard = ({
                     />
                   </FormControl>
                   <div>
-                    <FormLabel className="text-sm">
+                    <FormLabel className="text-xs">
                       This step can fail.
                     </FormLabel>
                     <FormDescription className="text-xs">
-                      Certain actions aren't reproducible on every version of a
-                      webpage. Setting this lets the workflow continue even when
-                      the action fails.
+                      Lets the workflow continue even if the action fails.
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name={`recordings.${index}.confirmed`}
+              render={({ field }) => (
+                <FormItem className="flex gap-2 items-start">
+                  <FormControl className="mt-3">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div>
+                    <FormLabel className="text-xs">
+                      This step requires confirmation.
+                    </FormLabel>
+                    <FormDescription className="text-xs">
+                      Prompts the user for confirmation before continuing to the
+                      next action.
                     </FormDescription>
                   </div>
                 </FormItem>
