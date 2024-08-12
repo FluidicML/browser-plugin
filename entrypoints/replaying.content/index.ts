@@ -5,7 +5,10 @@ import { Event, type Response, addMessageListener } from "@/utils/messages"
 const replayExtractingClick = async (
   payload: ReplayExtractingClickMessage["payload"]
 ): Promise<Response<ReplayExtractingClickMessage>> => {
-  const matches = await waitForSelector(payload.selector, payload.timeoutMillis)
+  const matches = await waitForSelector(
+    payload.selector,
+    payload.timeoutSecs * 1000
+  )
 
   if (matches.length === 0) {
     return { status: TaskStatus.FAILED, message: "Could not find element." }
@@ -43,7 +46,10 @@ const replayExtractingClick = async (
 const replayInjecting = async (
   payload: ReplayInjectingMessage["payload"]
 ): Promise<Response<ReplayInjectingMessage>> => {
-  const matches = await waitForSelector(payload.selector, payload.timeoutMillis)
+  const matches = await waitForSelector(
+    payload.selector,
+    payload.timeoutSecs * 1000
+  )
 
   if (matches.length === 0) {
     return { status: TaskStatus.FAILED, message: "Could not find element." }
@@ -81,7 +87,10 @@ const replayInjecting = async (
 const replayRecordingClick = async (
   payload: ReplayRecordingClickMessage["payload"]
 ): Promise<Response<ReplayRecordingClickMessage>> => {
-  const matches = await waitForSelector(payload.selector, payload.timeoutMillis)
+  const matches = await waitForSelector(
+    payload.selector,
+    payload.timeoutSecs * 1000
+  )
 
   if (matches.length === 0) {
     return { status: TaskStatus.FAILED, message: "Could not find element." }
@@ -100,7 +109,10 @@ const replayRecordingClick = async (
 const replayRecordingKeyup = async (
   payload: ReplayRecordingKeyupMessage["payload"]
 ): Promise<Response<ReplayRecordingKeyupMessage>> => {
-  const matches = await waitForSelector(payload.selector, payload.timeoutMillis)
+  const matches = await waitForSelector(
+    payload.selector,
+    payload.timeoutSecs * 1000
+  )
 
   if (matches.length === 0) {
     return { status: TaskStatus.FAILED, message: "Could not find element." }

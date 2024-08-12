@@ -161,7 +161,7 @@ const ActionCard = ({
             />
             <FormField
               control={control}
-              name={`recordings.${index}.replayTimeoutSec`}
+              name={`recordings.${index}.replayTimeoutSecs`}
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <div>

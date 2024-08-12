@@ -146,7 +146,7 @@ export const stepRecordingSchema = z
             // Indicates the action requires confirmation before continuing.
             confirmed: z.boolean().optional(),
             // An override on how long a replay can wait before timing out.
-            replayTimeoutSec: z.number().optional(),
+            replayTimeoutSecs: z.number().optional(),
           })
         )
       )
