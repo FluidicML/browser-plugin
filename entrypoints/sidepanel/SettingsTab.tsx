@@ -56,6 +56,7 @@ const SettingsTab = () => {
               </FormDescription>
               <FormControl>
                 <Input
+                  className="mt-2"
                   type={apiKeyVisible ? "text" : "password"}
                   placeholder="sk-*******"
                   {...field}
@@ -81,7 +82,7 @@ const SettingsTab = () => {
                 appear, etc. before potentially failing.
               </FormDescription>
               <FormControl>
-                <Input type="number" {...field} />
+                <Input className="mt-2" type="number" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

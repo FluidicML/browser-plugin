@@ -54,7 +54,7 @@ const ParameterField = ({ control, label, index }: ParameterFieldProps) => {
           <FormItem>
             <FormLabel className="text-xs">{label}</FormLabel>
             <FormControl>
-              <Input className="text-xs" placeholder="Value" {...field} />
+              <Input className="mt-2 text-xs" placeholder="Value" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

@@ -37,7 +37,7 @@ const ParameterField = ({ control, index }: ParameterFieldProps) => {
           <FormItem>
             <FormLabel>JSON Field {index + 1}</FormLabel>
             <FormControl>
-              <Input placeholder="Name" {...field} />
+              <Input className="mt-2" placeholder="Name" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -49,7 +49,7 @@ const ParameterField = ({ control, index }: ParameterFieldProps) => {
         render={({ field }) => (
           <FormItem>
             <FormControl>
-              <Textarea placeholder="Description" {...field} />
+              <Textarea className="mt-2" placeholder="Description" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -123,6 +123,7 @@ const StepOpenAIForm = ({ defaultValues, onChange }: StepOpenAIFormProps) => {
               <FormLabel>System Prompt</FormLabel>
               <FormControl>
                 <Textarea
+                  className="mt-2"
                   placeholder="You are a useful assistant for..."
                   rows={3}
                   {...field}
@@ -140,6 +141,7 @@ const StepOpenAIForm = ({ defaultValues, onChange }: StepOpenAIFormProps) => {
               <FormLabel>User Prompt</FormLabel>
               <FormControl>
                 <Textarea
+                  className="mt-2"
                   placeholder="Craft a concise request for..."
                   rows={10}
                   {...field}
