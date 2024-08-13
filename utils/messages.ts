@@ -90,19 +90,19 @@ export type RecordingStopMessage = BaseMessage<Event.RECORDING_STOP>
 export type ReplayCheckMessage = BaseMessage<Event.REPLAY_CHECK>
 export type ReplayExtractingClickMessage = BaseMessage<
   Event.REPLAY_EXTRACTING_CLICK,
-  { name: string; selector: Selector; timeoutMillis: number }
+  { name: string; selector: Selector; timeoutSecs: number }
 >
 export type ReplayInjectingMessage = BaseMessage<
   Event.REPLAY_INJECTING,
-  { name: string; selector: Selector; value: string; timeoutMillis: number }
+  { name: string; selector: Selector; value: string; timeoutSecs: number }
 >
 export type ReplayRecordingClickMessage = BaseMessage<
   Event.REPLAY_RECORDING_CLICK,
-  { selector: Selector; timeoutMillis: number }
+  { selector: Selector; timeoutSecs: number }
 >
 export type ReplayRecordingKeyupMessage = BaseMessage<
   Event.REPLAY_RECORDING_KEYUP,
-  { selector: Selector; value: string; timeoutMillis: number }
+  { selector: Selector; value: string; timeoutSecs: number }
 >
 
 export type Message =
