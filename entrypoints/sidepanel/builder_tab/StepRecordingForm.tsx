@@ -290,10 +290,14 @@ const StepRecordingForm = ({
           const index = recordings.fields.length - 1
           const last = recordings.fields[index]
           const value = form.watch(`recordings.${index}.value`)
+          const replayTimeoutSecs = form.watch(
+            `recordings.${index}.replayTimeoutSecs`
+          )
           if (message.payload.append && last.action === "keyup") {
             recordings.update(recordings.fields.length - 1, {
               ...message.payload,
               value: value + message.payload.value,
+              replayTimeoutSecs: replayTimeoutSecs,
             })
           } else {
             recordings.append(message.payload)
