@@ -68,3 +68,17 @@ export const queryTabs = (
     })
   })
 }
+
+// Thin wrapper for retrieving the active tab. Waits until the tab has
+// completely loaded.
+export const getActiveTab = (): Promise<Tabs.Tab | null> => {
+  return new Promise((resolve) => {
+    queryTabs({ active: true, currentWindow: true }).then((tabs) => {
+      if (tabs.length > 0 && isSupportedTab(tabs[0])) {
+        resolve(tabs[0])
+      } else {
+        resolve(null)
+      }
+    })
+  })
+}

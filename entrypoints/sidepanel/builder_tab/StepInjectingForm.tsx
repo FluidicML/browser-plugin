@@ -2,6 +2,7 @@ import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { UseFormReturn, useFieldArray, useForm } from "react-hook-form"
 
+import { getActiveTab } from "@/utils/browser_tabs"
 import PlayIcon from "@/components/icons/Play"
 import PlusIcon from "@/components/icons/Plus"
 import StopIcon from "@/components/icons/Stop"
@@ -145,8 +146,13 @@ const StepInjectingForm = ({
   const toggleInjecting = React.useCallback(
     async (index: number) => {
       try {
+        const tab = await getActiveTab()
+        if (!tab?.id) {
+          console.warn("Attempting to trigger for unsupported tab.")
+          return
+        }
         if (activeIndex === null) {
-          await sendTab(null, {
+          await sendTab(tab.id, {
             event: Event.INJECTING_START,
             payload: {
               param: form.watch(`targets.${index}.name`),
@@ -154,7 +160,7 @@ const StepInjectingForm = ({
             },
           })
         } else {
-          await sendTab(null, {
+          await sendTab(tab.id, {
             event: Event.INJECTING_STOP,
             payload: null,
           })
@@ -184,13 +190,8 @@ const StepInjectingForm = ({
     name: "targets",
   })
 
-  React.useEffect(() => {
-    return () => {
-      sendTab(null, { event: Event.INJECTING_STOP, payload: null })
-      store.sharedActions.unlock(id)
-    }
-  }, [store.sharedActions])
-
+  // Notify on form changes. Status is propagated upward so we can decide
+  // whether or not the user is allowed to save the workflow.
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       const parsed = stepInjectingSchema.safeParse(values)
@@ -203,6 +204,9 @@ const StepInjectingForm = ({
     return () => subscription.unsubscribe()
   }, [form.watch])
 
+  // Process messages while this form is active. Necessary for tracking which
+  // elements the user is attempting to inject into as well as synchronizing
+  // state across tabs (e.g. on change).
   React.useEffect(() => {
     if (activeIndex === null) {
       return
@@ -226,6 +230,22 @@ const StepInjectingForm = ({
 
     return () => removeMessageListener(listener)
   }, [activeIndex, targets])
+
+  // Cleanup on dismount. Ensure that if we are actively extracting, we notify
+  // any tabs that we are done.
+  React.useEffect(() => {
+    return () => {
+      if (activeIndex === 0) {
+        return
+      }
+      getActiveTab().then((tab) => {
+        if (tab?.id) {
+          sendTab(tab.id, { event: Event.INJECTING_STOP, payload: null })
+          store.sharedActions.unlock(id)
+        }
+      })
+    }
+  }, [])
 
   if (params.size === 0) {
     return (

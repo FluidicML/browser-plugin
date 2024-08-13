@@ -2,6 +2,7 @@ import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Control, useFieldArray, useForm } from "react-hook-form"
 
+import { getActiveTab } from "@/utils/browser_tabs"
 import {
   type StepExtractingSchema,
   type Step,
@@ -89,13 +90,18 @@ const StepExtractingForm = ({
 
   const toggleExtracting = React.useCallback(async () => {
     try {
+      const tab = await getActiveTab()
+      if (!tab?.id) {
+        console.warn("Attempting to trigger for unsupported tab.")
+        return
+      }
       if (isExtracting) {
-        await sendTab(null, {
+        await sendTab(tab.id, {
           event: Event.EXTRACTING_STOP,
           payload: null,
         })
       } else {
-        await sendTab(null, {
+        await sendTab(tab.id, {
           event: Event.EXTRACTING_START,
           payload: null,
         })
@@ -123,13 +129,8 @@ const StepExtractingForm = ({
     name: "params",
   })
 
-  React.useEffect(() => {
-    return () => {
-      sendTab(null, { event: Event.EXTRACTING_STOP, payload: null })
-      store.sharedActions.unlock(id)
-    }
-  }, [store.sharedActions])
-
+  // Notify on form changes. Status is propagated upward so we can decide
+  // whether or not the user is allowed to save the workflow.
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       const parsed = stepExtractingSchema.safeParse(values)
@@ -142,6 +143,9 @@ const StepExtractingForm = ({
     return () => subscription.unsubscribe()
   }, [form.watch])
 
+  // Process messages while this form is active. Necessary for tracking which
+  // elements the user is attempting to extract from as well as synchronizing
+  // state across tabs (e.g. on change).
   React.useEffect(() => {
     if (!isExtracting) {
       return
@@ -159,6 +163,22 @@ const StepExtractingForm = ({
     })
     return () => removeMessageListener(listener)
   }, [isExtracting, params])
+
+  // Cleanup on dismount. Ensure that if we are actively extracting, we notify
+  // any tabs that we are done.
+  React.useEffect(() => {
+    return () => {
+      if (!isExtracting) {
+        return
+      }
+      getActiveTab().then((tab) => {
+        if (tab?.id) {
+          sendTab(tab.id, { event: Event.EXTRACTING_STOP, payload: null })
+          store.sharedActions.unlock(id)
+        }
+      })
+    }
+  }, [])
 
   return (
     <Form {...form}>

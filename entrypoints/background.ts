@@ -152,7 +152,7 @@ const syncTab = async (tabId: number) => {
   await syncRecordingState(tabId)
 }
 
-export default defineBackground(() => {
+const definition: ReturnType<typeof defineBackground> = defineBackground(() => {
   // https://github.com/wxt-dev/wxt/issues/570
   // @ts-ignore
   browser.sidePanel
@@ -184,3 +184,5 @@ export default defineBackground(() => {
     await syncTab(tabId)
   })
 })
+
+export default definition

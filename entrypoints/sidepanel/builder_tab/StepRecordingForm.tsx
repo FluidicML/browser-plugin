@@ -2,6 +2,7 @@ import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Control, useFieldArray, useForm } from "react-hook-form"
 
+import { getActiveTab } from "@/utils/browser_tabs"
 import {
   type StepRecordingSchema,
   type Step,
@@ -204,13 +205,18 @@ const StepRecordingForm = ({
 
   const toggleRecording = React.useCallback(async () => {
     try {
+      const tab = await getActiveTab()
+      if (!tab?.id) {
+        console.warn("Attempting to trigger for unsupported tab.")
+        return
+      }
       if (isRecording) {
-        await sendTab(null, {
+        await sendTab(tab.id, {
           event: Event.RECORDING_STOP,
           payload: null,
         })
       } else {
-        await sendTab(null, {
+        await sendTab(tab.id, {
           event: Event.RECORDING_START,
           payload: null,
         })
@@ -242,13 +248,8 @@ const StepRecordingForm = ({
   // and deletions. Insertions should scroll downward. Deletions should not.
   const recordingsCount = React.useRef(defaultValues?.recordings.length ?? 0)
 
-  React.useEffect(() => {
-    return () => {
-      sendTab(null, { event: Event.RECORDING_STOP, payload: null })
-      store.sharedActions.unlock(id)
-    }
-  }, [store.sharedActions])
-
+  // Notify on form changes. Status is propagated upward so we can decide
+  // whether or not the user is allowed to save the workflow.
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       if (values.recordings) {
@@ -267,10 +268,14 @@ const StepRecordingForm = ({
     return () => subscription.unsubscribe()
   }, [triggerScroll, form.watch])
 
+  // Process messages while this form is active. Necessary for tracking which
+  // elements the user is recording against as well as synchronizing state
+  // across tabs (e.g. on change).
   React.useEffect(() => {
     if (!isRecording) {
       return
     }
+
     const listener = addMessageListener((message) => {
       switch (message.event) {
         case Event.RECORDING_QUERY: {
@@ -306,8 +311,25 @@ const StepRecordingForm = ({
         }
       }
     })
+
     return () => removeMessageListener(listener)
   }, [isRecording, recordings])
+
+  // Cleanup on dismount. Ensure that if we are actively recording, we notify
+  // any tabs that we are done.
+  React.useEffect(() => {
+    return () => {
+      if (!isRecording) {
+        return
+      }
+      getActiveTab().then((tab) => {
+        if (tab?.id) {
+          sendTab(tab.id, { event: Event.RECORDING_STOP, payload: null })
+          store.sharedActions.unlock(id)
+        }
+      })
+    }
+  }, [])
 
   return (
     <Form {...form}>

@@ -1,7 +1,6 @@
 import { browser, Runtime } from "wxt/browser"
 import { Selector } from "./selector"
 import { TaskResult } from "./workflow"
-import { isSupportedTab } from "./browser_tabs"
 
 export enum Event {
   // Checks if the extraction content script is loaded.
@@ -148,19 +147,11 @@ export const sendExt = <M extends Message>(
 ): Promise<Response<M>> => browser.runtime.sendMessage(message, options)
 
 export const sendTab = async <M extends Message>(
-  tabId: number | null,
+  tabId: number,
   message: M,
   options?: Runtime.SendMessageOptionsType
 ): Promise<Response<M>> => {
-  if (tabId !== null) {
-    return await browser.tabs.sendMessage(tabId, message, options)
-  }
-  for (const tab of await queryTabs({ active: true, currentWindow: true })) {
-    if (tab.id && isSupportedTab(tab)) {
-      return await browser.tabs.sendMessage(tab.id, message, options)
-    }
-  }
-  throw new Error("Could not find active tab.")
+  return await browser.tabs.sendMessage(tabId, message, options)
 }
 
 // A type-safe representation of the types of messages we anticipate handling
