@@ -7,6 +7,7 @@ import {
   sendTab,
 } from "@/utils/messages"
 import { isSupportedTab } from "@/utils/browser_tabs"
+import { Tabs } from "wxt/browser"
 
 // Tabs may not have our content script injected if they were already open
 // before the plugin itself was installed. This array tracks the different
@@ -89,9 +90,8 @@ const syncExtractingState = async (tabId: number) => {
       event: Event.EXTRACTING_QUERY,
       payload: null,
     })
-    if (!isExtracting) {
-      throw new Error()
-    }
+    if (!isExtracting) throw new Error()
+
     await sendTab(tabId, {
       event: Event.EXTRACTING_START,
       payload: null,
@@ -146,13 +146,40 @@ const syncRecordingState = async (tabId: number) => {
   }
 }
 
-const syncTab = async (tabId: number) => {
-  await syncExtractingState(tabId)
-  await syncInjectingState(tabId)
-  await syncRecordingState(tabId)
+const syncWorkflowTriggerState = async (tab: Tabs.Tab) => {
+  if (!tab.url || !tab.url.includes("headless/home?workflowIds[]=")) return
+
+  try {
+    const workflowIdsToEnqueue = new URL(tab.url).searchParams.getAll(
+      "workflowIds[]"
+    )
+
+    // TODO(@morganhowell95): Support enqueue of multiple workflows
+    const [workflowId] = workflowIdsToEnqueue
+    await sendExt({
+      event: Event.REPLAY_FROM_WORKFLOW_TRIGGER,
+      payload: { workflowId },
+    })
+  } catch (e) {
+    // TODO(@morganhowell95): Handle workflow trigger error states
+    throw new Error()
+  }
 }
 
-export default defineBackground(() => {
+const syncTab = async (tab: Tabs.Tab) => {
+  const { id: tabId } = tab
+  if (!tabId)
+    throw new Error("background->syncTab: tabId is undefined from Tabs.Tab")
+
+  await Promise.allSettled([
+    syncExtractingState(tabId),
+    syncInjectingState(tabId),
+    syncRecordingState(tabId),
+    syncWorkflowTriggerState(tab),
+  ])
+}
+
+const onDefineBackground = async () => {
   // https://github.com/wxt-dev/wxt/issues/570
   // @ts-ignore
   browser.sidePanel
@@ -170,17 +197,14 @@ export default defineBackground(() => {
       return
     }
     await injectContentScripts(activeInfo.tabId)
-    await syncTab(activeInfo.tabId)
+    await syncTab(tab)
   })
 
-  browser.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
-    if (!tabId || changeInfo.status !== "complete") {
-      return
-    }
-    const tab = await browser.tabs.get(tabId)
-    if (!isSupportedTab(tab)) {
-      return
-    }
-    await syncTab(tabId)
+  browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+    if (!tabId || changeInfo.status !== "complete") return
+    if (!isSupportedTab(tab)) return
+    await syncTab(tab)
   })
-})
+}
+
+export default defineBackground(onDefineBackground)

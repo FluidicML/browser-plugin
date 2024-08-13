@@ -150,6 +150,13 @@ const definition: ReturnType<typeof defineContentScript> = defineContentScript({
         case Event.REPLAY_RECORDING_KEYUP: {
           return replayRecordingKeyup(message.payload)
         }
+        case Event.REPLAY_FROM_WORKFLOW_TRIGGER: {
+          console.log("TRIGGEREED WITH MESSAGE, ", JSON.stringify(message))
+          return {
+            status: TaskStatus.SUCCEEDED,
+            message: `Injected {${Event.REPLAY_FROM_WORKFLOW_TRIGGER}}.`,
+          }
+        }
       }
     })
   },

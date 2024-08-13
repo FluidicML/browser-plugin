@@ -46,6 +46,8 @@ export enum Event {
   REPLAY_RECORDING_CLICK = "REPLAY_RECORDING_CLICK",
   // Sent on a recording (keyup) replay.
   REPLAY_RECORDING_KEYUP = "REPLAY_RECORDING_KEYUP",
+  // Sent on detection of headless landing page with valid workflowIds to be queued for execution.
+  REPLAY_FROM_WORKFLOW_TRIGGER = "REPLAY_FROM_WORKFLOW_TRIGGER",
 }
 
 type BaseMessage<E extends Event, P = null> = {
@@ -105,6 +107,11 @@ export type ReplayRecordingKeyupMessage = BaseMessage<
   { selector: Selector; value: string; timeoutMillis: number }
 >
 
+export type ReplayWorkflowMessage = BaseMessage<
+  Event.REPLAY_FROM_WORKFLOW_TRIGGER,
+  { workflowId: string }
+>
+
 export type Message =
   | ExtractingCheckMessage
   | ExtractingClickMessage
@@ -127,6 +134,7 @@ export type Message =
   | ReplayInjectingMessage
   | ReplayRecordingClickMessage
   | ReplayRecordingKeyupMessage
+  | ReplayWorkflowMessage
 
 export type Response<M extends Message> = M extends
   | ExtractingQueryMessage
@@ -139,6 +147,7 @@ export type Response<M extends Message> = M extends
           | ReplayInjectingMessage
           | ReplayRecordingClickMessage
           | ReplayRecordingKeyupMessage
+          | ReplayWorkflowMessage
       ? TaskResult
       : null
 
