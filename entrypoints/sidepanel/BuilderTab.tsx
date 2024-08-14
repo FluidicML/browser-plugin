@@ -17,7 +17,6 @@ import StepTabPanel from "./builder_tab/StepTabPanel"
 
 type StepTab = {
   key: string
-  label: string
   step: Step | null
 }
 
@@ -35,11 +34,7 @@ const BuilderTab = () => {
     setUUID(store.libraryEditing.uuid)
     setInitTab(store.libraryEditing.init)
     setStepTabs(
-      store.libraryEditing.steps.map((step, index) => ({
-        key: uuidv4(),
-        label: `Step ${index + 1}`,
-        step,
-      }))
+      store.libraryEditing.steps.map((step) => ({ key: uuidv4(), step }))
     )
     store.libraryActions.editWorkflow(null)
   }, [store.libraryEditing])
@@ -149,7 +144,7 @@ const BuilderTab = () => {
                 : "text-destructive data-[state=active]:bg-destructive"
             )}
           >
-            {tab.label}
+            Step {index + 1}
           </TabsTrigger>
         ))}
       </TabsList>
@@ -170,13 +165,7 @@ const BuilderTab = () => {
           onChange={(form) => tabUpdateForm(form, index)}
           onRemove={() => {
             setTabActive(`${index - (tabActiveLast ? 1 : 0)}`)
-            setStepTabs((tabs) => {
-              const spliced = [...tabs].toSpliced(index, 1)
-              for (let i = index; i < spliced.length; ++i) {
-                spliced[i].label = `Step ${i + 1}`
-              }
-              return spliced
-            })
+            setStepTabs((tabs) => [...tabs].toSpliced(index, 1))
           }}
         />
       ))}
@@ -184,24 +173,17 @@ const BuilderTab = () => {
       <div className="flex border-t px-4 py-2">
         <Button
           onClick={() => {
-            if (tabActiveLast) {
-              setStepTabs((tabs) => [
-                ...tabs,
-                {
-                  key: uuidv4(),
-                  label: `Step ${stepTabs.length + 1}`,
-                  step: null,
-                },
-              ])
-            }
+            setStepTabs((tabs) =>
+              tabs.toSpliced(tabActiveIndex + 1, 0, {
+                key: uuidv4(),
+                step: null,
+              })
+            )
             setTabActive(`${tabActiveIndex + 1}`)
           }}
-          disabled={
-            store.sharedLockedBy.size > 0 ||
-            (tabActiveLast && !tabValid(tabActiveIndex))
-          }
+          disabled={store.sharedLockedBy.size > 0}
         >
-          {tabActiveLast ? "New Step" : "Continue"}
+          New Step
         </Button>
         <Button
           variant="secondary"
