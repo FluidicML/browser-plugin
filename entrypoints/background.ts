@@ -10,6 +10,7 @@ import {
 } from "@/utils/messages"
 import { Event } from "@/utils/event"
 import { isSupportedTab } from "@/utils/browser_tabs"
+import { Workflow } from "@/utils/workflow"
 
 // Tabs may not have our content script injected if they were already open
 // before the plugin itself was installed. This array tracks the different
@@ -148,50 +149,29 @@ const syncRecordingState = async (tabId: number) => {
   }
 }
 
-const chromeRuntimeMessageListener = <T extends { event: Event }>(
-  message: T,
-  sender: chrome.runtime.MessageSender
-) => {
-  ;(async () => {
-    switch (message.event) {
-      case Event.WORKFLOW_TRIGGER_QUERY: {
-        const { id: tabId, windowId, url: tabURL } = sender.tab ?? {}
-        if (!tabId || !tabURL)
-          throw new Error(
-            `No tab id ${tabId} or tab url ${JSON.stringify(sender.tab)} found from evt sender`
-          )
+const getWorkflowTargetFromTab = async (tabURL: string): Promise<Workflow> => {
+  // TODO(@morganhowell95): Support enqueue of multiple workflows
+  const workflowIdsToEnqueue = new URL(tabURL).searchParams.getAll(
+    "fluidicWorkflowIds[]"
+  )
+  const [workflowId] = workflowIdsToEnqueue.map((s) => String(s).trim())
+  if (!workflowId)
+    throw new Error(
+      "No workflowId found in tab url query params, url: " + tabURL
+    )
 
-        // TODO(@morganhowell95): Support enqueue of multiple workflows
-        const workflowIdsToEnqueue = new URL(tabURL).searchParams.getAll(
-          "fluidicWorkflowIds[]"
-        )
-        const [workflowId] = workflowIdsToEnqueue.map((s) => String(s).trim())
-        if (!workflowId)
-          throw new Error(
-            "No workflowId found in tab url query params, url: " + tabURL
-          )
+  // Query workflowId as Workflow
+  // TODO(@morganhowell95): Replace with env-based api target OR propagate target in evt payload
+  const response = await fetch(
+    `http://localhost:80/api/workflows/${workflowId}`
+  )
+  const workflow: Workflow = await response.json()
+  if (!workflow)
+    throw new Error(
+      `No workflow found for id ${workflowId} from fetch response`
+    )
 
-        // This will open the side panel programatically — nesting or wrapping in any handler (without injecting a button from chrome runtime trigger by client) will lead to Error — user gesture required
-        // @ts-ignore
-        chrome.sidePanel.open({ windowId })
-        await chrome.sidePanel.setOptions({
-          tabId,
-          path: "sidepanel.html",
-          enabled: true,
-        })
-
-        // Emit event to begin executing workflow
-        await sendExt({
-          event: Event.WORKFLOW_TRIGGER_START,
-          payload: { workflowId },
-        })
-
-        // Clean up listener post-exec, should only execute once
-        chrome.runtime.onMessage.removeListener(chromeRuntimeMessageListener)
-        return
-      }
-    }
-  })()
+  return workflow
 }
 
 const syncTab = async (tab: Tabs.Tab) => {
@@ -202,6 +182,61 @@ const syncTab = async (tab: Tabs.Tab) => {
   await syncExtractingState(tabId)
   await syncInjectingState(tabId)
   await syncRecordingState(tabId)
+}
+
+const chromeRuntimeMessageListener = <M extends Message>(
+  message: M,
+  sender: chrome.runtime.MessageSender
+) => {
+  ;(async () => {
+    // console.debug(
+    //   "chromeRuntimeMessageListener->ReceivedMessage: ",
+    //   JSON.stringify(message)
+    // )
+
+    switch (message.event) {
+      case Event.WORKFLOW_TRIGGER_QUERY: {
+        const tab = sender.tab
+        const { id: tabId, windowId, url: tabURL } = sender.tab ?? {}
+        if (!tab || !tabId || !tabURL)
+          throw new Error(
+            `No tab id ${tabId} or tab url ${JSON.stringify(sender.tab)} found from evt sender`
+          )
+        // Open side panel programatically — nesting or wrapping in any handler (without injecting a button from chrome runtime trigger by client) will lead to Error — user gesture required
+        // @ts-ignore
+        chrome.sidePanel.open({ windowId })
+        await chrome.sidePanel.setOptions({
+          tabId,
+          path: "sidepanel.html",
+          enabled: true,
+        })
+
+        // Query workflow data and begin internal execution of steps sequentially
+        const workflow = await getWorkflowTargetFromTab(tabURL)
+        const tabs = await browser.tabs.query({
+          active: true,
+          currentWindow: true,
+        })
+        const anchorHeadlessTab = tabs.find((t) =>
+          t.url?.includes("headless/home?fluidicWorkflowIds[]")
+        )
+        if (!anchorHeadlessTab || !anchorHeadlessTab.id)
+          throw new Error(
+            "No headless found from tabs query for URL headless/home?fluidicWorkflowIds[]"
+          )
+
+        await injectContentScripts(anchorHeadlessTab.id)
+        await syncTab(anchorHeadlessTab)
+        await sendExt({
+          event: Event.WORKFLOW_TRIGGER_START,
+          payload: { workflow },
+        })
+        // Clean up listener post-exec, should only execute query->start once
+        chrome.runtime.onMessage.removeListener(chromeRuntimeMessageListener)
+        return
+      }
+    }
+  })()
 }
 
 const definition: ReturnType<typeof defineBackground> = defineBackground(() => {

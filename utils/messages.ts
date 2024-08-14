@@ -1,6 +1,6 @@
 import { browser, Runtime } from "wxt/browser"
 import { Selector } from "./selector"
-import { TaskResult } from "./workflow"
+import { TaskResult, Workflow } from "./workflow"
 import { Event } from "./event"
 
 type BaseMessage<E extends Event, P = null> = {
@@ -64,7 +64,7 @@ export type ReplayWorkflowQueryMessage =
   BaseMessage<Event.WORKFLOW_TRIGGER_QUERY>
 export type ReplayWorkflowStartMessage = BaseMessage<
   Event.WORKFLOW_TRIGGER_START,
-  { workflowId: string }
+  { workflow: Workflow }
 >
 export type ReplayWorkflowStopMessage = BaseMessage<Event.WORKFLOW_TRIGGER_STOP>
 

@@ -6,7 +6,6 @@ import {
   addMessageListener,
 } from "@/utils/messages"
 import { Event } from "@/utils/event"
-import { Runtime } from "wxt/browser"
 
 const TRIGGER_REPLAY_ID = "fluidic-trigger-replay-button"
 
@@ -162,6 +161,7 @@ const definition: ReturnType<typeof defineContentScript> = defineContentScript({
   matches: ["*://*/*"],
 
   main(_context: ContentScriptContext) {
+    // If button for headless landing page exists, attach listener so plugin may be launched
     const launchReplayButton = document.querySelector(`#${TRIGGER_REPLAY_ID}`)
     launchReplayButton?.addEventListener("click", () => {
       chrome.runtime.sendMessage({
@@ -171,7 +171,7 @@ const definition: ReturnType<typeof defineContentScript> = defineContentScript({
     })
 
     addMessageListener((message, sender) => {
-      console.debug("Internal Replay Runtime Message ", JSON.stringify(message))
+      // console.debug("Internal Replay Runtime Message ", JSON.stringify(message))
       const { event, payload } = message
 
       switch (event) {
