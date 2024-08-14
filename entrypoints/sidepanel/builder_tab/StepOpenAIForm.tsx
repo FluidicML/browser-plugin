@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Control, useFieldArray, useForm } from "react-hook-form"
 
 import PlusIcon from "@/components/icons/Plus"
+import TrashIcon from "@/components/icons/Trash"
 import {
   type StepOpenAISchema,
   type Step,
@@ -25,24 +26,35 @@ import { useSharedStore } from "../store"
 type ParameterFieldProps = {
   control: Control<StepOpenAISchema>
   index: number
+  onRemove: () => void
 }
 
-const ParameterField = ({ control, index }: ParameterFieldProps) => {
+const ParameterField = ({ control, index, onRemove }: ParameterFieldProps) => {
   return (
     <div className="flex flex-col gap-2">
-      <FormField
-        control={control}
-        name={`params.${index}.name`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>JSON Field {index + 1}</FormLabel>
-            <FormControl>
-              <Input className="mt-2" placeholder="Name" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div className="flex gap-2 items-end">
+        <FormField
+          control={control}
+          name={`params.${index}.name`}
+          render={({ field }) => (
+            <FormItem className="grow">
+              <FormLabel>JSON Field {index + 1}</FormLabel>
+              <FormControl>
+                <Input className="mt-2" placeholder="Name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button
+          type="button"
+          size="icon"
+          className="group hover:bg-destructive/90"
+          onClick={onRemove}
+        >
+          <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
+        </Button>
+      </div>
       <FormField
         control={control}
         name={`params.${index}.description`}
@@ -75,6 +87,7 @@ const StepOpenAIForm = ({ defaultValues, onChange }: StepOpenAIFormProps) => {
       params: [{ name: "", description: "" }],
     },
   })
+
   const params = useFieldArray({
     control: form.control,
     name: "params",
@@ -161,6 +174,7 @@ const StepOpenAIForm = ({ defaultValues, onChange }: StepOpenAIFormProps) => {
               key={field.id}
               control={form.control}
               index={index}
+              onRemove={() => params.remove(index)}
             />
           ))}
           <Button

@@ -45,30 +45,32 @@ const ActionCard = ({
 }: ActionCardProps) => {
   return (
     <Card>
-      <CardContent className="flex flex-col relative">
-        <FormField
-          control={control}
-          name={`params.${index}.name`}
-          render={({ field }) => (
-            // This form field also forces the form to scroll to the bottom
-            // automatically when new entries are inserted. If removed, make
-            // sure we still continue automatically scrolling.
-            <FormItem>
-              <FormControl>
-                <Input className="mb-4" placeholder="Name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button
-          type="button"
-          size="xicon"
-          className="absolute right-1 top-1 group hover:bg-destructive/90"
-          onClick={onRemove}
-        >
-          <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
-        </Button>
+      <CardContent className="flex flex-col">
+        <div className="flex gap-2">
+          <FormField
+            control={control}
+            name={`params.${index}.name`}
+            render={({ field }) => (
+              // This form field also forces the form to scroll to the bottom
+              // automatically when new entries are inserted. If removed, make
+              // sure we still continue automatically scrolling.
+              <FormItem className="grow">
+                <FormControl>
+                  <Input className="mb-4" placeholder="Name" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button
+            type="button"
+            size="icon"
+            className="group hover:bg-destructive/90"
+            onClick={onRemove}
+          >
+            <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
+          </Button>
+        </div>
         <SelectorTable selector={selector} />
       </CardContent>
     </Card>
