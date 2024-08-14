@@ -7,15 +7,7 @@ export default defineConfig({
   modules: ["@wxt-dev/module-react"],
   manifest: {
     action: { default_title: "Click to open sidebar" },
-    permissions: [
-      "scripting",
-      "storage",
-      "tabs",
-      "activeTab",
-      "sidePanel",
-      "http://localhost/*", // TODO(@morganhowell95): Move to build arg .env
-    ],
-    // externally_connectable: ["http://localhost/*"], // TODO(@morganhowell95): Move to build arg .env
+    permissions: ["scripting", "storage", "tabs"],
     host_permissions: ["<all_urls>"],
   },
   vite: () => ({
