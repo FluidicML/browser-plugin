@@ -60,13 +60,16 @@ export type ReplayRecordingKeyupMessage = BaseMessage<
   { selector: Selector; value: string; timeoutSecs: number }
 >
 
-export type ReplayWorkflowQueryMessage =
-  BaseMessage<Event.WORKFLOW_TRIGGER_QUERY>
-export type ReplayWorkflowStartMessage = BaseMessage<
-  Event.WORKFLOW_TRIGGER_START,
+export type TriggerWorkflowQueryMessage =
+  BaseMessage<Event.TRIGGER_WORKFLOW_QUERY>
+export type TriggerWorkflowStartMessage = BaseMessage<
+  Event.TRIGGER_WORKFLOW_START,
   { workflow: Workflow }
 >
-export type ReplayWorkflowStopMessage = BaseMessage<Event.WORKFLOW_TRIGGER_STOP>
+export type TriggerWorkflowStopMessage =
+  BaseMessage<Event.TRIGGER_WORKFLOW_STOP>
+export type TriggerWorkflowCheckMessage =
+  BaseMessage<Event.TRIGGER_WORKFLOW_CHECK>
 
 export type Message =
   | ExtractingCheckMessage
@@ -90,14 +93,15 @@ export type Message =
   | ReplayInjectingMessage
   | ReplayRecordingClickMessage
   | ReplayRecordingKeyupMessage
-  | ReplayWorkflowQueryMessage
-  | ReplayWorkflowStartMessage
-  | ReplayWorkflowStopMessage
+  | TriggerWorkflowQueryMessage
+  | TriggerWorkflowStartMessage
+  | TriggerWorkflowStopMessage
+  | TriggerWorkflowCheckMessage
 
 export type Response<M extends Message> = M extends
   | ExtractingQueryMessage
   | RecordingQueryMessage
-  | ReplayWorkflowQueryMessage
+  | TriggerWorkflowQueryMessage
   ? boolean
   : M extends InjectingQueryMessage
     ? InjectingStartMessage["payload"]
@@ -106,7 +110,7 @@ export type Response<M extends Message> = M extends
           | ReplayInjectingMessage
           | ReplayRecordingClickMessage
           | ReplayRecordingKeyupMessage
-          | ReplayWorkflowStartMessage
+          | TriggerWorkflowStartMessage
       ? TaskResult
       : null
 

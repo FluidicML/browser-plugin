@@ -42,9 +42,11 @@ export enum Event {
   // Sent on a recording (keyup) replay.
   REPLAY_RECORDING_KEYUP = "REPLAY_RECORDING_KEYUP",
   // Event sent from headless landing page with valid workflowIds to init workflow execution from workflow id provided in landing page URL query params.
-  WORKFLOW_TRIGGER_START = "WORKFLOW_TRIGGER_START",
+  TRIGGER_WORKFLOW_START = "TRIGGER_WORKFLOW_START",
   // Clean up workflow trigger init listener and query workflow data from provided id to replay all steps.
-  WORKFLOW_TRIGGER_QUERY = "WORKFLOW_TRIGGER_QUERY",
+  TRIGGER_WORKFLOW_QUERY = "TRIGGER_WORKFLOW_QUERY",
   // End embeddable/programmatic workflow execution.
-  WORKFLOW_TRIGGER_STOP = "WORKFLOW_TRIGGER_STOP",
+  TRIGGER_WORKFLOW_STOP = "TRIGGER_WORKFLOW_STOP",
+  // Check/ping content script on each trigger content script injection attempt.
+  TRIGGER_WORKFLOW_CHECK = "TRIGGER_WORKFLOW_CHECK",
 }

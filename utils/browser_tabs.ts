@@ -15,9 +15,7 @@ export const isSupportedTab = (tab?: Tabs.Tab | null) => {
 
 const waitUntilComplete = (tab: Tabs.Tab): Promise<Tabs.Tab> => {
   return new Promise((resolve) => {
-    if (tab.status === "complete") {
-      return resolve(tab)
-    }
+    if (tab.status === "complete") return resolve(tab)
     const listener = (
       tabId: number,
       changeInfo: Tabs.OnUpdatedChangeInfoType

@@ -6,12 +6,33 @@ import BuilderTab from "./BuilderTab"
 import LibraryTab from "./LibraryTab"
 import RunnerTab from "./RunnerTab"
 import SettingsTab from "./SettingsTab"
+import { Event } from "@/utils/event"
 
 function App() {
   const store = useSharedStore()
 
   React.useEffect(() => {
     document.documentElement.classList.add("dark")
+  }, [])
+
+  // Listen to any workflow trigger events that preload and/or auto execute flows
+  React.useEffect(() => {
+    console.warn("RENDERED EXT APP")
+
+    const listener = addMessageListener((message) => {
+      console.warn("FLUIDIC Received message", JSON.stringify(message))
+      switch (message.event) {
+        case Event.TRIGGER_WORKFLOW_QUERY: {
+          return Promise.resolve(true)
+        }
+        case Event.TRIGGER_WORKFLOW_START: {
+          store.sharedActions.setActiveTab("runner")
+          store.runnerActions.startWorkflow(message.payload.workflow)
+          return
+        }
+      }
+    })
+    return () => removeMessageListener(listener)
   }, [])
 
   return (
