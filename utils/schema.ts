@@ -50,7 +50,7 @@ export type StepInjectingSchema = z.infer<typeof stepInjectingSchema>
 
 // Basic prompting. Ask the user for data that can be interpolated into later
 // steps.
-export const stepPromptSchema = z.object({
+export const stepInputSchema = z.object({
   params: z
     .array(
       z.object({
@@ -62,7 +62,7 @@ export const stepPromptSchema = z.object({
     .nonempty(),
 })
 
-export type StepPromptSchema = z.infer<typeof stepPromptSchema>
+export type StepInputSchema = z.infer<typeof stepInputSchema>
 
 // Navigates to the specified domain. In general, the step is considered
 // complete as soon as the `DomContentLoaded` event fires. This means the
@@ -164,9 +164,9 @@ export type StepRecordingSchema = z.infer<typeof stepRecordingSchema>
 export enum StepKind {
   EXTRACTING = "Extracting",
   INJECTING = "Injecting",
+  INPUT = "Input",
   NAVIGATE = "Navigate",
   OPENAI = "OpenAI",
-  PROMPT = "Prompt",
   RECORDING = "Recording",
 }
 
@@ -180,16 +180,16 @@ export type Step =
       values: StepInjectingSchema
     }
   | {
+      kind: StepKind.INPUT
+      values: StepInputSchema
+    }
+  | {
       kind: StepKind.NAVIGATE
       values: StepNavigateSchema
     }
   | {
       kind: StepKind.OPENAI
       values: StepOpenAISchema
-    }
-  | {
-      kind: StepKind.PROMPT
-      values: StepPromptSchema
     }
   | {
       kind: StepKind.RECORDING
@@ -206,14 +206,14 @@ export const stepSafeParse = (step: Step) => {
     case StepKind.INJECTING: {
       return stepInjectingSchema.safeParse(step.values)
     }
+    case StepKind.INPUT: {
+      return stepInputSchema.safeParse(step.values)
+    }
     case StepKind.NAVIGATE: {
       return stepNavigateSchema.safeParse(step.values)
     }
     case StepKind.OPENAI: {
       return stepOpenAISchema.safeParse(step.values)
-    }
-    case StepKind.PROMPT: {
-      return stepPromptSchema.safeParse(step.values)
     }
     case StepKind.RECORDING: {
       return stepRecordingSchema.safeParse(step.values)
@@ -236,15 +236,15 @@ export const stepParams = (step: Step): string[] => {
     case StepKind.INJECTING: {
       return []
     }
+    case StepKind.INPUT: {
+      const parsed = stepInputSchema.safeParse(step.values)
+      return parsed.success ? parsed.data.params.map((p) => p.name) : []
+    }
     case StepKind.NAVIGATE: {
       return []
     }
     case StepKind.OPENAI: {
       const parsed = stepOpenAISchema.safeParse(step.values)
-      return parsed.success ? parsed.data.params.map((p) => p.name) : []
-    }
-    case StepKind.PROMPT: {
-      const parsed = stepPromptSchema.safeParse(step.values)
       return parsed.success ? parsed.data.params.map((p) => p.name) : []
     }
     case StepKind.RECORDING: {
@@ -275,12 +275,12 @@ export const createWorkflowSchema = z
           values: stepInjectingSchema,
         }),
         z.object({
-          kind: z.literal(StepKind.OPENAI),
-          values: stepOpenAISchema,
+          kind: z.literal(StepKind.INPUT),
+          values: stepInputSchema,
         }),
         z.object({
-          kind: z.literal(StepKind.PROMPT),
-          values: stepPromptSchema,
+          kind: z.literal(StepKind.OPENAI),
+          values: stepOpenAISchema,
         }),
         z.object({
           kind: z.literal(StepKind.RECORDING),

@@ -164,7 +164,7 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
           taskIndex = 0
           break
         }
-        case StepKind.PROMPT: {
+        case StepKind.INPUT: {
           stepIndex += 1
           taskIndex = 0
           break

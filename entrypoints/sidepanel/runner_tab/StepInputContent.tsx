@@ -16,7 +16,7 @@ import {
 import { useSharedStore } from "../store"
 import { type StepContentProps } from "./StepContent"
 
-const stepPromptContentSchema = z.object({
+const stepInputContentSchema = z.object({
   params: z
     .array(
       z.object({
@@ -31,10 +31,10 @@ const stepPromptContentSchema = z.object({
     .nonempty(),
 })
 
-type StepPromptContentSchema = z.infer<typeof stepPromptContentSchema>
+type StepInputContentSchema = z.infer<typeof stepInputContentSchema>
 
 type ParameterFieldProps = {
-  control: Control<StepPromptContentSchema>
+  control: Control<StepInputContentSchema>
   label: string
   index: number
 }
@@ -64,15 +64,15 @@ const ParameterField = ({ control, label, index }: ParameterFieldProps) => {
   )
 }
 
-const StepPromptContent = ({
+const StepInputContent = ({
   values,
   result,
-}: StepContentProps<StepPromptSchema>) => {
+}: StepContentProps<StepInputSchema>) => {
   const store = useSharedStore()
   const latest = result?.results[result.results.length - 1] ?? null
 
-  const form = useForm<StepPromptContentSchema>({
-    resolver: zodResolver(stepPromptContentSchema),
+  const form = useForm<StepInputContentSchema>({
+    resolver: zodResolver(stepInputContentSchema),
     defaultValues: {
       params: values.params.map((p) => ({ name: p.name, value: "" })),
     },
@@ -83,7 +83,7 @@ const StepPromptContent = ({
     name: "params",
   })
 
-  const onSubmit: SubmitHandler<StepPromptContentSchema> = (values) => {
+  const onSubmit: SubmitHandler<StepInputContentSchema> = (values) => {
     if (store.runnerActive === null) {
       return
     }
@@ -126,6 +126,6 @@ const StepPromptContent = ({
 
   return <span>{latest.message ?? "Finished prompting."}</span>
 }
-StepPromptContent.displayName = "StepPromptContent"
+StepInputContent.displayName = "StepInputContent"
 
-export default StepPromptContent
+export default StepInputContent
