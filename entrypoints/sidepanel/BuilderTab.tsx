@@ -18,6 +18,7 @@ import StepTabPanel from "./builder_tab/StepTabPanel"
 type StepTab = {
   key: string
   step: Step | null
+  isDirty: boolean
 }
 
 const BuilderTab = () => {
@@ -34,7 +35,11 @@ const BuilderTab = () => {
     setUUID(store.libraryEditing.uuid)
     setInitTab(store.libraryEditing.init)
     setStepTabs(
-      store.libraryEditing.steps.map((step) => ({ key: uuidv4(), step }))
+      store.libraryEditing.steps.map((step) => ({
+        key: uuidv4(),
+        step,
+        isDirty: false,
+      }))
     )
     store.libraryActions.editWorkflow(null)
   }, [store.libraryEditing])
@@ -84,6 +89,7 @@ const BuilderTab = () => {
       setStepTabs((tabs) => {
         const shallowCopy = [...tabs]
         shallowCopy[index].step = form
+        shallowCopy[index].isDirty = form === null
         return shallowCopy
       })
     },
@@ -167,6 +173,8 @@ const BuilderTab = () => {
             setTabActive(`${index - (tabActiveLast ? 1 : 0)}`)
             setStepTabs((tabs) => [...tabs].toSpliced(index, 1))
           }}
+          forceMount={tab.isDirty ? true : undefined}
+          hidden={tabActiveIndex !== index}
         />
       ))}
 
@@ -177,6 +185,7 @@ const BuilderTab = () => {
               tabs.toSpliced(tabActiveIndex + 1, 0, {
                 key: uuidv4(),
                 step: null,
+                isDirty: true,
               })
             )
             setTabActive(`${tabActiveIndex + 1}`)
