@@ -27,7 +27,7 @@ type Context = {
   taskIndex: number
   params: Map<string, string>
   openAIKey: string
-  replayTimeoutMillis: number
+  replayTimeoutSecs: number
 }
 
 const interpolate = (value: string, params: Map<string, string>): string => {
@@ -48,7 +48,7 @@ const runExtractingTask = async (
     payload: {
       name: values.params[context.taskIndex].name,
       selector: values.params[context.taskIndex].selector,
-      timeoutMillis: context.replayTimeoutMillis,
+      timeoutSecs: context.replayTimeoutSecs,
     },
   })
 }
@@ -63,7 +63,7 @@ const runInjectingTask = async (
       name: values.targets[context.taskIndex].name,
       selector: values.targets[context.taskIndex].selector,
       value: context.params.get(values.targets[context.taskIndex].name) ?? "",
-      timeoutMillis: context.replayTimeoutMillis,
+      timeoutSecs: context.replayTimeoutSecs,
     },
   })
 }
@@ -157,7 +157,9 @@ const replayRecordingTask = async (
         event: Event.REPLAY_RECORDING_CLICK,
         payload: {
           selector: recording.selector,
-          timeoutMillis: context.replayTimeoutMillis,
+          timeoutSecs: recording.replayTimeoutSecs
+            ? parseInt(recording.replayTimeoutSecs)
+            : context.replayTimeoutSecs,
         },
       })
       break
@@ -168,7 +170,9 @@ const replayRecordingTask = async (
         payload: {
           selector: recording.selector,
           value: recording.value,
-          timeoutMillis: context.replayTimeoutMillis,
+          timeoutSecs: recording.replayTimeoutSecs
+            ? parseInt(recording.replayTimeoutSecs)
+            : context.replayTimeoutSecs,
         },
       })
       break
@@ -295,7 +299,7 @@ const RunnerTab = () => {
       taskIndex: sharedStore.runnerTaskIndex,
       params: runnerParams,
       openAIKey: sharedStore.settingsOpenAIKey,
-      replayTimeoutMillis: sharedStore.settingsReplayTimeoutSecs * 1000,
+      replayTimeoutSecs: sharedStore.settingsReplayTimeoutSecs,
     }).then((result) => {
       sharedStore.runnerActions.pushTaskResult(workflow, result)
     })

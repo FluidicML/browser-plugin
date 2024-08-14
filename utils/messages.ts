@@ -1,7 +1,6 @@
 import { browser, Runtime } from "wxt/browser"
 import { Selector } from "./selector"
 import { TaskResult } from "./workflow"
-import { isSupportedTab } from "./browser_tabs"
 import { Event } from "./event"
 
 type BaseMessage<E extends Event, P = null> = {
@@ -46,19 +45,19 @@ export type RecordingStopMessage = BaseMessage<Event.RECORDING_STOP>
 export type ReplayCheckMessage = BaseMessage<Event.REPLAY_CHECK>
 export type ReplayExtractingClickMessage = BaseMessage<
   Event.REPLAY_EXTRACTING_CLICK,
-  { name: string; selector: Selector; timeoutMillis: number }
+  { name: string; selector: Selector; timeoutSecs: number }
 >
 export type ReplayInjectingMessage = BaseMessage<
   Event.REPLAY_INJECTING,
-  { name: string; selector: Selector; value: string; timeoutMillis: number }
+  { name: string; selector: Selector; value: string; timeoutSecs: number }
 >
 export type ReplayRecordingClickMessage = BaseMessage<
   Event.REPLAY_RECORDING_CLICK,
-  { selector: Selector; timeoutMillis: number }
+  { selector: Selector; timeoutSecs: number }
 >
 export type ReplayRecordingKeyupMessage = BaseMessage<
   Event.REPLAY_RECORDING_KEYUP,
-  { selector: Selector; value: string; timeoutMillis: number }
+  { selector: Selector; value: string; timeoutSecs: number }
 >
 
 export type ReplayWorkflowQueryMessage =
@@ -117,21 +116,10 @@ export const sendExt = <M extends Message>(
 ): Promise<Response<M>> => browser.runtime.sendMessage(message, options)
 
 export const sendTab = async <M extends Message>(
-  tabId: number | null,
+  tabId: number,
   message: M,
   options?: Runtime.SendMessageOptionsType
-): Promise<Response<M>> => {
-  if (tabId !== null) {
-    return await browser.tabs.sendMessage(tabId, message, options)
-  }
-  // @ts-ignore
-  for (const tab of await queryTabs({ active: true, currentWindow: true })) {
-    if (tab.id && isSupportedTab(tab)) {
-      return await browser.tabs.sendMessage(tab.id, message, options)
-    }
-  }
-  throw new Error("Could not find active tab.")
-}
+): Promise<Response<M>> => browser.tabs.sendMessage(tabId, message, options)
 
 // A type-safe representation of the types of messages we anticipate handling
 // within the content scripts/extension.
@@ -171,27 +159,6 @@ export const addMessageListener = <M extends Message>(
     }
   }
   browser.runtime.onMessage.addListener(wrapper)
-  return wrapper
-}
-
-export const addChromeMessageListener = <M extends Message>(
-  listener: ChromeMessageListener<M>
-): ChromeMessageListener<M> => {
-  const wrapper: ChromeMessageListener<M> = (message, sender, callback) => {
-    // console.debug(
-    //   "addChromeMessageListener->wrapper: Message Received ",
-    //   JSON.stringify(message),
-    //   " From: ",
-    //   sender
-    // )
-    if (
-      typeof message === "object" &&
-      Object.keys(Event).includes(message.event)
-    ) {
-      return listener(message, sender, callback)
-    }
-  }
-  chrome.runtime.onMessage.addListener(wrapper)
   return wrapper
 }
 

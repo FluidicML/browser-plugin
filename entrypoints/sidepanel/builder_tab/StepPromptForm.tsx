@@ -37,7 +37,7 @@ const ParameterField = ({ control, index, onRemove }: ParameterFieldProps) => {
           <FormItem className="grow">
             <FormLabel>Field {index + 1}</FormLabel>
             <FormControl>
-              <Input placeholder="Name" {...field} />
+              <Input className="mt-2" placeholder="Name" {...field} />
             </FormControl>
             <FormMessage />
           </FormItem>

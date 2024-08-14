@@ -2,6 +2,7 @@ import React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Control, useFieldArray, useForm } from "react-hook-form"
 
+import { getActiveTab } from "@/utils/browser_tabs"
 import {
   type StepRecordingSchema,
   type Step,
@@ -26,6 +27,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Form,
@@ -57,6 +59,7 @@ const ActionCard = ({
   recording,
   onRemove,
 }: ActionCardProps) => {
+  const sharedStore = useSharedStore()
   const [isExpanded, setIsExpanded] = React.useState(false)
 
   const action = recording.action
@@ -111,22 +114,21 @@ const ActionCard = ({
               </div>
             </div>
           </CollapsibleTrigger>
-          <CollapsibleContent className="pt-1">
+          <CollapsibleContent className="pt-4 space-y-3">
             <FormField
               control={control}
               name={`recordings.${index}.fallible`}
               render={({ field }) => (
-                <FormItem className="flex gap-2 items-start">
-                  <FormControl className="mt-3">
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div>
-                    <FormLabel className="text-xs">
-                      This step can fail.
-                    </FormLabel>
+                <FormItem>
+                  <FormLabel className="text-xs">This step can fail.</FormLabel>
+                  <div className="flex gap-2 items-start">
+                    <FormControl>
+                      <Checkbox
+                        className="mt-1"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
                     <FormDescription className="text-xs">
                       Lets the workflow continue even if the action fails.
                     </FormDescription>
@@ -138,22 +140,44 @@ const ActionCard = ({
               control={control}
               name={`recordings.${index}.confirmed`}
               render={({ field }) => (
-                <FormItem className="flex gap-2 items-start">
-                  <FormControl className="mt-3">
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div>
-                    <FormLabel className="text-xs">
-                      This step requires confirmation.
-                    </FormLabel>
+                <FormItem>
+                  <FormLabel className="text-xs">
+                    This step requires confirmation.
+                  </FormLabel>
+                  <div className="flex gap-2 items-start">
+                    <FormControl>
+                      <Checkbox
+                        className="mt-1"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
                     <FormDescription className="text-xs">
                       Prompts the user for confirmation before continuing to the
                       next action.
                     </FormDescription>
                   </div>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={control}
+              name={`recordings.${index}.replayTimeoutSecs`}
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <div>
+                    <FormLabel className="text-xs">Timeout (Sec.)</FormLabel>
+                    <FormDescription className="text-xs">
+                      Override how long this step can take before timing out.
+                    </FormDescription>
+                  </div>
+                  <FormControl className="mt-2">
+                    <Input
+                      type="number"
+                      placeholder={`${sharedStore.settingsReplayTimeoutSecs}`}
+                      {...field}
+                    />
+                  </FormControl>
                 </FormItem>
               )}
             />
@@ -181,13 +205,18 @@ const StepRecordingForm = ({
 
   const toggleRecording = React.useCallback(async () => {
     try {
+      const tab = await getActiveTab()
+      if (!tab?.id) {
+        console.warn("Attempting to trigger for unsupported tab.")
+        return
+      }
       if (isRecording) {
-        await sendTab(null, {
+        await sendTab(tab.id, {
           event: Event.RECORDING_STOP,
           payload: null,
         })
       } else {
-        await sendTab(null, {
+        await sendTab(tab.id, {
           event: Event.RECORDING_START,
           payload: null,
         })
@@ -219,13 +248,8 @@ const StepRecordingForm = ({
   // and deletions. Insertions should scroll downward. Deletions should not.
   const recordingsCount = React.useRef(defaultValues?.recordings.length ?? 0)
 
-  React.useEffect(() => {
-    return () => {
-      sendTab(null, { event: Event.RECORDING_STOP, payload: null })
-      store.sharedActions.unlock(id)
-    }
-  }, [store.sharedActions])
-
+  // Notify on form changes. Status is propagated upward so we can decide
+  // whether or not the user is allowed to save the workflow.
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       if (values.recordings) {
@@ -244,10 +268,14 @@ const StepRecordingForm = ({
     return () => subscription.unsubscribe()
   }, [triggerScroll, form.watch])
 
+  // Process messages while this form is active. Necessary for tracking which
+  // elements the user is recording against as well as synchronizing state
+  // across tabs (e.g. on change).
   React.useEffect(() => {
     if (!isRecording) {
       return
     }
+
     const listener = addMessageListener((message) => {
       switch (message.event) {
         case Event.RECORDING_QUERY: {
@@ -267,10 +295,14 @@ const StepRecordingForm = ({
           const index = recordings.fields.length - 1
           const last = recordings.fields[index]
           const value = form.watch(`recordings.${index}.value`)
+          const replayTimeoutSecs = form.watch(
+            `recordings.${index}.replayTimeoutSecs`
+          )
           if (message.payload.append && last.action === "keyup") {
             recordings.update(recordings.fields.length - 1, {
               ...message.payload,
               value: value + message.payload.value,
+              replayTimeoutSecs: replayTimeoutSecs,
             })
           } else {
             recordings.append(message.payload)
@@ -279,8 +311,25 @@ const StepRecordingForm = ({
         }
       }
     })
+
     return () => removeMessageListener(listener)
   }, [isRecording, recordings])
+
+  // Cleanup on dismount. Ensure that if we are actively recording, we notify
+  // any tabs that we are done.
+  React.useEffect(() => {
+    return () => {
+      if (!isRecording) {
+        return
+      }
+      getActiveTab().then((tab) => {
+        if (tab?.id) {
+          sendTab(tab.id, { event: Event.RECORDING_STOP, payload: null })
+          store.sharedActions.unlock(id)
+        }
+      })
+    }
+  }, [])
 
   return (
     <Form {...form}>
