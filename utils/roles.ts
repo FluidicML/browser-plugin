@@ -625,6 +625,7 @@ export const subrolesOf = (role: string): string[] => {
     pending.push(...(ROLES[next]?.subroles ?? []))
     // Even if `next` isn't in ROLES, push anyways. This accounts for cases
     // where a site specifies an unknown role - we can still match on it.
+    // @ts-ignore
     subroles.push(next)
   }
 

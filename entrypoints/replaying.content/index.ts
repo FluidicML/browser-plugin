@@ -1,6 +1,14 @@
 import type { ContentScriptContext } from "wxt/client"
 import { TaskStatus } from "@/utils/workflow"
-import { Event, type Response, addMessageListener } from "@/utils/messages"
+import {
+  ReplayWorkflowStartMessage,
+  type Response,
+  addMessageListener,
+} from "@/utils/messages"
+import { Event } from "@/utils/event"
+import { Runtime } from "wxt/browser"
+
+const TRIGGER_REPLAY_ID = "fluidic-trigger-replay-button"
 
 const replayExtractingClick = async (
   payload: ReplayExtractingClickMessage["payload"]
@@ -129,33 +137,53 @@ const replayRecordingKeyup = async (
   return { status: TaskStatus.SUCCEEDED, message: "Keyup." }
 }
 
+const replayWorkflow = async (
+  payload: ReplayWorkflowStartMessage["payload"]
+): Promise<Response<ReplayWorkflowStartMessage>> => {
+  return {
+    status: TaskStatus.SUCCEEDED,
+    message: `Replay workflow {${JSON.stringify(payload)}}.`,
+  }
+}
+
 const definition: ReturnType<typeof defineContentScript> = defineContentScript({
   matches: ["*://*/*"],
 
   main(_context: ContentScriptContext) {
-    addMessageListener((message) => {
-      switch (message.event) {
+    const launchReplayButton = document.querySelector(`#${TRIGGER_REPLAY_ID}`)
+    launchReplayButton?.addEventListener("click", () => {
+      chrome.runtime.sendMessage({
+        event: Event.WORKFLOW_TRIGGER_QUERY,
+        payload: null,
+      })
+    })
+
+    addMessageListener((message, sender) => {
+      console.debug("Internal Replay Runtime Message ", JSON.stringify(message))
+      const { event, payload } = message
+
+      switch (event) {
         case Event.REPLAY_CHECK: {
           return Promise.resolve(true)
         }
+        case Event.WORKFLOW_TRIGGER_STOP:
+        case Event.WORKFLOW_TRIGGER_QUERY: {
+          return Promise.resolve(true)
+        }
+        case Event.WORKFLOW_TRIGGER_START: {
+          return replayWorkflow(payload)
+        }
         case Event.REPLAY_EXTRACTING_CLICK: {
-          return replayExtractingClick(message.payload)
+          return replayExtractingClick(payload)
         }
         case Event.REPLAY_INJECTING: {
-          return replayInjecting(message.payload)
+          return replayInjecting(payload)
         }
         case Event.REPLAY_RECORDING_CLICK: {
-          return replayRecordingClick(message.payload)
+          return replayRecordingClick(payload)
         }
         case Event.REPLAY_RECORDING_KEYUP: {
-          return replayRecordingKeyup(message.payload)
-        }
-        case Event.REPLAY_FROM_WORKFLOW_TRIGGER: {
-          console.log("TRIGGEREED WITH MESSAGE, ", JSON.stringify(message))
-          return {
-            status: TaskStatus.SUCCEEDED,
-            message: `Injected {${Event.REPLAY_FROM_WORKFLOW_TRIGGER}}.`,
-          }
+          return replayRecordingKeyup(payload)
         }
       }
     })

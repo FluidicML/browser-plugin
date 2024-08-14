@@ -2,53 +2,7 @@ import { browser, Runtime } from "wxt/browser"
 import { Selector } from "./selector"
 import { TaskResult } from "./workflow"
 import { isSupportedTab } from "./browser_tabs"
-
-export enum Event {
-  // Checks if the extraction content script is loaded.
-  EXTRACTING_CHECK = "EXTRACTING_CHECK",
-  // Triggers on clicks while an extraction step is active.
-  EXTRACTING_CLICK = "EXTRACTING_CLICK",
-  // Queries for whether an extraction step is currently active.
-  EXTRACTING_QUERY = "EXTRACTING_QUERY",
-  // Indicates an extraction step was turned on.
-  EXTRACTING_START = "EXTRACTING_START",
-  // Indicates an extraction step was turned off.
-  EXTRACTING_STOP = "EXTRACTING_STOP",
-  // Checks if the injection content script is loaded.
-  INJECTING_CHECK = "INJECTING_CHECK",
-  // Triggers on clicks while an injection step is active.
-  INJECTING_CLICK = "INJECTING_CLICK",
-  // Queries for whether an injection step is currently active.
-  INJECTING_QUERY = "INJECTING_QUERY",
-  // Indicates an injection step was turned on.
-  INJECTING_START = "INJECTING_START",
-  // Indicates an injection step was turned off.
-  INJECTING_STOP = "INJECTING_STOP",
-  // Checks if the recording content script is loaded.
-  RECORDING_CHECK = "RECORDING_CHECK",
-  // Triggers on clicks while a recording step is active.
-  RECORDING_CLICK = "RECORDING_CLICK",
-  // Triggers on keyups while a recording step is active.
-  RECORDING_KEYUP = "RECORDING_KEYUP",
-  // Queries for whether a recording step is currently active.
-  RECORDING_QUERY = "RECORDING_QUERY",
-  // Indicates a recording step was turned on.
-  RECORDING_START = "RECORDING_START",
-  // Indicates a recording step was turned off.
-  RECORDING_STOP = "RECORDING_STOP",
-  // Checks if the replay content script is loaded.
-  REPLAY_CHECK = "REPLAY_CHECK",
-  // Sent on an extraction replay.
-  REPLAY_EXTRACTING_CLICK = "REPLAY_EXTRACTING_CLICK",
-  // Sent on an injection replay.
-  REPLAY_INJECTING = "REPLAY_INJECTING",
-  // Sent on a recording (click) replay.
-  REPLAY_RECORDING_CLICK = "REPLAY_RECORDING_CLICK",
-  // Sent on a recording (keyup) replay.
-  REPLAY_RECORDING_KEYUP = "REPLAY_RECORDING_KEYUP",
-  // Sent on detection of headless landing page with valid workflowIds to be queued for execution.
-  REPLAY_FROM_WORKFLOW_TRIGGER = "REPLAY_FROM_WORKFLOW_TRIGGER",
-}
+import { Event } from "./event"
 
 type BaseMessage<E extends Event, P = null> = {
   event: E
@@ -107,10 +61,13 @@ export type ReplayRecordingKeyupMessage = BaseMessage<
   { selector: Selector; value: string; timeoutMillis: number }
 >
 
-export type ReplayWorkflowMessage = BaseMessage<
-  Event.REPLAY_FROM_WORKFLOW_TRIGGER,
+export type ReplayWorkflowQueryMessage =
+  BaseMessage<Event.WORKFLOW_TRIGGER_QUERY>
+export type ReplayWorkflowStartMessage = BaseMessage<
+  Event.WORKFLOW_TRIGGER_START,
   { workflowId: string }
 >
+export type ReplayWorkflowStopMessage = BaseMessage<Event.WORKFLOW_TRIGGER_STOP>
 
 export type Message =
   | ExtractingCheckMessage
@@ -134,11 +91,14 @@ export type Message =
   | ReplayInjectingMessage
   | ReplayRecordingClickMessage
   | ReplayRecordingKeyupMessage
-  | ReplayWorkflowMessage
+  | ReplayWorkflowQueryMessage
+  | ReplayWorkflowStartMessage
+  | ReplayWorkflowStopMessage
 
 export type Response<M extends Message> = M extends
   | ExtractingQueryMessage
   | RecordingQueryMessage
+  | ReplayWorkflowQueryMessage
   ? boolean
   : M extends InjectingQueryMessage
     ? InjectingStartMessage["payload"]
@@ -147,7 +107,7 @@ export type Response<M extends Message> = M extends
           | ReplayInjectingMessage
           | ReplayRecordingClickMessage
           | ReplayRecordingKeyupMessage
-          | ReplayWorkflowMessage
+          | ReplayWorkflowStartMessage
       ? TaskResult
       : null
 
@@ -164,6 +124,7 @@ export const sendTab = async <M extends Message>(
   if (tabId !== null) {
     return await browser.tabs.sendMessage(tabId, message, options)
   }
+  // @ts-ignore
   for (const tab of await queryTabs({ active: true, currentWindow: true })) {
     if (tab.id && isSupportedTab(tab)) {
       return await browser.tabs.sendMessage(tab.id, message, options)
@@ -174,10 +135,16 @@ export const sendTab = async <M extends Message>(
 
 // A type-safe representation of the types of messages we anticipate handling
 // within the content scripts/extension.
-type MessageListener<M extends Message> = (
+export type MessageListener<M extends Message> = (
   message: M,
   sender?: Runtime.MessageSender
 ) => Promise<Response<M>> | true | void
+
+export type ChromeMessageListener<M extends Message> = (
+  message: M,
+  sender: chrome.runtime.MessageSender,
+  sendResponse: (response?: Response<M>) => void
+) => void
 
 // If passing an async function, the listener will return a Promise for every
 // message it receives, preventing other listeners from responding. If the
@@ -188,8 +155,14 @@ type MessageListener<M extends Message> = (
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage
 export const addMessageListener = <M extends Message>(
   listener: MessageListener<M>
-) => {
+): MessageListener<M> => {
   const wrapper: MessageListener<M> = (message, sender) => {
+    // console.debug(
+    //   "addMessageListener->wrapper: Message Received ",
+    //   JSON.stringify(message),
+    //   " From: ",
+    //   sender
+    // )
     if (
       typeof message === "object" &&
       Object.keys(Event).includes(message.event)
@@ -198,6 +171,27 @@ export const addMessageListener = <M extends Message>(
     }
   }
   browser.runtime.onMessage.addListener(wrapper)
+  return wrapper
+}
+
+export const addChromeMessageListener = <M extends Message>(
+  listener: ChromeMessageListener<M>
+): ChromeMessageListener<M> => {
+  const wrapper: ChromeMessageListener<M> = (message, sender, callback) => {
+    // console.debug(
+    //   "addChromeMessageListener->wrapper: Message Received ",
+    //   JSON.stringify(message),
+    //   " From: ",
+    //   sender
+    // )
+    if (
+      typeof message === "object" &&
+      Object.keys(Event).includes(message.event)
+    ) {
+      return listener(message, sender, callback)
+    }
+  }
+  chrome.runtime.onMessage.addListener(wrapper)
   return wrapper
 }
 
