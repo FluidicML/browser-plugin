@@ -17,9 +17,9 @@ import BracesIcon from "@/components/icons/Braces"
 import TrashIcon from "@/components/icons/Trash"
 import StepExtractingForm from "./StepExtractingForm"
 import StepInjectingForm from "./StepInjectingForm"
+import StepInputForm from "./StepInputForm"
 import StepNavigateForm from "./StepNavigateForm"
 import StepOpenAIForm from "./StepOpenAIForm"
-import StepPromptForm from "./StepPromptForm"
 import StepRecordingForm from "./StepRecordingForm"
 
 type ParameterSheetProps = {
@@ -128,11 +128,11 @@ const StepTabPanel = React.forwardRef<
           />
         )
       }
-      case StepKind.PROMPT: {
+      case StepKind.INPUT: {
         return (
-          <StepPromptForm
+          <StepInputForm
             defaultValues={
-              defaultValues?.kind === StepKind.PROMPT
+              defaultValues?.kind === StepKind.INPUT
                 ? defaultValues.values
                 : null
             }

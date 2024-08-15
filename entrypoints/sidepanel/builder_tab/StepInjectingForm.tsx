@@ -250,8 +250,8 @@ const StepInjectingForm = ({
   if (params.size === 0) {
     return (
       <p>
-        You have not defined any parameters yet. Consider using a{" "}
-        <span className="font-bold">Prompt</span> step before this one.
+        You have not defined any parameters yet. Consider using an{" "}
+        <span className="font-bold">Input</span> step before this one.
       </p>
     )
   }

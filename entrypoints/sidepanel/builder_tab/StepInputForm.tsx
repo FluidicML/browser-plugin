@@ -5,10 +5,10 @@ import { Control, useFieldArray, useForm } from "react-hook-form"
 import PlusIcon from "@/components/icons/Plus"
 import TrashIcon from "@/components/icons/Trash"
 import {
-  type StepPromptSchema,
+  type StepInputSchema,
   type Step,
   StepKind,
-  stepPromptSchema,
+  stepInputSchema,
 } from "@/utils/schema"
 import {
   Form,
@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 type ParameterFieldProps = {
-  control: Control<StepPromptSchema>
+  control: Control<StepInputSchema>
   index: number
   onRemove: () => void
 }
@@ -55,14 +55,14 @@ const ParameterField = ({ control, index, onRemove }: ParameterFieldProps) => {
   )
 }
 
-type StepPromptFormProps = {
-  defaultValues: StepPromptSchema | null
+type StepInputFormProps = {
+  defaultValues: StepInputSchema | null
   onChange: (values: Step | null) => void
 }
 
-const StepPromptForm = ({ defaultValues, onChange }: StepPromptFormProps) => {
-  const form = useForm<StepPromptSchema>({
-    resolver: zodResolver(stepPromptSchema),
+const StepInputForm = ({ defaultValues, onChange }: StepInputFormProps) => {
+  const form = useForm<StepInputSchema>({
+    resolver: zodResolver(stepInputSchema),
     defaultValues: defaultValues ?? { params: [{ name: "" }] },
   })
   const params = useFieldArray({
@@ -72,9 +72,9 @@ const StepPromptForm = ({ defaultValues, onChange }: StepPromptFormProps) => {
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
-      const parsed = stepPromptSchema.safeParse(values)
+      const parsed = stepInputSchema.safeParse(values)
       onChange(
-        parsed.success ? { kind: StepKind.PROMPT, values: parsed.data } : null
+        parsed.success ? { kind: StepKind.INPUT, values: parsed.data } : null
       )
     })
     return () => subscription.unsubscribe()
@@ -109,6 +109,6 @@ const StepPromptForm = ({ defaultValues, onChange }: StepPromptFormProps) => {
     </Form>
   )
 }
-StepPromptForm.displayName = "StepPromptForm"
+StepInputForm.displayName = "StepInputForm"
 
-export default StepPromptForm
+export default StepInputForm

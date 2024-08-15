@@ -13,9 +13,9 @@ import {
 import { type StepResult, getStepResultStatus } from "@/utils/workflow"
 import StepExtractingContent from "./StepExtractingContent"
 import StepInjectingContent from "./StepInjectingContent"
+import StepInputContent from "./StepInputContent"
 import StepNavigateContent from "./StepNavigateContent"
 import StepOpenAIContent from "./StepOpenAIContent"
-import StepPromptContent from "./StepPromptContent"
 import StepRecordingContent from "./StepRecordingContent"
 
 type StepCardContentProps = {
@@ -39,8 +39,8 @@ const StepCardContent = ({ step, result }: StepCardContentProps) => {
     case StepKind.OPENAI: {
       return <StepOpenAIContent values={step.values} result={result} />
     }
-    case StepKind.PROMPT: {
-      return <StepPromptContent values={step.values} result={result} />
+    case StepKind.INPUT: {
+      return <StepInputContent values={step.values} result={result} />
     }
     case StepKind.RECORDING: {
       return <StepRecordingContent values={step.values} result={result} />

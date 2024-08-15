@@ -247,7 +247,7 @@ const runTask = async (context: Context): Promise<TaskResult> => {
       result = await runOpenAITask(context, step.values)
       break
     }
-    case StepKind.PROMPT: {
+    case StepKind.INPUT: {
       result = { status: TaskStatus.SUCCEEDED, isPaused: true }
       break
     }
