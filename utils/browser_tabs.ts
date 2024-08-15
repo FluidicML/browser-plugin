@@ -1,16 +1,18 @@
 import { type Tabs, browser } from "wxt/browser"
 
 export const isSupportedTab = (tab?: Tabs.Tab | null) => {
-  const isSupportedTab =
+  return (
     tab &&
     tab.id &&
     (tab.url?.startsWith("http://") || tab.url?.startsWith("https://"))
-  return isSupportedTab
+  )
 }
 
 const waitUntilComplete = (tab: Tabs.Tab): Promise<Tabs.Tab> => {
   return new Promise((resolve) => {
-    if (tab.status === "complete") return resolve(tab)
+    if (tab.status === "complete") {
+      return resolve(tab)
+    }
     const listener = (
       tabId: number,
       changeInfo: Tabs.OnUpdatedChangeInfoType

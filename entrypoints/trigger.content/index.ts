@@ -1,4 +1,7 @@
 import type { ContentScriptContext } from "wxt/client"
+import { Runtime } from "wxt/browser"
+import axios from "axios"
+
 import { TaskStatus } from "@/utils/workflow"
 import {
   type Response,
@@ -9,7 +12,7 @@ import {
 import { Event } from "@/utils/event"
 
 const TRIGGER_REPLAY_ID = "fluidic-trigger-replay-button"
-const TRIGGER_MIN_INIT_TIMEOUT = 2500
+const TRIGGER_INIT_TIMEOUT = 1500
 
 const replayWorkflow = async (
   payload: TriggerWorkflowStartMessage["payload"]
@@ -17,7 +20,7 @@ const replayWorkflow = async (
   // Wait for main.tsx entrypoint App to load
   await waitForSelector(
     '[fluidic-react-app-loaded="true"]',
-    TRIGGER_MIN_INIT_TIMEOUT
+    TRIGGER_INIT_TIMEOUT
   )
   // Send event to trigger workflow via store sync
   await sendExt({
@@ -40,7 +43,7 @@ const definition: ReturnType<typeof defineContentScript> = defineContentScript({
     // If button for headless landing page exists, attach listener so ext may be launched
     const [launchReplayButton] = await waitForSelector(
       `#${TRIGGER_REPLAY_ID}`,
-      TRIGGER_MIN_INIT_TIMEOUT
+      TRIGGER_INIT_TIMEOUT
     )
     launchReplayButton?.addEventListener("click", () => {
       sendExt({
