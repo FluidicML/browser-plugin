@@ -64,7 +64,11 @@ const InitTabPanel = React.forwardRef<
               <FormItem>
                 <FormLabel>Workflow Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="The name of your workflow" {...field} />
+                  <Input
+                    className="mt-2"
+                    placeholder="The name of your workflow"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

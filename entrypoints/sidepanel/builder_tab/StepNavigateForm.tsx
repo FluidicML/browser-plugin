@@ -57,7 +57,11 @@ const StepNavigateForm = ({
             <FormItem>
               <FormLabel>URL</FormLabel>
               <FormControl>
-                <Input placeholder="https://fluidicml.com" {...field} />
+                <Input
+                  className="mt-2"
+                  placeholder="https://fluidicml.com"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
