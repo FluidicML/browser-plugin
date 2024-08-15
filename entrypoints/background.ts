@@ -183,11 +183,7 @@ const fetchWorkflow = async (tabURL: string): Promise<Workflow> => {
   return workflow
 }
 
-const syncTab = async (tab: Tabs.Tab) => {
-  const { id: tabId } = tab
-  if (!tabId)
-    throw new Error("background->syncTab: tabId is undefined from Tabs.Tab")
-
+const syncTab = async (tabId: number) => {
   await syncExtractingState(tabId)
   await syncInjectingState(tabId)
   await syncRecordingState(tabId)
@@ -251,13 +247,14 @@ const definition: ReturnType<typeof defineBackground> = defineBackground(() => {
       return
     }
     await injectContentScripts(activeInfo.tabId)
-    await syncTab(tab)
+    await syncTab(activeInfo.tabId)
   })
 
   browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-    if (!tabId || changeInfo.status !== "complete" || !isSupportedTab(tab))
+    if (!tabId || changeInfo.status !== "complete" || !isSupportedTab(tab)) {
       return
-    await syncTab(tab)
+    }
+    await syncTab(tabId)
   })
 
   // chrome.runtime.onMessage listeners must be set up in background service via top-level onDefineBackground;
