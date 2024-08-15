@@ -64,7 +64,7 @@ export type TriggerWorkflowQueryMessage =
   BaseMessage<Event.TRIGGER_WORKFLOW_QUERY>
 export type TriggerWorkflowStartMessage = BaseMessage<
   Event.TRIGGER_WORKFLOW_START,
-  { workflow: Workflow }
+  { workflow: Workflow; openAIKey?: string | null }
 >
 export type TriggerWorkflowCheckMessage =
   BaseMessage<Event.TRIGGER_WORKFLOW_CHECK>

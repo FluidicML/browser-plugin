@@ -29,6 +29,11 @@ export const fetchWorkflow = async (tabURL: string): Promise<Workflow> => {
   return workflow
 }
 
+export const getOpenAIKey = (tabURL: string): string | null => {
+  const openAIKey = new URL(tabURL).searchParams.get("openAIKey")
+  return openAIKey
+}
+
 // Top-level background listener to init flows within content script inject components; must be in background.ts and async iife wrapped to avoid 'Error - user gesture required'
 export const topLevelBackgroundMsgListener = <M extends Message>(
   message: M,
@@ -63,7 +68,7 @@ export const topLevelBackgroundMsgListener = <M extends Message>(
           )
         await sendTab(anchorHeadlessTab.id, {
           event: Event.TRIGGER_WORKFLOW_START,
-          payload: { workflow },
+          payload: { workflow, openAIKey: getOpenAIKey(tabURL) },
         })
         removeMessageListener(topLevelBackgroundMsgListener)
         return

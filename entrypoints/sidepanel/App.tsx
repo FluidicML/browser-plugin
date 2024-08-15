@@ -23,8 +23,10 @@ function App() {
           return Promise.resolve(true)
         }
         case Event.TRIGGER_WORKFLOW_START: {
+          const { openAIKey, workflow } = message.payload
+          openAIKey && store.settingsActions.setOpenAIKey(openAIKey)
           store.sharedActions.setActiveTab("runner")
-          store.runnerActions.startWorkflow(message.payload.workflow)
+          store.runnerActions.startWorkflow(workflow)
           return
         }
       }
