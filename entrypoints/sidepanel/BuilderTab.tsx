@@ -156,7 +156,7 @@ const BuilderTab = () => {
       </TabsList>
 
       <InitTabPanel
-        className="grow px-4 overflow-y-auto scrollbar"
+        className="grow px-4"
         value="-1"
         defaultValues={initTab}
         onChange={setInitTab}
@@ -164,7 +164,7 @@ const BuilderTab = () => {
       {stepTabs.map((tab, index) => (
         <StepTabPanel
           key={tab.key}
-          className="grow px-4 overflow-y-auto scrollbar"
+          className="grow px-4"
           value={`${index}`}
           defaultValues={tab.step}
           params={tabParams(index)}

@@ -184,7 +184,10 @@ const StepExtractingForm = ({
 
   return (
     <Form {...form}>
-      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+      <form
+        className="grow flex flex-col overflow-y-auto space-y-4"
+        onSubmit={(e) => e.preventDefault()}
+      >
         <p>
           Click "Start" and then click on elements whose text you want to
           extract.
@@ -207,7 +210,7 @@ const StepExtractingForm = ({
           )}
         </Button>
         {params.fields.length > 0 && (
-          <div className="flex flex-col gap-4">
+          <div className="grow flex flex-col gap-4 overflow-y-auto scrollbar">
             <p>Name each extraction for insertion into subsequent steps.</p>
             {params.fields.map((param, index) => (
               <ActionCard

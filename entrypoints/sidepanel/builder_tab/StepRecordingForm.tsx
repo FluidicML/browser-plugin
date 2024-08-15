@@ -191,16 +191,15 @@ const ActionCard = ({
 type StepRecordingFormProps = {
   defaultValues: StepRecordingSchema | null
   onChange: (values: Step | null) => void
-  triggerScroll: () => void
 }
 
 const StepRecordingForm = ({
   defaultValues,
   onChange,
-  triggerScroll,
 }: StepRecordingFormProps) => {
   const id = React.useId()
   const store = useSharedStore()
+  const scrollRef = React.useRef<HTMLDivElement | null>(null)
   const [isRecording, setIsRecording] = React.useState(false)
 
   const toggleRecording = React.useCallback(async () => {
@@ -253,8 +252,11 @@ const StepRecordingForm = ({
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       if (values.recordings) {
-        if (values.recordings.length > recordingsCount.current) {
-          triggerScroll()
+        if (
+          values.recordings.length > recordingsCount.current &&
+          scrollRef.current
+        ) {
+          scrollRef.current.scrollTo(0, scrollRef.current.scrollHeight)
         }
         recordingsCount.current = values.recordings.length
       }
@@ -266,7 +268,7 @@ const StepRecordingForm = ({
       )
     })
     return () => subscription.unsubscribe()
-  }, [triggerScroll, form.watch])
+  }, [form.watch])
 
   // Process messages while this form is active. Necessary for tracking which
   // elements the user is recording against as well as synchronizing state
@@ -333,7 +335,10 @@ const StepRecordingForm = ({
 
   return (
     <Form {...form}>
-      <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+      <form
+        className="grow flex flex-col overflow-y-auto space-y-4"
+        onSubmit={(e) => e.preventDefault()}
+      >
         <p>
           Click "Start" and then interact with the browser like you normally do.
           We track each click, type, etc. automatically.
@@ -355,7 +360,10 @@ const StepRecordingForm = ({
             </>
           )}
         </Button>
-        <div className="flex flex-col gap-4 pt-2">
+        <div
+          ref={scrollRef}
+          className="grow flex flex-col gap-4 pt-2 overflow-y-auto scrollbar"
+        >
           {...recordings.fields.map((recording, index) => (
             <ActionCard
               key={recording.id}
