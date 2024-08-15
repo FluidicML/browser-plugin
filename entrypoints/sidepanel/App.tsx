@@ -17,10 +17,7 @@ function App() {
 
   // Listen to any workflow trigger events that preload and/or auto execute flows
   React.useEffect(() => {
-    console.warn("RENDERED EXT APP")
-
     const listener = addMessageListener((message) => {
-      console.warn("FLUIDIC Received message", JSON.stringify(message))
       switch (message.event) {
         case Event.TRIGGER_WORKFLOW_QUERY: {
           return Promise.resolve(true)
@@ -32,6 +29,8 @@ function App() {
         }
       }
     })
+    // Set data attribute to allow content scripts to block until app listeners have been set
+    document.body.setAttribute("fluidic-react-app-loaded", "true")
     return () => removeMessageListener(listener)
   }, [])
 

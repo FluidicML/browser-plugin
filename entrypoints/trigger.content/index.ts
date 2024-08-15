@@ -14,7 +14,19 @@ const TRIGGER_MIN_INIT_TIMEOUT = 2500
 const replayWorkflow = async (
   payload: TriggerWorkflowStartMessage["payload"]
 ): Promise<Response<TriggerWorkflowStartMessage>> => {
-  // TODO(@morganhowell95): Implement auto workflow exec
+  // Wait for main.tsx entrypoint App to load
+  await waitForSelector(
+    '[fluidic-react-app-loaded="true"]',
+    TRIGGER_MIN_INIT_TIMEOUT
+  )
+  // Send event to trigger workflow via store sync
+  await sendExt({
+    event: Event.TRIGGER_WORKFLOW_START,
+    payload,
+  })
+
+  // TODO(@morganhowell95): Handle error states
+
   return {
     status: TaskStatus.SUCCEEDED,
     message: `Triggered Replay workflow {${JSON.stringify(payload)}}.`,
@@ -25,18 +37,12 @@ const definition: ReturnType<typeof defineContentScript> = defineContentScript({
   matches: ["*://*/*"], // TODO(@morganhowell95): Restrict to FluidicML Web App Headless Landing Page
 
   async main(_context: ContentScriptContext) {
-    // If button for headless landing page exists, attach listener so plugin may be launched
-    // TODO(@morganhowell95): waitForSelector with timeout is safer than immediate querySelector below however need to refactor for top-level main async handling
-    // const launchReplayButton = document.querySelector(`#${TRIGGER_REPLAY_ID}`)
+    // If button for headless landing page exists, attach listener so ext may be launched
     const [launchReplayButton] = await waitForSelector(
       `#${TRIGGER_REPLAY_ID}`,
       TRIGGER_MIN_INIT_TIMEOUT
     )
     launchReplayButton?.addEventListener("click", () => {
-      //   chrome.runtime.sendMessage({
-      //     event: Event.TRIGGER_WORKFLOW_CHECK,
-      //     payload: null,
-      //   })
       sendExt({
         event: Event.TRIGGER_WORKFLOW_CHECK,
         payload: null,
@@ -44,12 +50,7 @@ const definition: ReturnType<typeof defineContentScript> = defineContentScript({
     })
 
     addMessageListener((message, sender) => {
-      console.debug(
-        "Internal Trigger Runtime Message ",
-        JSON.stringify(message)
-      )
       const { event, payload } = message
-
       switch (event) {
         case Event.TRIGGER_WORKFLOW_CHECK: {
           return Promise.resolve(true)

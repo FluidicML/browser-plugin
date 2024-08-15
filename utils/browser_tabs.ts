@@ -5,11 +5,6 @@ export const isSupportedTab = (tab?: Tabs.Tab | null) => {
     tab &&
     tab.id &&
     (tab.url?.startsWith("http://") || tab.url?.startsWith("https://"))
-
-  // console.debug(
-  //   `browser_tabs->isSupportedTab(${isSupportedTab}): Tab ${tab?.id} with data ${JSON.stringify(tab)}`
-  // )
-
   return isSupportedTab
 }
 

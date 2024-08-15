@@ -158,25 +158,6 @@ const syncRecordingState = async (tabId: number) => {
   }
 }
 
-// const syncTriggerState = async (tabId: number) => {
-//   try {
-//     const isTriggering = await sendExt({
-//       event: Event.TRIGGER_WORKFLOW_QUERY,
-//       payload: null,
-//     })
-//     if (!isTriggering) throw new Error()
-//     // await sendTab(tabId, {
-//     //   event: Event.TRIGGER_WORKFLOW_START,
-//     //   payload: null,
-//     // })
-//   } catch (e) {
-//     await sendTab(tabId, {
-//       event: Event.TRIGGER_WORKFLOW_STOP,
-//       payload: null,
-//     })
-//   }
-// }
-
 const fetchWorkflow = async (tabURL: string): Promise<Workflow> => {
   // TODO: Support enqueue of multiple workflows
   const workflowIdsToEnqueue = new URL(tabURL).searchParams.getAll(
@@ -210,79 +191,13 @@ const syncTab = async (tab: Tabs.Tab) => {
   await syncExtractingState(tabId)
   await syncInjectingState(tabId)
   await syncRecordingState(tabId)
-  // await syncTriggerState(tabId)
 }
-
-// const chromeRuntimeMessageListener = <M extends Message>(
-//   message: M,
-//   sender: chrome.runtime.MessageSender
-// ) => {
-//   ;(async () => {
-//     console.debug(
-//       "chromeRuntimeMessageListener->ReceivedMessage: ",
-//       JSON.stringify(message)
-//     )
-
-//     switch (message.event) {
-//       case Event.TRIGGER_WORKFLOW_CHECK: {
-//         const tab = sender.tab
-//         const { id: tabId, windowId, url: tabURL } = sender.tab ?? {}
-//         if (!tab || !tabId || !tabURL)
-//           throw new Error( // TRIGGER_WORKFLOW_QUERY should not be sent until landing page has loaded, button has been injected, and tapped to open extension
-//             `No tab id ${tabId} or tab url ${JSON.stringify(sender.tab)} found from evt sender`
-//           )
-
-//         // Open side panel programatically — nesting or wrapping in any handler (without injecting a button from chrome runtime trigger by client) will lead to Error — user gesture required
-//         // @ts-ignore
-//         chrome.sidePanel.open({ windowId })
-//         await chrome.sidePanel.setOptions({
-//           tabId,
-//           path: "sidepanel.html",
-//           enabled: true,
-//         })
-
-//         // Query workflow data and begin internal execution of steps sequentially
-//         const workflow = await fetchWorkflow(tabURL)
-//         const tabs = await browser.tabs.query({
-//           active: true,
-//           currentWindow: true,
-//         })
-//         const anchorHeadlessTab = tabs.find((t) =>
-//           t.url?.includes("headless/home?fluidicWorkflowIds[]")
-//         )
-//         if (!anchorHeadlessTab || !anchorHeadlessTab.id)
-//           throw new Error(
-//             "No headless found from tabs query for URL headless/home?fluidicWorkflowIds[]"
-//           )
-
-//         // await injectContentScripts(anchorHeadlessTab.id)
-//         // await syncTab(anchorHeadlessTab)
-//         await sendTab(anchorHeadlessTab.id, {
-//           event: Event.TRIGGER_WORKFLOW_START,
-//           payload: { workflow },
-//         })
-//         // await sendExt({
-//         //   event: Event.TRIGGER_WORKFLOW_START,
-//         //   payload: { workflow },
-//         // })
-//         // Clean up listener post-exec, should only execute query->start once
-//         chrome.runtime.onMessage.removeListener(chromeRuntimeMessageListener)
-//         return
-//       }
-//     }
-//   })()
-// }
 
 const topLevelBackgroundMsgListener = <M extends Message>(
   message: M,
   sender?: Runtime.MessageSender
 ) => {
   ;(async () => {
-    console.debug(
-      "chromeRuntimeMessageListener->ReceivedMessage: ",
-      JSON.stringify(message)
-    )
-
     switch (message.event) {
       case Event.TRIGGER_WORKFLOW_CHECK: {
         const tab = sender?.tab
@@ -295,12 +210,6 @@ const topLevelBackgroundMsgListener = <M extends Message>(
         // Open side panel programatically — nesting or wrapping in any handler (without injecting a button from chrome runtime trigger by client) will lead to Error — user gesture required
         // @ts-ignore
         browser.sidePanel.open({ windowId })
-        // @ts-ignore
-        await browser.sidePanel.setOptions({
-          tabId,
-          path: "sidepanel.html",
-          enabled: true,
-        })
 
         // Query workflow data and begin internal execution of steps sequentially
         const workflow = await fetchWorkflow(tabURL)
@@ -315,19 +224,10 @@ const topLevelBackgroundMsgListener = <M extends Message>(
           throw new Error(
             "No headless found from tabs query for URL headless/home?fluidicWorkflowIds[]"
           )
-
-        // await injectContentScripts(anchorHeadlessTab.id)
-        // await syncTab(anchorHeadlessTab)
         await sendTab(anchorHeadlessTab.id, {
           event: Event.TRIGGER_WORKFLOW_START,
           payload: { workflow },
         })
-        // await sendExt({
-        //   event: Event.TRIGGER_WORKFLOW_START,
-        //   payload: { workflow },
-        // })
-        // Clean up listener post-exec, should only execute query->start once
-        //chrome.runtime.onMessage.removeListener(chromeRuntimeMessageListener)
         removeMessageListener(topLevelBackgroundMsgListener)
         return
       }
@@ -362,8 +262,6 @@ const definition: ReturnType<typeof defineBackground> = defineBackground(() => {
 
   // chrome.runtime.onMessage listeners must be set up in background service via top-level onDefineBackground;
   // onMessage/onMessageExternal is undefined in content scripts and within tab listeners above.
-  // chrome.runtime.onMessage.addListener(chromeRuntimeMessageListener)
-  // browser.runtime.onMessage.addListener(chromeRuntimeMessageListener)
   addMessageListener(topLevelBackgroundMsgListener)
 })
 

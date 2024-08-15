@@ -66,8 +66,6 @@ export type TriggerWorkflowStartMessage = BaseMessage<
   Event.TRIGGER_WORKFLOW_START,
   { workflow: Workflow }
 >
-export type TriggerWorkflowStopMessage =
-  BaseMessage<Event.TRIGGER_WORKFLOW_STOP>
 export type TriggerWorkflowCheckMessage =
   BaseMessage<Event.TRIGGER_WORKFLOW_CHECK>
 
@@ -95,7 +93,6 @@ export type Message =
   | ReplayRecordingKeyupMessage
   | TriggerWorkflowQueryMessage
   | TriggerWorkflowStartMessage
-  | TriggerWorkflowStopMessage
   | TriggerWorkflowCheckMessage
 
 export type Response<M extends Message> = M extends
@@ -149,12 +146,6 @@ export const addMessageListener = <M extends Message>(
   listener: MessageListener<M>
 ): MessageListener<M> => {
   const wrapper: MessageListener<M> = (message, sender) => {
-    // console.debug(
-    //   "addMessageListener->wrapper: Message Received ",
-    //   JSON.stringify(message),
-    //   " From: ",
-    //   sender
-    // )
     if (
       typeof message === "object" &&
       Object.keys(Event).includes(message.event)

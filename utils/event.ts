@@ -45,8 +45,6 @@ export enum Event {
   TRIGGER_WORKFLOW_START = "TRIGGER_WORKFLOW_START",
   // Clean up workflow trigger init listener and query workflow data from provided id to replay all steps.
   TRIGGER_WORKFLOW_QUERY = "TRIGGER_WORKFLOW_QUERY",
-  // End embeddable/programmatic workflow execution.
-  TRIGGER_WORKFLOW_STOP = "TRIGGER_WORKFLOW_STOP",
   // Check/ping content script on each trigger content script injection attempt.
   TRIGGER_WORKFLOW_CHECK = "TRIGGER_WORKFLOW_CHECK",
 }
