@@ -1,6 +1,7 @@
 import React from "react"
 import { useForm } from "react-hook-form"
 
+import { Model } from "@/utils/openai"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Form,
@@ -11,10 +12,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { useSharedStore } from "./store"
 
 type SettingsFormData = {
+  openaiModel: Model
   openaiApiKey: string
   replayTimeoutSecs: number
 }
@@ -25,6 +34,7 @@ const SettingsTab = () => {
 
   const form = useForm<SettingsFormData>({
     defaultValues: {
+      openaiModel: store.settingsOpenAIModel ?? Model.GPT_4O_MINI,
       openaiApiKey: store.settingsOpenAIKey ?? undefined,
       replayTimeoutSecs: store.settingsReplayTimeoutSecs ?? undefined,
     },
@@ -32,6 +42,9 @@ const SettingsTab = () => {
 
   React.useEffect(() => {
     const subscription = form.watch((values) => {
+      if (values.openaiModel !== undefined) {
+        store.settingsActions.setOpenAIModel(values.openaiModel)
+      }
       if (values.openaiApiKey !== undefined) {
         store.settingsActions.setOpenAIKey(values.openaiApiKey)
       }
@@ -47,10 +60,37 @@ const SettingsTab = () => {
       <form className="space-y-4 p-4" onSubmit={(e) => e.preventDefault()}>
         <FormField
           control={form.control}
+          name="openaiModel"
+          render={({ field }) => (
+            <FormItem className="grow">
+              <FormLabel>OpenAI Model</FormLabel>
+              <FormDescription>
+                Used in <span className="font-bold">OpenAI</span> actions.
+              </FormDescription>
+              <Select defaultValue={field.value} onValueChange={field.onChange}>
+                <FormControl>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Select a model." />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {[...Object.entries(Model)].map(([k, v]) => (
+                    <SelectItem key={k} value={v}>
+                      {v}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="openaiApiKey"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>API Key</FormLabel>
+              <FormLabel>OpenAI API Key</FormLabel>
               <FormDescription>
                 Used in <span className="font-bold">OpenAI</span> actions.
               </FormDescription>

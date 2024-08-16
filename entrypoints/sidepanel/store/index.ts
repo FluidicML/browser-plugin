@@ -73,6 +73,7 @@ export const useSharedStore = create<SharedState>()(
 
       partialize: (state) => ({
         librarySaved: state.librarySaved,
+        settingsOpenAIModel: state.settingsOpenAIModel,
         settingsOpenAIKey: state.settingsOpenAIKey,
         settingsReplayTimeoutSecs: state.settingsReplayTimeoutSecs,
       }),

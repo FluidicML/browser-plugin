@@ -6,7 +6,7 @@ import type {
   ReplayRecordingClickMessage,
   ReplayRecordingKeyupMessage,
 } from "@/utils/messages"
-import { chatCompletion } from "@/utils/openai"
+import { Model, chatCompletion } from "@/utils/openai"
 import { type TaskResult } from "@/utils/workflow"
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
@@ -25,6 +25,7 @@ type Context = {
   stepIndex: number
   taskIndex: number
   params: Map<string, string>
+  openAIModel: Model
   openAIKey: string
   replayTimeoutSecs: number
 }
@@ -97,6 +98,7 @@ const runOpenAITask = async (
 
   try {
     const response = await chatCompletion({
+      model: context.openAIModel,
       openAIKey: context.openAIKey,
       systemPrompt: `
         ${interpolate(values.system, context.params)}
@@ -297,6 +299,7 @@ const RunnerTab = () => {
       stepIndex: sharedStore.runnerStepIndex,
       taskIndex: sharedStore.runnerTaskIndex,
       params: runnerParams,
+      openAIModel: sharedStore.settingsOpenAIModel,
       openAIKey: sharedStore.settingsOpenAIKey,
       replayTimeoutSecs: sharedStore.settingsReplayTimeoutSecs,
     }).then((result) => {
