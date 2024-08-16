@@ -6,7 +6,8 @@
 import "./styles.css"
 
 import type { ContentScriptContext } from "wxt/client"
-import { Event, addMessageListener, sendExt } from "@/utils/messages"
+import { addMessageListener, sendExt } from "@/utils/messages"
+import { Event } from "@/utils/event"
 import { type FluidicElement, isFluidicElement } from "@/utils/dom"
 
 const OUTLINE_PADDING = 15

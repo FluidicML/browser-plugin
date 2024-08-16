@@ -1,51 +1,7 @@
 import { browser, Runtime } from "wxt/browser"
 import { Selector } from "./selector"
-import { TaskResult } from "./workflow"
-
-export enum Event {
-  // Checks if the extraction content script is loaded.
-  EXTRACTING_CHECK = "EXTRACTING_CHECK",
-  // Triggers on clicks while an extraction step is active.
-  EXTRACTING_CLICK = "EXTRACTING_CLICK",
-  // Queries for whether an extraction step is currently active.
-  EXTRACTING_QUERY = "EXTRACTING_QUERY",
-  // Indicates an extraction step was turned on.
-  EXTRACTING_START = "EXTRACTING_START",
-  // Indicates an extraction step was turned off.
-  EXTRACTING_STOP = "EXTRACTING_STOP",
-  // Checks if the injection content script is loaded.
-  INJECTING_CHECK = "INJECTING_CHECK",
-  // Triggers on clicks while an injection step is active.
-  INJECTING_CLICK = "INJECTING_CLICK",
-  // Queries for whether an injection step is currently active.
-  INJECTING_QUERY = "INJECTING_QUERY",
-  // Indicates an injection step was turned on.
-  INJECTING_START = "INJECTING_START",
-  // Indicates an injection step was turned off.
-  INJECTING_STOP = "INJECTING_STOP",
-  // Checks if the recording content script is loaded.
-  RECORDING_CHECK = "RECORDING_CHECK",
-  // Triggers on clicks while a recording step is active.
-  RECORDING_CLICK = "RECORDING_CLICK",
-  // Triggers on keyups while a recording step is active.
-  RECORDING_KEYUP = "RECORDING_KEYUP",
-  // Queries for whether a recording step is currently active.
-  RECORDING_QUERY = "RECORDING_QUERY",
-  // Indicates a recording step was turned on.
-  RECORDING_START = "RECORDING_START",
-  // Indicates a recording step was turned off.
-  RECORDING_STOP = "RECORDING_STOP",
-  // Checks if the replay content script is loaded.
-  REPLAY_CHECK = "REPLAY_CHECK",
-  // Sent on an extraction replay.
-  REPLAY_EXTRACTING_CLICK = "REPLAY_EXTRACTING_CLICK",
-  // Sent on an injection replay.
-  REPLAY_INJECTING = "REPLAY_INJECTING",
-  // Sent on a recording (click) replay.
-  REPLAY_RECORDING_CLICK = "REPLAY_RECORDING_CLICK",
-  // Sent on a recording (keyup) replay.
-  REPLAY_RECORDING_KEYUP = "REPLAY_RECORDING_KEYUP",
-}
+import { TaskResult, Workflow } from "./workflow"
+import { Event } from "./event"
 
 type BaseMessage<E extends Event, P = null> = {
   event: E
@@ -104,6 +60,15 @@ export type ReplayRecordingKeyupMessage = BaseMessage<
   { selector: Selector; value: string; timeoutSecs: number }
 >
 
+export type TriggerWorkflowQueryMessage =
+  BaseMessage<Event.TRIGGER_WORKFLOW_QUERY>
+export type TriggerWorkflowStartMessage = BaseMessage<
+  Event.TRIGGER_WORKFLOW_START,
+  { workflow: Workflow; openAIKey?: string | null }
+>
+export type TriggerWorkflowCheckMessage =
+  BaseMessage<Event.TRIGGER_WORKFLOW_CHECK>
+
 export type Message =
   | ExtractingCheckMessage
   | ExtractingClickMessage
@@ -126,10 +91,14 @@ export type Message =
   | ReplayInjectingMessage
   | ReplayRecordingClickMessage
   | ReplayRecordingKeyupMessage
+  | TriggerWorkflowQueryMessage
+  | TriggerWorkflowStartMessage
+  | TriggerWorkflowCheckMessage
 
 export type Response<M extends Message> = M extends
   | ExtractingQueryMessage
   | RecordingQueryMessage
+  | TriggerWorkflowQueryMessage
   ? boolean
   : M extends InjectingQueryMessage
     ? InjectingStartMessage["payload"]
@@ -138,6 +107,7 @@ export type Response<M extends Message> = M extends
           | ReplayInjectingMessage
           | ReplayRecordingClickMessage
           | ReplayRecordingKeyupMessage
+          | TriggerWorkflowStartMessage
       ? TaskResult
       : null
 
@@ -150,16 +120,20 @@ export const sendTab = async <M extends Message>(
   tabId: number,
   message: M,
   options?: Runtime.SendMessageOptionsType
-): Promise<Response<M>> => {
-  return await browser.tabs.sendMessage(tabId, message, options)
-}
+): Promise<Response<M>> => browser.tabs.sendMessage(tabId, message, options)
 
 // A type-safe representation of the types of messages we anticipate handling
 // within the content scripts/extension.
-type MessageListener<M extends Message> = (
+export type MessageListener<M extends Message> = (
   message: M,
   sender?: Runtime.MessageSender
 ) => Promise<Response<M>> | true | void
+
+export type ChromeMessageListener<M extends Message> = (
+  message: M,
+  sender: chrome.runtime.MessageSender,
+  sendResponse: (response?: Response<M>) => void
+) => void
 
 // If passing an async function, the listener will return a Promise for every
 // message it receives, preventing other listeners from responding. If the
@@ -170,7 +144,7 @@ type MessageListener<M extends Message> = (
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage
 export const addMessageListener = <M extends Message>(
   listener: MessageListener<M>
-) => {
+): MessageListener<M> => {
   const wrapper: MessageListener<M> = (message, sender) => {
     if (
       typeof message === "object" &&

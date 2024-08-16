@@ -10,11 +10,11 @@ import {
   stepRecordingSchema,
 } from "@/utils/schema"
 import {
-  Event,
   addMessageListener,
   removeMessageListener,
   sendTab,
 } from "@/utils/messages"
+import { Event } from "@/utils/event"
 import CollapseIcon from "@/components/icons/Collapse"
 import ExpandIcon from "@/components/icons/Expand"
 import PlayIcon from "@/components/icons/Play"

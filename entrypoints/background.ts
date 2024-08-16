@@ -2,11 +2,13 @@ import {
   type ExtractingCheckMessage,
   type InjectingCheckMessage,
   type RecordingCheckMessage,
-  Event,
   sendExt,
   sendTab,
+  TriggerWorkflowCheckMessage,
 } from "@/utils/messages"
+import { Event } from "@/utils/event"
 import { isSupportedTab } from "@/utils/browser_tabs"
+import { topLevelBackgroundMsgListener } from "@/utils/trigger_workflow"
 
 // Tabs may not have our content script injected if they were already open
 // before the plugin itself was installed. This array tracks the different
@@ -26,6 +28,7 @@ type ContentScript = {
     | InjectingCheckMessage
     | RecordingCheckMessage
     | ReplayCheckMessage
+    | TriggerWorkflowCheckMessage
 }
 
 const CONTENT_SCRIPTS: ContentScript[] = [
@@ -60,6 +63,13 @@ const CONTENT_SCRIPTS: ContentScript[] = [
       payload: null,
     },
   },
+  {
+    js: "content-scripts/trigger.js",
+    message: {
+      event: Event.TRIGGER_WORKFLOW_CHECK,
+      payload: null,
+    },
+  },
 ]
 
 const injectContentScripts = async (tabId: number) => {
@@ -89,9 +99,8 @@ const syncExtractingState = async (tabId: number) => {
       event: Event.EXTRACTING_QUERY,
       payload: null,
     })
-    if (!isExtracting) {
-      throw new Error()
-    }
+    if (!isExtracting) throw new Error()
+
     await sendTab(tabId, {
       event: Event.EXTRACTING_START,
       payload: null,
@@ -160,9 +169,7 @@ const definition: ReturnType<typeof defineBackground> = defineBackground(() => {
     .catch((e: any) => console.error("FLUIDIC", e))
 
   browser.tabs.onActivated.addListener(async (activeInfo) => {
-    if (!activeInfo.tabId) {
-      return
-    }
+    if (!activeInfo.tabId) return
     const tab = await browser.tabs.get(activeInfo.tabId)
     if (!tab || tab.status === "loading" || !isSupportedTab(tab)) {
       // Once the tab completes, content scripts will already exist. Let the
@@ -173,16 +180,15 @@ const definition: ReturnType<typeof defineBackground> = defineBackground(() => {
     await syncTab(activeInfo.tabId)
   })
 
-  browser.tabs.onUpdated.addListener(async (tabId, changeInfo) => {
-    if (!tabId || changeInfo.status !== "complete") {
-      return
-    }
-    const tab = await browser.tabs.get(tabId)
-    if (!isSupportedTab(tab)) {
+  browser.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+    if (!tabId || changeInfo.status !== "complete" || !isSupportedTab(tab)) {
       return
     }
     await syncTab(tabId)
   })
+
+  // top-level background listener to init flows within content script inject components; must be in background.ts and async iife wrapped to avoid 'Error - user gesture required'
+  addMessageListener(topLevelBackgroundMsgListener)
 })
 
 export default definition

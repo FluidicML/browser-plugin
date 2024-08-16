@@ -13,11 +13,11 @@ import {
   stepInjectingSchema,
 } from "@/utils/schema"
 import {
-  Event,
   addMessageListener,
   removeMessageListener,
   sendTab,
 } from "@/utils/messages"
+import { Event } from "@/utils/event"
 import {
   Form,
   FormControl,

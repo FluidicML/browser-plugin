@@ -1,6 +1,7 @@
 import type { ContentScriptContext } from "wxt/client"
 import { TaskStatus } from "@/utils/workflow"
-import { Event, type Response, addMessageListener } from "@/utils/messages"
+import { type Response, addMessageListener } from "@/utils/messages"
+import { Event } from "@/utils/event"
 
 const replayExtractingClick = async (
   payload: ReplayExtractingClickMessage["payload"]
@@ -145,22 +146,24 @@ const definition: ReturnType<typeof defineContentScript> = defineContentScript({
   matches: ["*://*/*"],
 
   main(_context: ContentScriptContext) {
-    addMessageListener((message) => {
-      switch (message.event) {
+    addMessageListener((message, sender) => {
+      const { event, payload } = message
+
+      switch (event) {
         case Event.REPLAY_CHECK: {
           return Promise.resolve(true)
         }
         case Event.REPLAY_EXTRACTING_CLICK: {
-          return replayExtractingClick(message.payload)
+          return replayExtractingClick(payload)
         }
         case Event.REPLAY_INJECTING: {
-          return replayInjecting(message.payload)
+          return replayInjecting(payload)
         }
         case Event.REPLAY_RECORDING_CLICK: {
-          return replayRecordingClick(message.payload)
+          return replayRecordingClick(payload)
         }
         case Event.REPLAY_RECORDING_KEYUP: {
-          return replayRecordingKeyup(message.payload)
+          return replayRecordingKeyup(payload)
         }
       }
     })
