@@ -1,6 +1,6 @@
 import { browser, Runtime } from "wxt/browser"
 import { Selector } from "./selector"
-import { TaskResult } from "./workflow"
+import { TaskResult } from "./models"
 
 export enum Event {
   // Checks if the extraction content script is loaded.

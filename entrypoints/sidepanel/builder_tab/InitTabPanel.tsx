@@ -53,7 +53,7 @@ const InitTabPanel = React.forwardRef<
       <Form {...form}>
         <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
           <p>
-            Build a new workflow. All steps run relative to whichever page you
+            Build a new script. All steps run relative to whichever page you
             have open at time of running. For consistency, consider making the
             first action a <span className="font-bold">Navigate</span>.
           </p>
@@ -62,11 +62,11 @@ const InitTabPanel = React.forwardRef<
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Workflow Name</FormLabel>
+                <FormLabel>Name</FormLabel>
                 <FormControl>
                   <Input
                     className="mt-2"
-                    placeholder="The name of your workflow"
+                    placeholder="The name of your script"
                     {...field}
                   />
                 </FormControl>

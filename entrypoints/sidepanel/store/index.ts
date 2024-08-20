@@ -69,7 +69,7 @@ export const useSharedStore = create<SharedState>()(
       ...settingsSlice(set, get, api),
     })),
     {
-      name: "fluidic-workflows",
+      name: "fluidic-browser-plugin",
 
       partialize: (state) => ({
         librarySaved: state.librarySaved,

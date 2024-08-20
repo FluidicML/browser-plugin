@@ -2,12 +2,12 @@ import { z } from "zod"
 
 import { selectorSchema } from "./selector"
 
-// The initial tab shown when building the workflow. Contains basic details
-// all workflows must have.
+// The initial tab shown when building the script. Contains basic details all
+// scripts must have.
 export const initSchema = z
   .object({
     name: z.string().min(1, {
-      message: "You must provide a workflow name.",
+      message: "You must provide a name.",
     }),
   })
   .required()
@@ -81,7 +81,7 @@ export type StepNavigateSchema = z.infer<typeof stepNavigateSchema>
 
 // Trigger a chat completion request to OpenAI. Responses are always structured
 // as a `Record<string, string>` corresponding to the parsed JSON response.
-// These values can then be accessed by all subsequent steps of the workflow.
+// These values can then be accessed by all subsequent steps of the script.
 export const stepOpenAISchema = z
   .object({
     system: z.string().min(1, {
@@ -159,8 +159,8 @@ export const stepRecordingSchema = z
 
 export type StepRecordingSchema = z.infer<typeof stepRecordingSchema>
 
-// Allow aggregating steps together. A workflow can consist of a sequence of
-// any type of steps, though it must always start with an `init`.
+// Allow aggregating steps together. A script can consist of a sequence of any
+// type of steps, though it must always start with an `init`.
 export enum StepKind {
   EXTRACTING = "Extracting",
   INJECTING = "Injecting",
@@ -257,7 +257,7 @@ export const stepParams = (step: Step): string[] => {
   }
 }
 
-export const createWorkflowSchema = z
+export const createAutoScriptSchema = z
   .object({
     init: initSchema,
     steps: z.array(
@@ -291,4 +291,4 @@ export const createWorkflowSchema = z
   })
   .required()
 
-export type CreateWorkflowDto = z.infer<typeof createWorkflowSchema>
+export type CreateAutoScriptSchema = z.infer<typeof createAutoScriptSchema>

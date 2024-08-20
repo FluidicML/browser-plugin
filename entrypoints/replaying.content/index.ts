@@ -1,5 +1,5 @@
 import type { ContentScriptContext } from "wxt/client"
-import { TaskStatus } from "@/utils/workflow"
+import { TaskStatus } from "@/utils/models"
 import { Event, type Response, addMessageListener } from "@/utils/messages"
 
 const replayExtractingClick = async (

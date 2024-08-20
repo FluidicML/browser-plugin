@@ -1,6 +1,6 @@
 import React from "react"
 
-import { type StepResult, TaskStatus } from "@/utils/workflow"
+import { type StepResult, TaskStatus } from "@/utils/models"
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import NullIcon from "@/components/icons/Null"

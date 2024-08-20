@@ -1,35 +1,35 @@
 import {
-  type Workflow,
+  type AutoScript,
   type StepResult,
   type TaskResult,
   StepStatus,
   getStepResultParams,
   getStepResultStatus,
-} from "@/utils/workflow"
+} from "@/utils/models"
 import { type SharedStateCreator } from "./index"
 import { queryTabs } from "@/utils/browser_tabs"
 
 export type RunnerSlice = {
-  runnerActive: Workflow | null
+  runnerActive: AutoScript | null
   runnerTabId: number | null
   runnerStepIndex: number
   runnerTaskIndex: number
   runnerResults: StepResult[]
 
   runnerActions: {
-    startWorkflow: (workflow: Workflow) => Promise<void>
-    // Until we support running workflows in parallel, every action should take
-    // in a workflow to be used as a guard. If the passed workflow does not
-    // match the active workflow, the action should be a no-op or return a
-    // reasonable default.
+    startAutoScript: (script: AutoScript) => Promise<void>
+    // Until we support running scripts in parallel, every action should take
+    // in a script to be used as a guard. If the passed script does not match
+    // the active one, the action should be a no-op or return a reasonable
+    // default.
     //
     // TODO: Extend `runnerActive` to `runnerActives`.
-    isFinished: (workflow: Workflow) => boolean
-    isPaused: (workflow: Workflow) => boolean
-    getParams: (workflow: Workflow) => Map<string, string>
-    getStatus: (workflow: Workflow) => StepStatus
-    popTaskResult: (workflow: Workflow) => TaskResult | null
-    pushTaskResult: (workflow: Workflow, result: TaskResult) => void
+    isFinished: (script: AutoScript) => boolean
+    isPaused: (script: AutoScript) => boolean
+    getParams: (script: AutoScript) => Map<string, string>
+    getStatus: (script: AutoScript) => StepStatus
+    popTaskResult: (script: AutoScript) => TaskResult | null
+    pushTaskResult: (script: AutoScript, result: TaskResult) => void
   }
 }
 
@@ -41,11 +41,11 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
   runnerResults: [],
 
   runnerActions: {
-    startWorkflow: async (workflow) => {
+    startAutoScript: async (script) => {
       const tabs = await queryTabs({ active: true, currentWindow: true })
       set({
         sharedActiveTab: "runner",
-        runnerActive: workflow,
+        runnerActive: script,
         runnerStepIndex: 0,
         runnerTaskIndex: 0,
         runnerResults: [],
@@ -53,20 +53,20 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       })
     },
 
-    isFinished: (workflow) => {
+    isFinished: (script) => {
       const active = get().runnerActive
-      if (active?.uuid !== workflow.uuid || get().runnerTabId === null) {
+      if (active?.uuid !== script.uuid || get().runnerTabId === null) {
         return true
       }
 
       return (
-        get().runnerActions.getStatus(workflow) === StepStatus.FAILED ||
+        get().runnerActions.getStatus(script) === StepStatus.FAILED ||
         get().runnerStepIndex >= active.steps.length
       )
     },
 
-    isPaused: (workflow) => {
-      if (get().runnerActive?.uuid !== workflow.uuid) {
+    isPaused: (script) => {
+      if (get().runnerActive?.uuid !== script.uuid) {
         return false
       }
 
@@ -78,9 +78,9 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       return step.isPaused ?? false
     },
 
-    getParams: (workflow) => {
+    getParams: (script) => {
       const params = new Map()
-      if (get().runnerActive?.uuid !== workflow.uuid) {
+      if (get().runnerActive?.uuid !== script.uuid) {
         return params
       }
 
@@ -93,8 +93,8 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       return params
     },
 
-    getStatus: (workflow) => {
-      if (get().runnerActive?.uuid !== workflow.uuid) {
+    getStatus: (script) => {
+      if (get().runnerActive?.uuid !== script.uuid) {
         return StepStatus.FAILED
       }
 
@@ -106,9 +106,9 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       return getStepResultStatus(step)
     },
 
-    popTaskResult: (workflow) => {
+    popTaskResult: (script) => {
       const active = get().runnerActive
-      if (active?.uuid !== workflow.uuid) {
+      if (active?.uuid !== script.uuid) {
         return null
       }
 
@@ -124,9 +124,9 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       return latest ?? null
     },
 
-    pushTaskResult: (workflow, result) => {
+    pushTaskResult: (script, result) => {
       const active = get().runnerActive
-      if (active?.uuid !== workflow.uuid) {
+      if (active?.uuid !== script.uuid) {
         return
       }
 

@@ -8,10 +8,10 @@ import TrashIcon from "@/components/icons/Trash"
 import { Button } from "@/components/ui/button"
 import { Card, CardTitle, CardContent } from "@/components/ui/card"
 import { useSharedStore } from "./store"
-import type { Workflow } from "@/utils/workflow"
+import type { AutoScript } from "@/utils/models"
 
-const WorkflowCard = (workflow: Workflow) => {
-  const { uuid, init, steps: actions } = workflow
+const AutoScriptCard = (script: AutoScript) => {
+  const { uuid, init, steps: actions } = script
   const store = useSharedStore()
 
   return (
@@ -31,21 +31,21 @@ const WorkflowCard = (workflow: Workflow) => {
           <Button
             size="xs"
             className="group hover:bg-muted-foreground/90"
-            onClick={() => store.libraryActions.editWorkflow(workflow)}
+            onClick={() => store.libraryActions.editAutoScript(script)}
           >
             <PencilIcon className="w-5 h-5 fill-white dark:fill-black group-hover:fill-white" />
           </Button>
           <Button
             size="xs"
             className="group hover:bg-destructive/90"
-            onClick={() => store.libraryActions.removeWorkflow(workflow)}
+            onClick={() => store.libraryActions.removeAutoScript(script)}
           >
             <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
           </Button>
           <Button
             size="xs"
             className="group hover:bg-emerald-600/90"
-            onClick={() => store.runnerActions.startWorkflow(workflow)}
+            onClick={() => store.runnerActions.startAutoScript(script)}
           >
             <PlayCircleIcon className="w-5 h-5 fill-white dark:fill-black group-hover:fill-white" />
           </Button>
@@ -62,7 +62,7 @@ const LibraryTab = () => {
     return (
       <div className="flex flex-col items-center gap-2 p-4">
         <BooksIcon className="w-12 h-12 stroke-black dark:stroke-white" />
-        <p className="text-center text-base">No saved workflows.</p>
+        <p className="text-center text-base">No saved scripts.</p>
       </div>
     )
   }
@@ -70,7 +70,7 @@ const LibraryTab = () => {
   return (
     <div className="flex flex-col p-4 gap-4">
       {store.librarySaved.map((w) => (
-        <WorkflowCard key={w.uuid} {...w} />
+        <AutoScriptCard key={w.uuid} {...w} />
       ))}
     </div>
   )

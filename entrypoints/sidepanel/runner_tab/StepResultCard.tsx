@@ -10,7 +10,7 @@ import {
   CardDescription,
   CardTitle,
 } from "@/components/ui/card"
-import { type StepResult, getStepResultStatus } from "@/utils/workflow"
+import { type StepResult, getStepResultStatus } from "@/utils/models"
 import StepExtractingContent from "./StepExtractingContent"
 import StepInjectingContent from "./StepInjectingContent"
 import StepInputContent from "./StepInputContent"
