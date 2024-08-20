@@ -41,7 +41,7 @@ const BuilderTab = () => {
         isDirty: false,
       }))
     )
-    store.libraryActions.editAutoScript(null)
+    store.libraryActions.editAutomation(null)
   }, [store.libraryEditing])
 
   const [tabActive, setTabActive] = React.useState("-1")
@@ -96,11 +96,11 @@ const BuilderTab = () => {
     [setStepTabs]
   )
 
-  const saveAutoScript = React.useCallback(() => {
+  const saveAutomation = React.useCallback(() => {
     if (!initTab) {
       throw new Error("Attempted to save invalid `InitSchema`.")
     }
-    store.libraryActions.saveAutoScript({
+    store.libraryActions.saveAutomation({
       uuid: uuid,
       init: initTab,
       steps: stepTabs.map((t) => t.step).filter((f): f is Step => Boolean(f)),
@@ -200,7 +200,7 @@ const BuilderTab = () => {
           disabled={
             store.sharedLockedBy.size > 0 || !tabValid(stepTabs.length - 1)
           }
-          onClick={saveAutoScript}
+          onClick={saveAutomation}
         >
           Save
         </Button>

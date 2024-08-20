@@ -7,7 +7,7 @@ import type {
   ReplayRecordingKeyupMessage,
 } from "@/utils/messages"
 import { Model, chatCompletion } from "@/utils/openai"
-import type { AutoScript, TaskResult } from "@/utils/models"
+import type { Automation, TaskResult } from "@/utils/models"
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import FolderIcon from "@/components/icons/Folder"
@@ -20,7 +20,7 @@ import { waitForTab, updateTab } from "@/utils/browser_tabs"
 import StepResultCard from "./runner_tab/StepResultCard"
 
 type Context = {
-  script: AutoScript
+  auto: Automation
   tabId: number
   stepIndex: number
   taskIndex: number
@@ -228,7 +228,7 @@ const runRecordingTask = async (
 }
 
 const runTask = async (context: Context): Promise<TaskResult> => {
-  const step = context.script.steps[context.stepIndex]
+  const step = context.auto.steps[context.stepIndex]
   const kind = step.kind
 
   let result: TaskResult
@@ -294,7 +294,7 @@ const RunnerTab = () => {
     }
 
     runTask({
-      script: script,
+      auto: script,
       tabId,
       stepIndex: sharedStore.runnerStepIndex,
       taskIndex: sharedStore.runnerTaskIndex,

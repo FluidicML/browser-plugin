@@ -1,17 +1,17 @@
-import type { AutoScript } from "@/utils/models"
+import type { Automation } from "@/utils/models"
 import { type SharedStateCreator } from "./index"
 
 export type LibrarySlice = {
   // A collection of locally saved scripts.
-  librarySaved: AutoScript[]
+  librarySaved: Automation[]
   // The script being edited. This is set temporarily as a messaging mechanism.
   // The library tab sets it and the builder tab unsets it.
-  libraryEditing: AutoScript | null
+  libraryEditing: Automation | null
 
   libraryActions: {
-    editAutoScript: (script: AutoScript | null) => void
-    saveAutoScript: (script: AutoScript) => void
-    removeAutoScript: (script: AutoScript) => void
+    editAutomation: (auto: Automation | null) => void
+    saveAutomation: (auto: Automation) => void
+    removeAutomation: (auto: Automation) => void
   }
 }
 
@@ -20,14 +20,14 @@ export const librarySlice: SharedStateCreator<LibrarySlice> = (set, get) => ({
   libraryEditing: null,
 
   libraryActions: {
-    editAutoScript: (script) => {
+    editAutomation: (script) => {
       set({
         sharedActiveTab: "builder",
         libraryEditing: script,
       })
     },
 
-    saveAutoScript: (script) => {
+    saveAutomation: (script) => {
       const index = get().librarySaved.findIndex((w) => w.uuid === script.uuid)
       set((s) => {
         const lib =
@@ -37,7 +37,7 @@ export const librarySlice: SharedStateCreator<LibrarySlice> = (set, get) => ({
       })
     },
 
-    removeAutoScript: (script) => {
+    removeAutomation: (script) => {
       const index = get().librarySaved.findIndex((w) => w.uuid === script.uuid)
       if (index === -1) {
         return

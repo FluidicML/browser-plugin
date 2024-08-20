@@ -3,7 +3,7 @@ import { InitSchema, type Step } from "./schema"
 // Automation scripts are represented as a sequence of steps, each of which is
 // further broken down into one or more tasks. From the script's perspective, a
 // task is the smallest atomic unit of work.
-export type AutoScript = {
+export type Automation = {
   uuid: string
   init: InitSchema
   steps: Step[]

@@ -257,7 +257,7 @@ export const stepParams = (step: Step): string[] => {
   }
 }
 
-export const createAutoScriptSchema = z
+export const createAutomationSchema = z
   .object({
     init: initSchema,
     steps: z.array(
@@ -291,4 +291,4 @@ export const createAutoScriptSchema = z
   })
   .required()
 
-export type CreateAutoScriptSchema = z.infer<typeof createAutoScriptSchema>
+export type CreateAutomationSchema = z.infer<typeof createAutomationSchema>

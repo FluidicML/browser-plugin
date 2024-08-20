@@ -8,9 +8,9 @@ import TrashIcon from "@/components/icons/Trash"
 import { Button } from "@/components/ui/button"
 import { Card, CardTitle, CardContent } from "@/components/ui/card"
 import { useSharedStore } from "./store"
-import type { AutoScript } from "@/utils/models"
+import type { Automation } from "@/utils/models"
 
-const AutoScriptCard = (script: AutoScript) => {
+const AutomationCard = (script: Automation) => {
   const { uuid, init, steps: actions } = script
   const store = useSharedStore()
 
@@ -31,21 +31,21 @@ const AutoScriptCard = (script: AutoScript) => {
           <Button
             size="xs"
             className="group hover:bg-muted-foreground/90"
-            onClick={() => store.libraryActions.editAutoScript(script)}
+            onClick={() => store.libraryActions.editAutomation(script)}
           >
             <PencilIcon className="w-5 h-5 fill-white dark:fill-black group-hover:fill-white" />
           </Button>
           <Button
             size="xs"
             className="group hover:bg-destructive/90"
-            onClick={() => store.libraryActions.removeAutoScript(script)}
+            onClick={() => store.libraryActions.removeAutomation(script)}
           >
             <TrashIcon className="w-5 h-5 stroke-white dark:stroke-black group-hover:stroke-white" />
           </Button>
           <Button
             size="xs"
             className="group hover:bg-emerald-600/90"
-            onClick={() => store.runnerActions.startAutoScript(script)}
+            onClick={() => store.runnerActions.startAutomation(script)}
           >
             <PlayCircleIcon className="w-5 h-5 fill-white dark:fill-black group-hover:fill-white" />
           </Button>
@@ -70,7 +70,7 @@ const LibraryTab = () => {
   return (
     <div className="flex flex-col p-4 gap-4">
       {store.librarySaved.map((w) => (
-        <AutoScriptCard key={w.uuid} {...w} />
+        <AutomationCard key={w.uuid} {...w} />
       ))}
     </div>
   )

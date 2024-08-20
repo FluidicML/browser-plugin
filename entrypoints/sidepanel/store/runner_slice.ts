@@ -1,5 +1,5 @@
 import {
-  type AutoScript,
+  type Automation,
   type StepResult,
   type TaskResult,
   StepStatus,
@@ -10,26 +10,26 @@ import { type SharedStateCreator } from "./index"
 import { queryTabs } from "@/utils/browser_tabs"
 
 export type RunnerSlice = {
-  runnerActive: AutoScript | null
+  runnerActive: Automation | null
   runnerTabId: number | null
   runnerStepIndex: number
   runnerTaskIndex: number
   runnerResults: StepResult[]
 
   runnerActions: {
-    startAutoScript: (script: AutoScript) => Promise<void>
+    startAutomation: (auto: Automation) => Promise<void>
     // Until we support running scripts in parallel, every action should take
-    // in a script to be used as a guard. If the passed script does not match
-    // the active one, the action should be a no-op or return a reasonable
-    // default.
+    // in an automation to be used as a guard. If the passed automation does
+    // not match the active one, the action should be a no-op or return a
+    // reasonable default.
     //
     // TODO: Extend `runnerActive` to `runnerActives`.
-    isFinished: (script: AutoScript) => boolean
-    isPaused: (script: AutoScript) => boolean
-    getParams: (script: AutoScript) => Map<string, string>
-    getStatus: (script: AutoScript) => StepStatus
-    popTaskResult: (script: AutoScript) => TaskResult | null
-    pushTaskResult: (script: AutoScript, result: TaskResult) => void
+    isFinished: (auto: Automation) => boolean
+    isPaused: (auto: Automation) => boolean
+    getParams: (auto: Automation) => Map<string, string>
+    getStatus: (auto: Automation) => StepStatus
+    popTaskResult: (auto: Automation) => TaskResult | null
+    pushTaskResult: (auto: Automation, result: TaskResult) => void
   }
 }
 
@@ -41,11 +41,11 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
   runnerResults: [],
 
   runnerActions: {
-    startAutoScript: async (script) => {
+    startAutomation: async (auto) => {
       const tabs = await queryTabs({ active: true, currentWindow: true })
       set({
         sharedActiveTab: "runner",
-        runnerActive: script,
+        runnerActive: auto,
         runnerStepIndex: 0,
         runnerTaskIndex: 0,
         runnerResults: [],
@@ -53,20 +53,20 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       })
     },
 
-    isFinished: (script) => {
+    isFinished: (auto) => {
       const active = get().runnerActive
-      if (active?.uuid !== script.uuid || get().runnerTabId === null) {
+      if (active?.uuid !== auto.uuid || get().runnerTabId === null) {
         return true
       }
 
       return (
-        get().runnerActions.getStatus(script) === StepStatus.FAILED ||
+        get().runnerActions.getStatus(auto) === StepStatus.FAILED ||
         get().runnerStepIndex >= active.steps.length
       )
     },
 
-    isPaused: (script) => {
-      if (get().runnerActive?.uuid !== script.uuid) {
+    isPaused: (auto) => {
+      if (get().runnerActive?.uuid !== auto.uuid) {
         return false
       }
 
@@ -78,9 +78,9 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       return step.isPaused ?? false
     },
 
-    getParams: (script) => {
+    getParams: (auto) => {
       const params = new Map()
-      if (get().runnerActive?.uuid !== script.uuid) {
+      if (get().runnerActive?.uuid !== auto.uuid) {
         return params
       }
 
@@ -93,8 +93,8 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       return params
     },
 
-    getStatus: (script) => {
-      if (get().runnerActive?.uuid !== script.uuid) {
+    getStatus: (auto) => {
+      if (get().runnerActive?.uuid !== auto.uuid) {
         return StepStatus.FAILED
       }
 
@@ -106,9 +106,9 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       return getStepResultStatus(step)
     },
 
-    popTaskResult: (script) => {
+    popTaskResult: (auto) => {
       const active = get().runnerActive
-      if (active?.uuid !== script.uuid) {
+      if (active?.uuid !== auto.uuid) {
         return null
       }
 
@@ -124,9 +124,9 @@ export const runnerSlice: SharedStateCreator<RunnerSlice> = (set, get) => ({
       return latest ?? null
     },
 
-    pushTaskResult: (script, result) => {
+    pushTaskResult: (auto, result) => {
       const active = get().runnerActive
-      if (active?.uuid !== script.uuid) {
+      if (active?.uuid !== auto.uuid) {
         return
       }
 
