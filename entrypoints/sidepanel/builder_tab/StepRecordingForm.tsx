@@ -130,7 +130,8 @@ const ActionCard = ({
                       />
                     </FormControl>
                     <FormDescription className="text-xs">
-                      Lets the workflow continue even if the action fails.
+                      Lets the automation script continue even if the action
+                      fails.
                     </FormDescription>
                   </div>
                 </FormItem>
@@ -248,7 +249,7 @@ const StepRecordingForm = ({
   const recordingsCount = React.useRef(defaultValues?.recordings.length ?? 0)
 
   // Notify on form changes. Status is propagated upward so we can decide
-  // whether or not the user is allowed to save the workflow.
+  // whether or not the user is allowed to save the script.
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       if (values.recordings) {

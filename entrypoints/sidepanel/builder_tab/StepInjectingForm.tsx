@@ -191,7 +191,7 @@ const StepInjectingForm = ({
   })
 
   // Notify on form changes. Status is propagated upward so we can decide
-  // whether or not the user is allowed to save the workflow.
+  // whether or not the user is allowed to save the script.
   React.useEffect(() => {
     const subscription = form.watch((values) => {
       const parsed = stepInjectingSchema.safeParse(values)

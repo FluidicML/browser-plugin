@@ -1,4 +1,4 @@
-# Fluidic Workflows
+# Browser Plugin
 
 ![chromium](https://img.shields.io/badge/supported-chromium-blue)
 ![chrome](https://img.shields.io/badge/supported-chrome-blue)
@@ -10,8 +10,8 @@
 
 ## Overview
 
-`Fluidic Workflows` is a browser extension for creating web-based automations
-on the fly. Capture different actions automatically for later replay or create
+This project is a browser extension for creating web-based automations on the
+fly. Capture different actions automatically for later replay or create
 fine-tuned steps in an intuitive, no-code way.
 
 ## Building
@@ -97,14 +97,14 @@ presses automatically.
 
 ![Screenshot from 2024-08-02 18-48-13](https://github.com/user-attachments/assets/af06935d-5ea9-4de5-8406-4b55e100350d)
 
-A repository of all previously saved workflows. From here you can edit, delete,
-or execute (i.e. *run*) the workflow.
+A repository of all previously saved scripts. From here you can edit, delete,
+or execute (i.e. *run*) the script.
 
 ### Runner
 
 ![Screenshot from 2024-08-02 18-48-52](https://github.com/user-attachments/assets/f9cc2e3a-0102-4cdb-b514-e4259ff1a59b)
 
-After running a workflow from your library, this tab will populate with details
+After running a script from your library, this tab will populate with details
 on each step as they execute. It will also surface any errors encountered
 during.
 

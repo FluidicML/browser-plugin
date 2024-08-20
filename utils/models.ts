@@ -1,9 +1,9 @@
 import { InitSchema, type Step } from "./schema"
 
-// Workflows are represented as a sequence of steps, each of which is further
-// broken down into one or more tasks. From the workflow's perspective, a task
-// is the smallest atomic unit of work.
-export type Workflow = {
+// Automation scripts are represented as a sequence of steps, each of which is
+// further broken down into one or more tasks. From the script's perspective, a
+// task is the smallest atomic unit of work.
+export type AutoScript = {
   uuid: string
   init: InitSchema
   steps: Step[]
@@ -22,7 +22,7 @@ export type TaskResult = {
   // latter isn't serializable. This would otherwise make communicating results
   // through message passing impossible.
   params?: [string, string][]
-  // Indicates the workflow has stopped execution. User interaction is required
+  // Indicates the script has stopped execution. User interaction is required
   // to continue.
   isPaused?: boolean
 }

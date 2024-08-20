@@ -7,7 +7,7 @@ import type {
   ReplayRecordingKeyupMessage,
 } from "@/utils/messages"
 import { Model, chatCompletion } from "@/utils/openai"
-import { type TaskResult } from "@/utils/workflow"
+import type { AutoScript, TaskResult } from "@/utils/models"
 import CheckmarkIcon from "@/components/icons/Checkmark"
 import CloseIcon from "@/components/icons/Close"
 import FolderIcon from "@/components/icons/Folder"
@@ -20,7 +20,7 @@ import { waitForTab, updateTab } from "@/utils/browser_tabs"
 import StepResultCard from "./runner_tab/StepResultCard"
 
 type Context = {
-  workflow: Workflow
+  script: AutoScript
   tabId: number
   stepIndex: number
   taskIndex: number
@@ -228,7 +228,7 @@ const runRecordingTask = async (
 }
 
 const runTask = async (context: Context): Promise<TaskResult> => {
-  const step = context.workflow.steps[context.stepIndex]
+  const step = context.script.steps[context.stepIndex]
   const kind = step.kind
 
   let result: TaskResult
@@ -270,31 +270,31 @@ const RunnerTab = () => {
   const sharedStore = useSharedStore()
 
   const runnerParams = React.useMemo(() => {
-    const workflow = sharedStore.runnerActive
-    return workflow ? sharedStore.runnerActions.getParams(workflow) : new Map()
+    const script = sharedStore.runnerActive
+    return script ? sharedStore.runnerActions.getParams(script) : new Map()
   }, [
     sharedStore.runnerActive,
     sharedStore.runnerStepIndex,
     sharedStore.runnerTaskIndex,
   ])
 
-  // Process each step/task of the workflow. On completion, trigger an update
-  // to reinvoke this same effect.
+  // Process each step/task of the script. On completion, trigger an update to
+  // reinvoke this same effect.
   React.useEffect(() => {
-    const workflow = sharedStore.runnerActive
+    const script = sharedStore.runnerActive
     const tabId = sharedStore.runnerTabId
 
     if (
-      workflow === null ||
+      script === null ||
       tabId === null ||
-      sharedStore.runnerActions.isPaused(workflow) ||
-      sharedStore.runnerActions.isFinished(workflow)
+      sharedStore.runnerActions.isPaused(script) ||
+      sharedStore.runnerActions.isFinished(script)
     ) {
       return
     }
 
     runTask({
-      workflow,
+      script: script,
       tabId,
       stepIndex: sharedStore.runnerStepIndex,
       taskIndex: sharedStore.runnerTaskIndex,
@@ -303,11 +303,11 @@ const RunnerTab = () => {
       openAIKey: sharedStore.settingsOpenAIKey,
       replayTimeoutSecs: sharedStore.settingsReplayTimeoutSecs,
     }).then((result) => {
-      sharedStore.runnerActions.pushTaskResult(workflow, result)
+      sharedStore.runnerActions.pushTaskResult(script, result)
     })
   }, [
     // Be careful with what is included in this list. We want to ensure only
-    // successfully completing tasks advance the workflow.
+    // successfully completing tasks advance the script.
     sharedStore.runnerActive,
     sharedStore.runnerStepIndex,
     sharedStore.runnerTaskIndex,
@@ -317,7 +317,7 @@ const RunnerTab = () => {
     return (
       <div className="flex flex-col items-center gap-2 p-4">
         <FolderIcon className="w-10 h-10 fill-black dark:fill-white" />
-        <p className="pt-2 text-center text-base">No running workflow.</p>
+        <p className="pt-2 text-center text-base">No running script.</p>
       </div>
     )
   }
@@ -364,18 +364,18 @@ const RunnerTab = () => {
       <Separator />
 
       {[...Array(sharedStore.runnerStepIndex + 1).keys()].map((index) => {
-        const workflow = sharedStore.runnerActive
-        if (workflow === null || index >= workflow.steps.length) {
+        const script = sharedStore.runnerActive
+        if (script === null || index >= script.steps.length) {
           return null
         }
 
-        const title = `Step ${index + 1} / ${workflow.steps.length}`
-        const step = workflow.steps[index]
+        const title = `Step ${index + 1} / ${script.steps.length}`
+        const step = script.steps[index]
         const desc = `${step.kind.slice(0, 1).toUpperCase() + step.kind.slice(1)}`
 
         return (
           <StepResultCard
-            key={`${workflow.uuid}-${index}`}
+            key={`${script.uuid}-${index}`}
             title={title}
             description={desc}
             step={step}

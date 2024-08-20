@@ -41,14 +41,14 @@ const BuilderTab = () => {
         isDirty: false,
       }))
     )
-    store.libraryActions.editWorkflow(null)
+    store.libraryActions.editAutoScript(null)
   }, [store.libraryEditing])
 
   const [tabActive, setTabActive] = React.useState("-1")
   // Retrieves the index of the active tab. For uniformity, the "init" tab is
   // treated as if it has index `-1` in the `actionTabs` array.
   const tabActiveIndex = parseInt(tabActive)
-  // Checks if the active tab is also the last tab in the workflow.
+  // Checks if the active tab is also the last tab in the form.
   const tabActiveLast = tabActiveIndex === stepTabs.length - 1
 
   const tabParams = React.useCallback(
@@ -96,11 +96,11 @@ const BuilderTab = () => {
     [setStepTabs]
   )
 
-  const saveWorkflow = React.useCallback(() => {
+  const saveAutoScript = React.useCallback(() => {
     if (!initTab) {
       throw new Error("Attempted to save invalid `InitSchema`.")
     }
-    store.libraryActions.saveWorkflow({
+    store.libraryActions.saveAutoScript({
       uuid: uuid,
       init: initTab,
       steps: stepTabs.map((t) => t.step).filter((f): f is Step => Boolean(f)),
@@ -200,9 +200,9 @@ const BuilderTab = () => {
           disabled={
             store.sharedLockedBy.size > 0 || !tabValid(stepTabs.length - 1)
           }
-          onClick={saveWorkflow}
+          onClick={saveAutoScript}
         >
-          Save Workflow
+          Save
         </Button>
       </div>
     </Tabs>

@@ -1,6 +1,6 @@
 {
-  "name": "fluidic-workflows",
-  "description": "Workflow automation plugin.",
+  "name": "fluidic-browser-plugin",
+  "description": "Browser automation plugin.",
   "private": true,
   "version": "0.1.0",
   "type": "module",
